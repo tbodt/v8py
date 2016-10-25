@@ -103,7 +103,7 @@ PyObject *py_context_add_template(py_context *self, PyObject *args) {
     Context::Scope context_scope(context);
 
     Local<Function> js_function = py_template_to_function(templ, context);
-    context->Global()->Set(context, js_from_py(name), js_function)
+    context->Global()->Set(context, js_from_py(name, context), js_function)
         .FromJust();
 
     // why the fuck is None reference counted

@@ -16,7 +16,7 @@ int py_js_object_type_init() {
     py_js_object_type.tp_flags = Py_TPFLAGS_DEFAULT;
     py_js_object_type.tp_doc = "";
 
-    py_js_object_type.tp_new = (newfunc) py_js_object_fake_new;
+    py_js_object_type.tp_new = py_fake_new;
     py_js_object_type.tp_dealloc = (destructor) py_js_object_dealloc;
     py_js_object_type.tp_getattro = (getattrofunc) py_js_object_getattro;
     py_js_object_type.tp_setattro = (setattrofunc) py_js_object_setattro;
@@ -47,7 +47,7 @@ PyObject *py_js_object_getattro(py_js_object *self, PyObject *name) {
     HandleScope hs(isolate);
     Local<Object> object = self->object->Get(isolate);
     Local<Context> context = self->context->Get(isolate);
-    Local<Value> js_name = js_from_py(name);
+    Local<Value> js_name = js_from_py(name, context);
 
     if (!object->Has(context, js_name).FromJust()) {
         PyObject *class_name = py_from_js(object->GetConstructorName(), context);
@@ -64,7 +64,7 @@ int py_js_object_setattro(py_js_object *self, PyObject *name, PyObject *value) {
     Local<Object> object = self->object->Get(isolate);
     Local<Context> context = self->context->Get(isolate);
 
-    if (!object->Set(context, js_from_py(name), js_from_py(value)).FromJust()) {
+    if (!object->Set(context, js_from_py(name, context), js_from_py(value, context)).FromJust()) {
         PyErr_SetString(PyExc_AttributeError, "Object->Set completely failed for some reason");
         return -1;
     }
@@ -91,7 +91,7 @@ PyObject *py_js_function_call(py_js_function *self, PyObject *args, PyObject *kw
     int argc = PyTuple_GET_SIZE(args);
     Local<Value> *argv = new Local<Value>[argc];
     for (int i = 0; i < argc; i++) {
-        argv[i] = js_from_py(PyTuple_GET_ITEM(args, i));
+        argv[i] = js_from_py(PyTuple_GET_ITEM(args, i), context);
     }
     Local<Value> result = object->CallAsFunction(context, Undefined(isolate), argc, argv).ToLocalChecked();
     return py_from_js(result, context);

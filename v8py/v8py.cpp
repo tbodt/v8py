@@ -50,6 +50,11 @@ static PyMethodDef v8_methods[] = {
     {NULL},
 };
 
+PyObject *py_fake_new(PyTypeObject *type, PyObject *args, PyObject *kwargs) {
+    PyErr_SetString(PyExc_NotImplementedError, "this type can't be created from Python");
+    return NULL;
+}
+
 PyMODINIT_FUNC initv8py() {
     initialize_v8();
     PyObject *module = Py_InitModule("v8py", v8_methods);

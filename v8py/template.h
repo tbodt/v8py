@@ -14,9 +14,10 @@ typedef struct {
 int py_template_type_init();
 
 void py_template_dealloc(py_template *self);
-PyObject *py_template_new(PyTypeObject *type, PyObject *args, PyObject *kwargs);
+PyObject *py_template_new(PyObject *func);
 PyObject *py_template_init(py_template *self, PyObject *args, PyObject *kwargs);
 
+PyObject *py_function_to_template(PyObject *func);
 Local<Function> py_template_to_function(py_template *self, Local<Context> context);
 
 extern PyTypeObject py_template_type;

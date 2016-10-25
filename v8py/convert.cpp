@@ -1,8 +1,9 @@
 #include <Python.h>
 #include <v8.h>
 #include "v8py.h"
-#include "convert.h"
+#include "template.h"
 #include "jsobject.h"
+#include "convert.h"
 
 PyObject *py_from_js(Local<Value> value, Local<Context> context) {
     HandleScope hs(isolate);
@@ -52,7 +53,7 @@ PyObject *py_from_js(Local<Value> value, Local<Context> context) {
     return Py_None;
 }
 
-Local<Value> js_from_py(PyObject *value) {
+Local<Value> js_from_py(PyObject *value, Local<Context> context) {
     EscapableHandleScope hs(isolate);
 
     if (PyUnicode_Check(value)) {
@@ -86,6 +87,11 @@ Local<Value> js_from_py(PyObject *value) {
             return hs.Escape(Undefined(isolate));
         }
         return hs.Escape(js_value);
+    }
+
+    if (PyFunction_Check(value)) {
+        py_template *templ = (py_template *) py_function_to_template(value);
+        return hs.Escape(py_template_to_function(templ, context));
     }
 
     if (PyObject_TypeCheck(value, &py_js_object_type)) {

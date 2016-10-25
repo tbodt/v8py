@@ -17,30 +17,18 @@ int py_template_type_init() {
     py_template_type.tp_dealloc = (destructor) py_template_dealloc;
     py_template_type.tp_flags = Py_TPFLAGS_DEFAULT;
     py_template_type.tp_doc = "";
-    py_template_type.tp_init = (initproc) py_template_init;
-    py_template_type.tp_new = (newfunc) py_template_new;
+    py_template_type.tp_new = py_fake_new;
     return PyType_Ready(&py_template_type);
 }
 
 static void py_template_callback(const FunctionCallbackInfo<Value> &info);
 
-PyObject *py_template_new(PyTypeObject *type, PyObject *args, PyObject *kwargs) {
-    py_template *self = (py_template *) type->tp_alloc(type, 0);
-    if (self != NULL) {
-        self->js_template = new Persistent<FunctionTemplate>();
-    }
-    return (PyObject *) self;
-}
-
-PyObject *py_template_init(py_template *self, PyObject *args, PyObject *kwargs) {
-    PyObject *function;
-    if (!PyArg_ParseTuple(args, "O:__init__", &function)) {
+PyObject *py_template_new(PyObject *function) {
+    py_template *self = (py_template *) py_template_type.tp_alloc(&py_template_type, 0);
+    if (self == NULL) {
         return NULL;
     }
-    if (!PyCallable_Check(function)) {
-        PyErr_SetString(PyExc_TypeError, "FunctionTemplate must be passed a function");
-        return NULL;
-    }
+    self->js_template = new Persistent<FunctionTemplate>();
     Py_INCREF(function);
     self->function = function;
 
@@ -58,7 +46,28 @@ PyObject *py_template_init(py_template *self, PyObject *args, PyObject *kwargs) 
     Local<FunctionTemplate> js_template = FunctionTemplate::New(isolate, py_template_callback, js_self);
     self->js_template->Reset(isolate, js_template);
 
-    return NULL;
+    return (PyObject *) self;
+}
+
+static PyObject *template_dict = NULL;
+
+PyObject *py_function_to_template(PyObject *func) {
+    if (template_dict == NULL) {
+        template_dict = PyDict_New();
+        if (template_dict == NULL) {
+            return NULL;
+        }
+    }
+
+    PyObject *templ = PyDict_GetItem(template_dict, func);
+    if (templ != NULL) {
+        Py_INCREF(templ);
+        return templ;
+    }
+
+    templ = py_template_new(func);
+    PyDict_SetItem(template_dict, func, templ);
+    return templ;
 }
 
 Local<Function> py_template_to_function(py_template *self, Local<Context> context) {
@@ -85,7 +94,7 @@ static void py_template_callback(const FunctionCallbackInfo<Value> &info) {
         result = Py_None;
     }
     Py_DECREF(args);
-    Local<Value> js_result = js_from_py(result);
+    Local<Value> js_result = js_from_py(result, context);
     Py_DECREF(result);
     info.GetReturnValue().Set(js_result);
 }
