@@ -10,6 +10,10 @@ using namespace v8;
 PyTypeObject py_js_object_type = {
     PyObject_HEAD_INIT(NULL)
 };
+PyMethodDef py_js_object_methods[] = {
+    {"__dir__", (PyCFunction) py_js_object_dir, METH_NOARGS, NULL},
+    {NULL}
+};
 int py_js_object_type_init() {
     py_js_object_type.tp_name = "v8py.JSObject";
     py_js_object_type.tp_basicsize = sizeof(py_js_object);
@@ -20,6 +24,8 @@ int py_js_object_type_init() {
     py_js_object_type.tp_dealloc = (destructor) py_js_object_dealloc;
     py_js_object_type.tp_getattro = (getattrofunc) py_js_object_getattro;
     py_js_object_type.tp_setattro = (setattrofunc) py_js_object_setattro;
+    py_js_object_type.tp_repr = (reprfunc) py_js_object_repr;
+    py_js_object_type.tp_methods = py_js_object_methods;
     return PyType_Ready(&py_js_object_type);
 }
 
@@ -70,6 +76,32 @@ int py_js_object_setattro(py_js_object *self, PyObject *name, PyObject *value) {
     }
     return 0;
 }
+
+PyObject *py_js_object_dir(py_js_object *self) {
+    HandleScope hs(isolate);
+    Local<Object> object = self->object->Get(isolate);
+    Local<Context> context = self->context->Get(isolate);
+    Local<Array> properties = object->GetPropertyNames(context).ToLocalChecked();
+    PyObject *py_properties = PyList_New(properties->Length());
+    if (py_properties == NULL) {
+        return NULL;
+    }
+    for (int i = 0; i < properties->Length(); i++) {
+        PyObject *py_property = py_from_js(properties->Get(context, i).ToLocalChecked(), context);
+        PyList_SET_ITEM(py_properties, i, py_property);
+    }
+    return py_properties;
+}
+
+PyObject *py_js_object_repr(py_js_object *self) {
+    Isolate::Scope is(isolate);
+    HandleScope hs(isolate);
+    Local<Object> object = self->object->Get(isolate);
+    Local<Context> context = self->context->Get(isolate);
+    return py_from_js(object->ToString(), context);
+}
+
+/////////////////////////////////////////////
 
 PyTypeObject py_js_function_type = {
     PyObject_HEAD_INIT(NULL)

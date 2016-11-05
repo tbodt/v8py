@@ -20,6 +20,8 @@ void py_js_object_dealloc(py_js_object *self);
 
 PyObject *py_js_object_getattro(py_js_object *self, PyObject *name);
 int py_js_object_setattro(py_js_object *self, PyObject *name, PyObject *value);
+PyObject *py_js_object_dir(py_js_object *self);
+PyObject *py_js_object_repr(py_js_object *self);
 
 typedef struct {
     py_js_object object;
