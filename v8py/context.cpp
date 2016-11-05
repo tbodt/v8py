@@ -15,7 +15,6 @@ template <class T> static Local<T> unwrap_local(MaybeLocal<T> local) {
 
 PyMethodDef py_context_methods[] = {
     {"eval", (PyCFunction) py_context_eval, METH_O, NULL},
-    {"add_template", (PyCFunction) py_context_add_template, METH_VARARGS, NULL},
     {"gc", (PyCFunction) py_context_gc, METH_NOARGS, NULL},
     {NULL},
 };
@@ -89,26 +88,6 @@ PyObject *py_context_eval(py_context *self, PyObject *program) {
 
     Py_DECREF(program);
     return py_from_js(result.ToLocalChecked(), context);
-}
-
-PyObject *py_context_add_template(py_context *self, PyObject *args) {
-    PyObject *name = NULL;
-    py_template *templ = NULL;
-    if (!PyArg_ParseTuple(args, "O!O", &py_template_type, &templ, &name))
-        return NULL;
-
-    Isolate::Scope isolate_scope(isolate);
-    HandleScope handle_scope(isolate);
-    Local<Context> context = self->js_context->Get(isolate);
-    Context::Scope context_scope(context);
-
-    Local<Function> js_function = py_template_to_function(templ, context);
-    context->Global()->Set(context, js_from_py(name, context), js_function)
-        .FromJust();
-
-    // why the fuck is None reference counted
-    Py_INCREF(Py_None);
-    return Py_None;
 }
 
 PyObject *py_context_get_global(py_context *self, void *shit) {
