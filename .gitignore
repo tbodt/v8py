@@ -1,4 +1,10 @@
 engine
+
+*.pyc
+v8py.so
+v8py.egg-info
 build
 dist
+.eggs
+
 Session.vim
