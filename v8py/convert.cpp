@@ -107,3 +107,20 @@ Local<Value> js_from_py(PyObject *value, Local<Context> context) {
     return hs.Escape(Undefined(isolate));
 }
 
+PyObject *pys_from_jss(const FunctionCallbackInfo<Value> &js_args, Local<Context> context) {
+    PyObject *py_args = PyTuple_New(js_args.Length());
+    for (int i = 0; i < js_args.Length(); i++) {
+        PyTuple_SET_ITEM(py_args, i, py_from_js(js_args[i], context));
+    }
+    return py_args;
+}
+
+Local<Value> *pys_from_jss(PyObject *py_args, Local<Context> context, int *argc) {
+    *argc = PyTuple_GET_SIZE(py_args);
+    Local<Value> *js_args = new Local<Value>[*argc];
+    for (int i = 0; i < *argc; i++) {
+        js_args[i] = js_from_py(PyTuple_GET_ITEM(py_args, i), context);
+    }
+    return js_args;
+}
+

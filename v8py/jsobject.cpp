@@ -120,11 +120,8 @@ PyObject *py_js_function_call(py_js_function *self, PyObject *args, PyObject *kw
     Local<Context> context = self->object.context->Get(isolate);
 
     Local<Object> object = self->object.object->Get(isolate);
-    int argc = PyTuple_GET_SIZE(args);
-    Local<Value> *argv = new Local<Value>[argc];
-    for (int i = 0; i < argc; i++) {
-        argv[i] = js_from_py(PyTuple_GET_ITEM(args, i), context);
-    }
+    int argc;
+    Local<Value> *argv = pys_from_jss(args, context, &argc);
     Local<Value> result = object->CallAsFunction(context, Undefined(isolate), argc, argv).ToLocalChecked();
     return py_from_js(result, context);
 }

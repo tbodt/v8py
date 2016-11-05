@@ -81,10 +81,7 @@ static void py_template_callback(const FunctionCallbackInfo<Value> &info) {
     Local<Context> context = isolate->GetCurrentContext();
 
     py_template *self = (py_template *) info.Data().As<External>()->Value();
-    PyObject *args = PyTuple_New(info.Length());
-    for (int i = 0; i < info.Length(); i++) {
-        PyTuple_SET_ITEM(args, i, py_from_js(info[i], context));
-    }
+    PyObject *args = pys_from_jss(info, context);
     PyObject *result = PyObject_CallObject(self->function, args);
     if (result == NULL) {
         // function threw an exception
