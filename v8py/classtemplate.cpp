@@ -123,7 +123,7 @@ void py_class_construct_callback(const FunctionCallbackInfo<Value> &info) {
     Local<Context> context = isolate->GetCurrentContext();
     Local<Object> js_new_object = info.This();
 
-    if (js_new_object->InternalFieldCount() != 2) {
+    if (!info.IsConstructCall()) {
         // TODO: throw a JS exception
         // "this is supposed to be called like a constructor" or something to that effect
         // either that or self->templ->GetFunction(context)->CallAsConstructor()
