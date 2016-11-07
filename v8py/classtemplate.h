@@ -17,9 +17,10 @@ PyObject *py_class_to_template(PyObject *cls);
 Local<Function> py_class_get_constructor(py_class_template *self, Local<Context> context);
 
 extern PyTypeObject py_class_template_type;
-extern Persistent<Object> object_magic;
 
 void py_class_construct_callback(const FunctionCallbackInfo<Value> &info);
 void py_class_method_callback(const FunctionCallbackInfo<Value> &info);
+
+#define OBJ_MAGIC ((void *) 0xDaC1a550)
 
 #endif

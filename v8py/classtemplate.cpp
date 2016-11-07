@@ -48,8 +48,6 @@ PyObject *py_class_to_template(PyObject *cls) {
     return templ;
 }
 
-Persistent<Object> object_magic;
-
 PyObject *py_class_template_new(PyObject *cls) {
     Isolate::Scope is(isolate);
     HandleScope hs(isolate);
@@ -58,12 +56,6 @@ PyObject *py_class_template_new(PyObject *cls) {
     // don't have a context. So we use a null context and special-case
     // functions.
     Local<Context> no_ctx;
-
-    // This magic object goes in the first internal field so any other object
-    // with internal fields doesn't look like one of ours.
-    if (magic.IsEmpty()) {
-        magic.Reset(Object::New(isolate));
-    }
 
     py_class_template *self = (py_class_template *) py_class_template_type.tp_alloc(&py_class_template_type, 0);
     if (self == NULL) {
@@ -131,7 +123,7 @@ void py_class_construct_callback(const FunctionCallbackInfo<Value> &info) {
     Local<Context> context = isolate->GetCurrentContext();
     Local<Object> js_new_object = info.This();
 
-    if (js_new_object->InternalFieldCount() != 1) {
+    if (js_new_object->InternalFieldCount() != 2) {
         // TODO: throw a JS exception
         // "this is supposed to be called like a constructor" or something to that effect
         // either that or self->templ->GetFunction(context)->CallAsConstructor()
@@ -139,7 +131,7 @@ void py_class_construct_callback(const FunctionCallbackInfo<Value> &info) {
     }
 
     PyObject *new_object = PyObject_Call(self->cls, pys_from_jss(info, context), NULL);
-    js_new_object->SetInternalField(0, magic);
+    js_new_object->SetAlignedPointerInInternalField(0, OBJ_MAGIC);
     js_new_object->SetInternalField(1, External::New(isolate, new_object));
 }
 
@@ -149,7 +141,7 @@ void py_class_method_callback(const FunctionCallbackInfo<Value> &info) {
     Local<Context> context = isolate->GetCurrentContext();
 
     Local<Object> js_self = info.This();
-    PyObject *self = (PyObject *) js_self->GetInternalField(0).As<External>()->Value();
+    PyObject *self = (PyObject *) js_self->GetInternalField(1).As<External>()->Value();
     PyObject *args = pys_from_jss(info, context);
 
     PyObject *method_name = py_from_js(info.Data(), context);

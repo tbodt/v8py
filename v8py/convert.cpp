@@ -30,14 +30,15 @@ PyObject *py_from_js(Local<Value> value, Local<Context> context) {
     }
     
     if (value->IsObject()) {
-        if (value->InternalFieldCount() == 2) {
-            if (value->GetInternalField(1)->StrictEquals(object_magic)) {
-                PyObject *object = (PyObject *) value->GetInternalField(2)->As<External>()->Value();
+        Local<Object> obj_value = value.As<Object>();
+        if (obj_value->InternalFieldCount() == 2) {
+            if (obj_value->GetAlignedPointerFromInternalField(1) == OBJ_MAGIC) {
+                PyObject *object = (PyObject *) obj_value->GetInternalField(2).As<External>()->Value();
                 Py_INCREF(object);
                 return object;
             }
         }
-        return (PyObject *) py_js_object_new(value.As<Object>(), context);
+        return (PyObject *) py_js_object_new(obj_value, context);
     }
 
     if (value->IsString()) {
