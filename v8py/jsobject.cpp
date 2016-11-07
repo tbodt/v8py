@@ -129,4 +129,5 @@ PyObject *py_js_function_call(py_js_function *self, PyObject *args, PyObject *kw
 void py_js_object_dealloc(py_js_object *self) {
     delete self->object;
     delete self->context;
+    self->ob_type->tp_free((PyObject *) self);
 }
