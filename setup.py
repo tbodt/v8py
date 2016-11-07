@@ -25,10 +25,10 @@ setup(
                       '-std=c++11', 
                       '-Wno-writable-strings', # fucking warnings
                       # '-g', '-O0', # debugging
-                      '-fsanitize=address', '-fomit-frame-pointer', # make it possible to fix segfaults
+                      '-fsanitize=address', '-fno-omit-frame-pointer', # make it possible to fix segfaults
                   ],
                   extra_link_args=[
-                      '-fsanitize=address', '-fomit-frame-pointer', # make it possible to fix segfaults
+                      '-fsanitize=address', '-fno-omit-frame-pointer', # make it possible to fix segfaults
                   ]),
     ],
 
