@@ -7,6 +7,7 @@
 
 #include "v8py.h"
 #include "context.h"
+#include "classtemplate.h"
 #include "jsobject.h"
 
 using namespace v8;
@@ -68,8 +69,11 @@ PyMODINIT_FUNC initv8py() {
 
     if (py_template_type_init() < 0)
         return;
-    Py_INCREF(&py_template_type);
-    PyModule_AddObject(module, "FunctionTemplate", (PyObject *) &py_template_type);
+
+    if (py_class_template_type_init() < 0)
+        return;
+    Py_INCREF(&py_class_template_type);
+    PyModule_AddObject(module, "ClassTemplate", (PyObject *) &py_class_template_type);
 
     if (py_js_object_type_init() < 0)
         return;

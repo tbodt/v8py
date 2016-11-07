@@ -2,6 +2,7 @@
 #include <v8.h>
 #include "v8py.h"
 #include "template.h"
+#include "classtemplate.h"
 #include "jsobject.h"
 #include "convert.h"
 
@@ -29,6 +30,13 @@ PyObject *py_from_js(Local<Value> value, Local<Context> context) {
     }
     
     if (value->IsObject()) {
+        if (value->InternalFieldCount() == 2) {
+            if (value->GetInternalField(1)->StrictEquals(object_magic)) {
+                PyObject *object = (PyObject *) value->GetInternalField(2)->As<External>()->Value();
+                Py_INCREF(object);
+                return object;
+            }
+        }
         return (PyObject *) py_js_object_new(value.As<Object>(), context);
     }
 
@@ -92,6 +100,11 @@ Local<Value> js_from_py(PyObject *value, Local<Context> context) {
     if (PyFunction_Check(value)) {
         py_template *templ = (py_template *) py_function_to_template(value);
         return hs.Escape(py_template_to_function(templ, context));
+    }
+
+    if (PyType_Check(value)) {
+        py_class_template *templ = (py_class_template *) py_class_to_template(value);
+        return hs.Escape(py_class_get_constructor(templ, context));
     }
 
     if (PyObject_TypeCheck(value, &py_js_object_type)) {
