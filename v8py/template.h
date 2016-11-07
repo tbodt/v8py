@@ -9,6 +9,7 @@ using namespace v8;
 typedef struct {
     PyObject_HEAD
     PyObject *function;
+    PyObject *function_name;
     Persistent<FunctionTemplate> *js_template;
 } py_template;
 int py_template_type_init();

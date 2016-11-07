@@ -31,6 +31,7 @@ PyObject *py_template_new(PyObject *function) {
     self->js_template = new Persistent<FunctionTemplate>();
     Py_INCREF(function);
     self->function = function;
+    self->function_name = PyObject_GetAttrString(function, "__name__");
 
     // I've discovered that v8 trades memory leaks for speed. If you allocate a
     // FunctionTemplate and instantiate it, the FunctionTemplate, callback
@@ -73,6 +74,7 @@ PyObject *py_function_to_template(PyObject *func) {
 Local<Function> py_template_to_function(py_template *self, Local<Context> context) {
     EscapableHandleScope hs(isolate);
     Local<Function> function = self->js_template->Get(isolate)->GetFunction(context).ToLocalChecked();
+    function->SetName(js_from_py(self->function_name, context).As<String>());
     return hs.Escape(function);
 }
 

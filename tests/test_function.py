@@ -3,4 +3,5 @@ def test_function(context):
         return len(args)
     context.glob.len_args = len_args
     assert context.eval('len_args(1, 2, 3)') == 3
+    assert context.eval('len_args.name') == 'len_args'
 
