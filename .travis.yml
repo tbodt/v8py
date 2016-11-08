@@ -6,7 +6,7 @@ script: ./setup.py test
 # travis gcc is hopelessly out of date. :(
 sudo: required
 install:
-    - apt-show-versions gcc
+    - dpkg -s gcc
     - sudo apt-get update
     - sudo apt-get install gcc
     - pip install -U pytest
