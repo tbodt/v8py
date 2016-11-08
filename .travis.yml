@@ -1,6 +1,7 @@
-language: python
-python:
-    - '2.7'
+language: cpp
+compiler:
+    - clang
+    - gcc
 script: ./setup.py test
 
 sudo: false
