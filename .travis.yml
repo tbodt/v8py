@@ -3,10 +3,12 @@ python:
     - '2.7'
 script: ./setup.py test
 
-# travis gcc is hopelessly out of date. :(
-sudo: required
 install:
-    - dpkg -s gcc
-    - sudo apt-get update
-    - sudo apt-get install gcc
-    - pip install -U pytest
+    - sudo apt-get install g++-4.8
+
+addons:
+    apt:
+        packages:
+            gcc-4.8
+            g++-4.8
+            clang
