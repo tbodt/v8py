@@ -15,7 +15,7 @@ PyMethodDef py_js_object_methods[] = {
     {NULL}
 };
 int py_js_object_type_init() {
-    py_js_object_type.tp_name = "v8py.JSObject";
+    py_js_object_type.tp_name = "v8py.Object";
     py_js_object_type.tp_basicsize = sizeof(py_js_object);
     py_js_object_type.tp_flags = Py_TPFLAGS_DEFAULT;
     py_js_object_type.tp_doc = "";
@@ -38,6 +38,8 @@ py_js_object *py_js_object_new(Local<Object> object, Local<Context> context) {
     py_js_object *self;
     if (object->IsCallable()) {
         self = (py_js_object *) py_js_function_type.tp_alloc(&py_js_function_type, 0);
+        ((py_js_function *) self)->js_this = new Persistent<Value>();
+        fprintf(stderr, "%p\n", ((py_js_function *) self)->js_this);
     } else {
         self = (py_js_object *) py_js_object_type.tp_alloc(&py_js_object_type, 0);
     }
@@ -62,7 +64,12 @@ PyObject *py_js_object_getattro(py_js_object *self, PyObject *name) {
         Py_DECREF(class_name);
         return NULL;
     }
-    return py_from_js(object->Get(context, js_name).ToLocalChecked(), context);
+    PyObject *value = py_from_js(object->Get(context, js_name).ToLocalChecked(), context);
+    if (Py_TYPE(value) == &py_js_function_type) {
+        py_js_function *func = (py_js_function *) value;
+        func->js_this->Reset(isolate, object);
+    }
+    return value;
 }
 
 int py_js_object_setattro(py_js_object *self, PyObject *name, PyObject *value) {
@@ -107,7 +114,8 @@ PyTypeObject py_js_function_type = {
     PyObject_HEAD_INIT(NULL)
 };
 int py_js_function_type_init() {
-    py_js_function_type.tp_name = "v8py.JSFunction";
+    py_js_function_type.tp_name = "v8py.BoundFunction";
+    py_js_function_type.tp_basicsize = sizeof(py_js_function);
     py_js_function_type.tp_flags = Py_TPFLAGS_DEFAULT;
     py_js_function_type.tp_doc = "";
     py_js_function_type.tp_call = (ternaryfunc) py_js_function_call;
@@ -120,9 +128,15 @@ PyObject *py_js_function_call(py_js_function *self, PyObject *args, PyObject *kw
     Local<Context> context = self->object.context->Get(isolate);
 
     Local<Object> object = self->object.object->Get(isolate);
+    Local<Value> js_this;
+    if (self->js_this->IsEmpty()) {
+        js_this = Undefined(isolate);
+    } else {
+        js_this = self->js_this->Get(isolate);
+    }
     int argc;
     Local<Value> *argv = pys_from_jss(args, context, &argc);
-    Local<Value> result = object->CallAsFunction(context, Undefined(isolate), argc, argv).ToLocalChecked();
+    Local<Value> result = object->CallAsFunction(context, js_this, argc, argv).ToLocalChecked();
     return py_from_js(result, context);
 }
 
@@ -130,4 +144,9 @@ void py_js_object_dealloc(py_js_object *self) {
     delete self->object;
     delete self->context;
     self->ob_type->tp_free((PyObject *) self);
+}
+
+void py_js_function_dealloc(py_js_function *self) {
+    delete self->js_this;
+    py_js_object_dealloc((py_js_object *) self);
 }

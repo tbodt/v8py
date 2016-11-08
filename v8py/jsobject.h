@@ -25,6 +25,7 @@ PyObject *py_js_object_repr(py_js_object *self);
 
 typedef struct {
     py_js_object object;
+    Persistent<Value> *js_this;
 } py_js_function;
 extern PyTypeObject py_js_function_type;
 int py_js_function_type_init();
