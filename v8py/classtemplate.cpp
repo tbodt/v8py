@@ -116,6 +116,19 @@ Local<Function> py_class_get_constructor(py_class_template *self, Local<Context>
     return hs.Escape(function);
 }
 
+void py_class_object_weak_callback(const WeakCallbackInfo<Persistent<Object>> &info) {
+    HandleScope hs(isolate);
+    Local<Object> js_object = info.GetParameter()->Get(isolate);
+    assert(js_object->InternalFieldCount() == 2);
+    assert(js_object->GetAlignedPointerInInternalField(0) == OBJ_MAGIC);
+    PyObject *py_object = (PyObject *) js_object->GetInternalField(1).As<External>()->Value();
+
+    // the entire purpose of this weak callback
+    Py_DECREF(py_object);
+
+    delete info.GetParameter();
+}
+
 void py_class_construct_callback(const FunctionCallbackInfo<Value> &info) {
     Isolate::Scope is(isolate);
     HandleScope hs(isolate);
@@ -133,6 +146,9 @@ void py_class_construct_callback(const FunctionCallbackInfo<Value> &info) {
     PyObject *new_object = PyObject_Call(self->cls, pys_from_jss(info, context), NULL);
     js_new_object->SetAlignedPointerInInternalField(0, OBJ_MAGIC);
     js_new_object->SetInternalField(1, External::New(isolate, new_object));
+
+    Persistent<Object> *obj_handle = new Persistent<Object>(isolate, js_new_object);
+    obj_handle->SetWeak(obj_handle, py_class_object_weak_callback, WeakCallbackType::kInternalFields);
 }
 
 void py_class_method_callback(const FunctionCallbackInfo<Value> &info) {
