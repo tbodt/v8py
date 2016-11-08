@@ -29,6 +29,12 @@ def test_glob(context):
     context.eval('foo = "bar"')
     assert context.glob.foo == 'bar'
 
+def test_context_getattr(context):
+    context.foo = 'bar'
+    assert context.foo == 'bar'
+    assert context.glob.foo == 'bar'
+    assert context.eval('foo') == 'bar'
+
 def test_convert_to_js(context):
     context.glob.foo = 'Hello, world!'
     assert context.eval('foo == "Hello, world!"')
