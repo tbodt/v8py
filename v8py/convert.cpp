@@ -103,7 +103,7 @@ Local<Value> js_from_py(PyObject *value, Local<Context> context) {
         return hs.Escape(py_template_to_function(templ, context));
     }
 
-    if (PyType_Check(value)) {
+    if (PyType_Check(value) || PyClass_Check(value)) {
         py_class_template *templ = (py_class_template *) py_class_to_template(value);
         return hs.Escape(py_class_get_constructor(templ, context));
     }
