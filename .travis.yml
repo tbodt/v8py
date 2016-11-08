@@ -7,5 +7,5 @@ script: ./setup.py test
 sudo: required
 install:
     - sudo apt-get update
-    - sudo apt-get upgrade build-essential
+    - sudo apt-get upgrade gcc
     - pip install -U pytest
