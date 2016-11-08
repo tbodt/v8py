@@ -4,4 +4,4 @@ python:
 script: ./setup.py test
 
 install:
-    - pip install pytest
+    - pip install -U pytest
