@@ -129,12 +129,27 @@ void py_class_object_weak_callback(const WeakCallbackInfo<Persistent<Object>> &i
     delete info.GetParameter();
 }
 
+void py_class_init_js_object(Local<Object> js_object, PyObject *py_object) {
+    js_object->SetAlignedPointerInInternalField(0, OBJ_MAGIC);
+    js_object->SetInternalField(1, External::New(isolate, py_object));
+
+    Persistent<Object> *obj_handle = new Persistent<Object>(isolate, js_object);
+    obj_handle->SetWeak(obj_handle, py_class_object_weak_callback, WeakCallbackType::kInternalFields);
+}
+
+Local<Object> py_class_create_js_object(py_class_template *self, PyObject *py_object, Local<Context> context) {
+    EscapableHandleScope hs(isolate);
+    Local<Object> js_object = self->templ->Get(isolate)->InstanceTemplate()->NewInstance(context).ToLocalChecked();
+    Py_INCREF(py_object);
+    py_class_init_js_object(js_object, py_object);
+    return hs.Escape(js_object);
+}
+
 void py_class_construct_callback(const FunctionCallbackInfo<Value> &info) {
     Isolate::Scope is(isolate);
     HandleScope hs(isolate);
     py_class_template *self = (py_class_template *) info.Data().As<External>()->Value();
     Local<Context> context = isolate->GetCurrentContext();
-    Local<Object> js_new_object = info.This();
 
     if (!info.IsConstructCall()) {
         // TODO: throw a JS exception
@@ -143,12 +158,9 @@ void py_class_construct_callback(const FunctionCallbackInfo<Value> &info) {
         return;
     }
 
+    Local<Object> js_new_object = info.This();
     PyObject *new_object = PyObject_Call(self->cls, pys_from_jss(info, context), NULL);
-    js_new_object->SetAlignedPointerInInternalField(0, OBJ_MAGIC);
-    js_new_object->SetInternalField(1, External::New(isolate, new_object));
-
-    Persistent<Object> *obj_handle = new Persistent<Object>(isolate, js_new_object);
-    obj_handle->SetWeak(obj_handle, py_class_object_weak_callback, WeakCallbackType::kInternalFields);
+    py_class_init_js_object(js_new_object, new_object);
 }
 
 void py_class_method_callback(const FunctionCallbackInfo<Value> &info) {

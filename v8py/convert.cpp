@@ -57,6 +57,8 @@ PyObject *py_from_js(Local<Value> value, Local<Context> context) {
         return PyFloat_FromDouble(value.As<Number>()->Value());
     }
 
+    // i'm not quite ready to turn this into an assert quite yet
+    // i'll do that when I've special-cased every primitive type
     printf("cannot convert\n");
     Py_INCREF(Py_None);
     return Py_None;
@@ -83,7 +85,7 @@ Local<Value> js_from_py(PyObject *value, Local<Context> context) {
         return hs.Escape(True(isolate));
     }
 
-    if (PyNumber_Check(value)) {
+    if (PyNumber_Check(value) && !PyInstance_Check(value)) {
         Local<Number> js_value;
         if (PyFloat_Check(value)) {
             js_value = Number::New(isolate, PyFloat_AS_DOUBLE(value));
@@ -117,8 +119,17 @@ Local<Value> js_from_py(PyObject *value, Local<Context> context) {
         return hs.Escape(Undefined(isolate));
     }
 
-    printf("cannot convert to js\n");
-    return hs.Escape(Undefined(isolate));
+    // it's an arbitrary object
+    PyObject *type;
+    if (PyInstance_Check(value)) {
+        type = PyObject_GetAttrString(value, "__class__");
+    } else {
+        type = (PyObject *) Py_TYPE(value);
+        Py_INCREF(type);
+    }
+    py_class_template *templ = (py_class_template *) py_class_to_template(type);
+    Py_DECREF(type);
+    return hs.Escape(py_class_create_js_object(templ, value, context));
 }
 
 PyObject *pys_from_jss(const FunctionCallbackInfo<Value> &js_args, Local<Context> context) {

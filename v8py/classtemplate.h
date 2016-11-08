@@ -15,6 +15,7 @@ void py_class_template_dealloc(py_class_template *self);
 PyObject *py_class_template_new(PyObject *cls);
 PyObject *py_class_to_template(PyObject *cls);
 Local<Function> py_class_get_constructor(py_class_template *self, Local<Context> context);
+Local<Object> py_class_create_js_object(py_class_template *self, PyObject *py_object, Local<Context> context);
 
 extern PyTypeObject py_class_template_type;
 

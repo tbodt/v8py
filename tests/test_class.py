@@ -1,19 +1,5 @@
 import pytest
 
-@pytest.fixture(params=['new', 'old'])
-def class_ctx(request, context):
-    if request.param == 'new':
-        class Test(object):
-            def method(self):
-                return 'thing'
-        context.glob.Test = Test
-    else:
-        class Test:
-            def method(self):
-                return 'thing'
-        context.glob.Test = Test
-    return context
-    
 def test_call_method(class_ctx):
     assert class_ctx.eval('new Test().method()') == 'thing'
 
