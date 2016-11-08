@@ -14,6 +14,9 @@ PyMethodDef py_js_object_methods[] = {
     {"__dir__", (PyCFunction) py_js_object_dir, METH_NOARGS, NULL},
     {NULL}
 };
+PyMappingMethods py_js_object_mapping_methods = {
+    NULL, (binaryfunc) py_js_object_getattro, (objobjargproc) py_js_object_setattro
+};
 int py_js_object_type_init() {
     py_js_object_type.tp_name = "v8py.Object";
     py_js_object_type.tp_basicsize = sizeof(py_js_object);
@@ -26,6 +29,7 @@ int py_js_object_type_init() {
     py_js_object_type.tp_setattro = (setattrofunc) py_js_object_setattro;
     py_js_object_type.tp_repr = (reprfunc) py_js_object_repr;
     py_js_object_type.tp_methods = py_js_object_methods;
+    py_js_object_type.tp_as_mapping = &py_js_object_mapping_methods;
     return PyType_Ready(&py_js_object_type);
 }
 
