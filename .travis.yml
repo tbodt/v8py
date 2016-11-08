@@ -3,5 +3,8 @@ python:
     - '2.7'
 script: ./setup.py test
 
+# travis gcc is hopelessly out of date. :(
+sudo: required
 install:
+    - sudo apt-get update && sudo apt-get upgrade
     - pip install -U pytest
