@@ -120,12 +120,13 @@ Local<Function> py_class_get_constructor(py_class_template *self, Local<Context>
 void py_class_object_weak_callback(const WeakCallbackInfo<Persistent<Object>> &info) {
     HandleScope hs(isolate);
     Local<Object> js_object = info.GetParameter()->Get(isolate);
-    assert(js_object->GetAlignedPointerInInternalField(0) == OBJ_MAGIC);
-    PyObject *py_object = (PyObject *) js_object->GetInternalField(2).As<External>()->Value();
+    assert(js_object->GetAlignedPointerFromInternalField(0) == OBJ_MAGIC);
+    PyObject *py_object = (PyObject *) js_object->GetInternalField(1).As<External>()->Value();
 
     // the entire purpose of this weak callback
     Py_DECREF(py_object);
 
+    info.GetParameter()->Reset();
     delete info.GetParameter();
 }
 
@@ -134,7 +135,7 @@ void py_class_init_js_object(Local<Object> js_object, PyObject *py_object) {
     js_object->SetInternalField(1, External::New(isolate, py_object));
 
     Persistent<Object> *obj_handle = new Persistent<Object>(isolate, js_object);
-    obj_handle->SetWeak(obj_handle, py_class_object_weak_callback, WeakCallbackType::kInternalFields);
+    obj_handle->SetWeak(obj_handle, py_class_object_weak_callback, WeakCallbackType::kFinalizer);
 }
 
 Local<Object> py_class_create_js_object(py_class_template *self, PyObject *py_object, Local<Context> context) {
