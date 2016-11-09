@@ -62,10 +62,10 @@ PyMODINIT_FUNC initv8py() {
     if (module == NULL)
         return;
 
-    if (py_context_type_init() < 0)
+    if (context_type_init() < 0)
         return;
-    Py_INCREF(&py_context_type);
-    PyModule_AddObject(module, "Context", (PyObject *) &py_context_type);
+    Py_INCREF(&context_type);
+    PyModule_AddObject(module, "Context", (PyObject *) &context_type);
 
     if (py_template_type_init() < 0)
         return;

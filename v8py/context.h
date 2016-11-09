@@ -11,21 +11,21 @@ using namespace v8;
 typedef struct {
     PyObject_HEAD
     Persistent<Context> *js_context;
-} py_context;
-int py_context_type_init();
+} context;
+int context_type_init();
 
-void py_context_dealloc(py_context *self);
-PyObject *py_context_new(PyTypeObject *type, PyObject *args, PyObject *kwargs);
-PyObject *py_context_eval(py_context *self, PyObject *program);
-PyObject *py_context_gc(py_context *self);
+void context_dealloc(context *self);
+PyObject *context_new(PyTypeObject *type, PyObject *args, PyObject *kwargs);
+PyObject *context_eval(context *self, PyObject *program);
+PyObject *context_gc(context *self);
 
-PyObject *py_context_get_global(py_context *self, void *shit);
+PyObject *context_get_global(context *self, void *shit);
 
-PyObject *py_context_getattro(py_context *self, PyObject *name);
-PyObject *py_context_getitem(py_context *self, PyObject *name);
-int py_context_setattro(py_context *self, PyObject *name, PyObject *value);
-int py_context_setitem(py_context *self, PyObject *name, PyObject *value);
+PyObject *context_getattro(context *self, PyObject *name);
+PyObject *context_getitem(context *self, PyObject *name);
+int context_setattro(context *self, PyObject *name, PyObject *value);
+int context_setitem(context *self, PyObject *name, PyObject *value);
 
-extern PyTypeObject py_context_type;
+extern PyTypeObject context_type;
 
 #endif
