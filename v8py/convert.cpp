@@ -1,7 +1,7 @@
 #include <Python.h>
 #include <v8.h>
 #include "v8py.h"
-#include "template.h"
+#include "pyfunction.h"
 #include "classtemplate.h"
 #include "jsobject.h"
 #include "convert.h"
@@ -101,7 +101,7 @@ Local<Value> js_from_py(PyObject *value, Local<Context> context) {
     }
 
     if (PyFunction_Check(value)) {
-        py_template *templ = (py_template *) py_function_to_template(value);
+        py_function *templ = (py_function *) py_function_to_template(value);
         return hs.Escape(py_template_to_function(templ, context));
     }
 

@@ -11,15 +11,15 @@ typedef struct {
     PyObject *function;
     PyObject *function_name;
     Persistent<FunctionTemplate> *js_template;
-} py_template;
-int py_template_type_init();
+} py_function;
+int py_function_type_init();
 
-void py_template_dealloc(py_template *self);
-PyObject *py_template_new(PyObject *func);
+void py_function_dealloc(py_function *self);
+PyObject *py_function_new(PyObject *func);
 
 PyObject *py_function_to_template(PyObject *func);
-Local<Function> py_template_to_function(py_template *self, Local<Context> context);
+Local<Function> py_template_to_function(py_function *self, Local<Context> context);
 
-extern PyTypeObject py_template_type;
+extern PyTypeObject py_function_type;
 
 #endif

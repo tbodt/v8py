@@ -2,7 +2,7 @@
 #include <v8.h>
 
 #include "context.h"
-#include "template.h"
+#include "pyfunction.h"
 #include "convert.h"
 #include "v8py.h"
 

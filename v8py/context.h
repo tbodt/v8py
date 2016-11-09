@@ -4,7 +4,7 @@
 #include <Python.h>
 #include <v8.h>
 
-#include "template.h"
+#include "pyfunction.h"
 
 using namespace v8;
 

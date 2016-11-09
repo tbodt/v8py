@@ -3,7 +3,7 @@
 
 #include "v8py.h"
 #include "convert.h"
-#include "template.h"
+#include "pyfunction.h"
 #include "classtemplate.h"
 
 PyTypeObject py_class_template_type = {
@@ -87,7 +87,7 @@ PyObject *py_class_template_new(PyObject *cls) {
         if (PyMethod_Check(attrib_value)) {
             js_value = FunctionTemplate::New(isolate, py_class_method_callback, js_name, signature);
         } else if (PyFunction_Check(attrib_value)) {
-            js_value = ((py_template *) py_function_to_template(attrib_value))->js_template->Get(isolate);
+            js_value = ((py_function *) py_function_to_template(attrib_value))->js_template->Get(isolate);
         } else {
             js_value = js_from_py(attrib_value, no_ctx);
         }
@@ -102,6 +102,7 @@ PyObject *py_class_template_new(PyObject *cls) {
     // first one is magic object
     // second one is actual pointer
     templ->InstanceTemplate()->SetInternalFieldCount(2);
+    /* templ->InstanceTemplate()->SetHandler(NamedPropertyHandlerConfiguration(py_class_named_getter)); */
 
     self->templ = new Persistent<FunctionTemplate>();
     self->templ->Reset(isolate, templ);
@@ -119,9 +120,8 @@ Local<Function> py_class_get_constructor(py_class_template *self, Local<Context>
 void py_class_object_weak_callback(const WeakCallbackInfo<Persistent<Object>> &info) {
     HandleScope hs(isolate);
     Local<Object> js_object = info.GetParameter()->Get(isolate);
-    assert(js_object->InternalFieldCount() == 2);
     assert(js_object->GetAlignedPointerInInternalField(0) == OBJ_MAGIC);
-    PyObject *py_object = (PyObject *) js_object->GetInternalField(1).As<External>()->Value();
+    PyObject *py_object = (PyObject *) js_object->GetInternalField(2).As<External>()->Value();
 
     // the entire purpose of this weak callback
     Py_DECREF(py_object);
@@ -183,6 +183,17 @@ void py_class_method_callback(const FunctionCallbackInfo<Value> &info) {
     Py_DECREF(args);
     Py_DECREF(retval);
 }
+
+// Handler callbacks. There are TOO DAMN MANY
+
+/* void py_class_named_getter(Local<Name> name, const PropertyCallbackInfo<Value> &info) { */
+/*     HandleScope hs(isolate); */
+/*     Local<Context> context = isolate->GetCurrentContext(); */
+
+    /* assert(js_self->GetAlignedPointerInInternalField(0) == OBJ_MAGIC); */
+    /* PyObject *value = PyObject_GetAttr(py_from_js(info.This(), context), py_from_js(name, context)); */
+    /* info.GetReturnValue().Set(js_from_py(value)); */
+/* } */
 
 void py_class_template_dealloc(py_class_template *self) {
     printf("this should never happen\n");

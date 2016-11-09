@@ -5,26 +5,26 @@
 #include "v8py.h"
 #include "context.h"
 #include "convert.h"
-#include "template.h"
+#include "pyfunction.h"
 
-PyTypeObject py_template_type = {
+PyTypeObject py_function_type = {
     PyObject_HEAD_INIT(NULL)
 };
 
-int py_template_type_init() {
-    py_template_type.tp_name = "v8py.FunctionTemplate";
-    py_template_type.tp_basicsize = sizeof(py_template);
-    py_template_type.tp_dealloc = (destructor) py_template_dealloc;
-    py_template_type.tp_flags = Py_TPFLAGS_DEFAULT;
-    py_template_type.tp_doc = "";
-    py_template_type.tp_new = py_fake_new;
-    return PyType_Ready(&py_template_type);
+int py_function_type_init() {
+    py_function_type.tp_name = "v8py.Function";
+    py_function_type.tp_basicsize = sizeof(py_function);
+    py_function_type.tp_dealloc = (destructor) py_function_dealloc;
+    py_function_type.tp_flags = Py_TPFLAGS_DEFAULT;
+    py_function_type.tp_doc = "";
+    py_function_type.tp_new = py_fake_new;
+    return PyType_Ready(&py_function_type);
 }
 
-static void py_template_callback(const FunctionCallbackInfo<Value> &info);
+static void py_function_callback(const FunctionCallbackInfo<Value> &info);
 
-PyObject *py_template_new(PyObject *function) {
-    py_template *self = (py_template *) py_template_type.tp_alloc(&py_template_type, 0);
+PyObject *py_function_new(PyObject *function) {
+    py_function *self = (py_function *) py_function_type.tp_alloc(&py_function_type, 0);
     if (self == NULL) {
         return NULL;
     }
@@ -44,7 +44,7 @@ PyObject *py_template_new(PyObject *function) {
     HandleScope handle_scope(isolate);
 
     Local<External> js_self = External::New(isolate, self);
-    Local<FunctionTemplate> js_template = FunctionTemplate::New(isolate, py_template_callback, js_self);
+    Local<FunctionTemplate> js_template = FunctionTemplate::New(isolate, py_function_callback, js_self);
     self->js_template->Reset(isolate, js_template);
 
     return (PyObject *) self;
@@ -66,23 +66,23 @@ PyObject *py_function_to_template(PyObject *func) {
         return templ;
     }
 
-    templ = py_template_new(func);
+    templ = py_function_new(func);
     PyDict_SetItem(template_dict, func, templ);
     return templ;
 }
 
-Local<Function> py_template_to_function(py_template *self, Local<Context> context) {
+Local<Function> py_template_to_function(py_function *self, Local<Context> context) {
     EscapableHandleScope hs(isolate);
     Local<Function> function = self->js_template->Get(isolate)->GetFunction(context).ToLocalChecked();
     function->SetName(js_from_py(self->function_name, context).As<String>());
     return hs.Escape(function);
 }
 
-static void py_template_callback(const FunctionCallbackInfo<Value> &info) {
+static void py_function_callback(const FunctionCallbackInfo<Value> &info) {
     HandleScope hs(isolate);
     Local<Context> context = isolate->GetCurrentContext();
 
-    py_template *self = (py_template *) info.Data().As<External>()->Value();
+    py_function *self = (py_function *) info.Data().As<External>()->Value();
     PyObject *args = pys_from_jss(info, context);
     PyObject *result = PyObject_CallObject(self->function, args);
     if (result == NULL) {
@@ -98,7 +98,7 @@ static void py_template_callback(const FunctionCallbackInfo<Value> &info) {
     info.GetReturnValue().Set(js_result);
 }
 
-void py_template_dealloc(py_template *self) {
+void py_function_dealloc(py_function *self) {
     printf("this should never happen\n");
     (void) *((char *)NULL); // intentional segfault
 }
