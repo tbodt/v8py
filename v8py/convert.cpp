@@ -112,7 +112,7 @@ Local<Value> js_from_py(PyObject *value, Local<Context> context) {
 
     if (PyObject_TypeCheck(value, &js_object_type)) {
         js_object *py_value = (js_object *) value;
-        return hs.Escape(py_value->object->Get(isolate));
+        return hs.Escape(py_value->object.Get(isolate));
     }
 
     if (value == Py_None) {

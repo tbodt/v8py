@@ -40,7 +40,7 @@ int context_type_init() {
 }
 
 void context_dealloc(context *self) {
-    delete self->js_context;
+    self->js_context.Reset();
     self->ob_type->tp_free((PyObject *) self);
 }
 
@@ -52,8 +52,7 @@ PyObject *context_new(PyTypeObject *type, PyObject *args, PyObject *kwargs) {
 
         Local<Context> context = Context::New(isolate);
 
-        self->js_context = new Persistent<Context>();
-        self->js_context->Reset(isolate, context);
+        self->js_context.Reset(isolate, context);
     }
     return (PyObject *) self;
 }
@@ -61,7 +60,7 @@ PyObject *context_new(PyTypeObject *type, PyObject *args, PyObject *kwargs) {
 PyObject *context_eval(context *self, PyObject *program) {
     Isolate::Scope isolate_scope(isolate);
     HandleScope handle_scope(isolate);
-    Local<Context> context = self->js_context->Get(isolate);
+    Local<Context> context = self->js_context.Get(isolate);
     Context::Scope context_scope(context);
 
     if (PyString_CheckExact(program)) {
@@ -90,7 +89,7 @@ PyObject *context_eval(context *self, PyObject *program) {
 
 PyObject *context_get_global(context *self, void *shit) {
     HandleScope hs(isolate);
-    Local<Context> context = self->js_context->Get(isolate);
+    Local<Context> context = self->js_context.Get(isolate);
     return py_from_js(context->Global(), context);
 }
 

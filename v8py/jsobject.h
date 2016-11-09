@@ -8,8 +8,8 @@ using namespace v8;
 
 typedef struct {
     PyObject_HEAD
-    Persistent<Object> *object;
-    Persistent<Context> *context;
+    Persistent<Object> object;
+    Persistent<Context> context;
 } js_object;
 extern PyTypeObject js_object_type;
 int js_object_type_init();
@@ -25,7 +25,7 @@ PyObject *js_object_repr(js_object *self);
 
 typedef struct {
     js_object object;
-    Persistent<Value> *js_this;
+    Persistent<Value> js_this;
 } js_function;
 extern PyTypeObject js_function_type;
 int js_function_type_init();

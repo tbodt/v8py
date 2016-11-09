@@ -42,23 +42,21 @@ js_object *js_object_new(Local<Object> object, Local<Context> context) {
     js_object *self;
     if (object->IsCallable()) {
         self = (js_object *) js_function_type.tp_alloc(&js_function_type, 0);
-        ((js_function *) self)->js_this = new Persistent<Value>();
-        fprintf(stderr, "%p\n", ((js_function *) self)->js_this);
     } else {
         self = (js_object *) js_object_type.tp_alloc(&js_object_type, 0);
     }
 
     if (self != NULL) {
-        self->object = new Persistent<Object>(isolate, object);
-        self->context = new Persistent<Context>(isolate, context);
+        self->object.Reset(isolate, object);
+        self->context.Reset(isolate, context);
     }
     return self;
 }
 
 PyObject *js_object_getattro(js_object *self, PyObject *name) {
     HandleScope hs(isolate);
-    Local<Object> object = self->object->Get(isolate);
-    Local<Context> context = self->context->Get(isolate);
+    Local<Object> object = self->object.Get(isolate);
+    Local<Context> context = self->context.Get(isolate);
     Local<Value> js_name = js_from_py(name, context);
 
     if (!object->Has(context, js_name).FromJust()) {
@@ -71,15 +69,15 @@ PyObject *js_object_getattro(js_object *self, PyObject *name) {
     PyObject *value = py_from_js(object->Get(context, js_name).ToLocalChecked(), context);
     if (Py_TYPE(value) == &js_function_type) {
         js_function *func = (js_function *) value;
-        func->js_this->Reset(isolate, object);
+        func->js_this.Reset(isolate, object);
     }
     return value;
 }
 
 int js_object_setattro(js_object *self, PyObject *name, PyObject *value) {
     HandleScope hs(isolate);
-    Local<Object> object = self->object->Get(isolate);
-    Local<Context> context = self->context->Get(isolate);
+    Local<Object> object = self->object.Get(isolate);
+    Local<Context> context = self->context.Get(isolate);
 
     if (!object->Set(context, js_from_py(name, context), js_from_py(value, context)).FromJust()) {
         PyErr_SetString(PyExc_AttributeError, "Object->Set completely failed for some reason");
@@ -90,8 +88,8 @@ int js_object_setattro(js_object *self, PyObject *name, PyObject *value) {
 
 PyObject *js_object_dir(js_object *self) {
     HandleScope hs(isolate);
-    Local<Object> object = self->object->Get(isolate);
-    Local<Context> context = self->context->Get(isolate);
+    Local<Object> object = self->object.Get(isolate);
+    Local<Context> context = self->context.Get(isolate);
     Local<Array> properties = object->GetPropertyNames(context).ToLocalChecked();
     PyObject *py_properties = PyList_New(properties->Length());
     if (py_properties == NULL) {
@@ -107,8 +105,8 @@ PyObject *js_object_dir(js_object *self) {
 PyObject *js_object_repr(js_object *self) {
     Isolate::Scope is(isolate);
     HandleScope hs(isolate);
-    Local<Object> object = self->object->Get(isolate);
-    Local<Context> context = self->context->Get(isolate);
+    Local<Object> object = self->object.Get(isolate);
+    Local<Context> context = self->context.Get(isolate);
     return py_from_js(object->ToString(), context);
 }
 
@@ -129,14 +127,14 @@ int js_function_type_init() {
 
 PyObject *js_function_call(js_function *self, PyObject *args, PyObject *kwargs) {
     HandleScope hs(isolate);
-    Local<Context> context = self->object.context->Get(isolate);
+    Local<Context> context = self->object.context.Get(isolate);
 
-    Local<Object> object = self->object.object->Get(isolate);
+    Local<Object> object = self->object.object.Get(isolate);
     Local<Value> js_this;
-    if (self->js_this->IsEmpty()) {
+    if (self->js_this.IsEmpty()) {
         js_this = Undefined(isolate);
     } else {
-        js_this = self->js_this->Get(isolate);
+        js_this = self->js_this.Get(isolate);
     }
     int argc;
     Local<Value> *argv = pys_from_jss(args, context, &argc);
@@ -145,12 +143,12 @@ PyObject *js_function_call(js_function *self, PyObject *args, PyObject *kwargs) 
 }
 
 void js_object_dealloc(js_object *self) {
-    delete self->object;
-    delete self->context;
+    self->object.Reset();
+    self->context.Reset();
     self->ob_type->tp_free((PyObject *) self);
 }
 
 void js_function_dealloc(js_function *self) {
-    delete self->js_this;
+    self->js_this.Reset();
     js_object_dealloc((js_object *) self);
 }

@@ -10,7 +10,7 @@ using namespace v8;
 
 typedef struct {
     PyObject_HEAD
-    Persistent<Context> *js_context;
+    Persistent<Context> js_context;
 } context;
 int context_type_init();
 
