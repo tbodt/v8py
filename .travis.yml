@@ -23,8 +23,12 @@ install:
     - cd v8
     - git checkout branch-heads/5.4
     - gclient sync
-    - tools/dev/v8gen.py x64.release
-    - echo "is_component_build = true" >> out.gn/x64.release/args.gn
-    - ninja -C out.gn/x64.release
+    - make native -j2
+    - cd ..
 
     - if [ "$CXX" = "g++" ]; then export CXX="g++-4.8" CC="gcc-4.8"; fi
+
+# it takes ages to compile v8 so don't do it too often
+cache:
+    directories:
+        v8
