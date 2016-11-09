@@ -38,7 +38,7 @@ PyObject *py_from_js(Local<Value> value, Local<Context> context) {
                 return object;
             }
         }
-        return (PyObject *) py_js_object_new(obj_value, context);
+        return (PyObject *) js_object_new(obj_value, context);
     }
 
     if (value->IsString()) {
@@ -110,8 +110,8 @@ Local<Value> js_from_py(PyObject *value, Local<Context> context) {
         return hs.Escape(py_class_get_constructor(templ, context));
     }
 
-    if (PyObject_TypeCheck(value, &py_js_object_type)) {
-        py_js_object *py_value = (py_js_object *) value;
+    if (PyObject_TypeCheck(value, &js_object_type)) {
+        js_object *py_value = (js_object *) value;
         return hs.Escape(py_value->object->Get(isolate));
     }
 

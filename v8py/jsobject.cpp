@@ -7,45 +7,45 @@
 
 using namespace v8;
 
-PyTypeObject py_js_object_type = {
+PyTypeObject js_object_type = {
     PyObject_HEAD_INIT(NULL)
 };
-PyMethodDef py_js_object_methods[] = {
-    {"__dir__", (PyCFunction) py_js_object_dir, METH_NOARGS, NULL},
+PyMethodDef js_object_methods[] = {
+    {"__dir__", (PyCFunction) js_object_dir, METH_NOARGS, NULL},
     {NULL}
 };
-PyMappingMethods py_js_object_mapping_methods = {
-    NULL, (binaryfunc) py_js_object_getattro, (objobjargproc) py_js_object_setattro
+PyMappingMethods js_object_mapping_methods = {
+    NULL, (binaryfunc) js_object_getattro, (objobjargproc) js_object_setattro
 };
-int py_js_object_type_init() {
-    py_js_object_type.tp_name = "v8py.Object";
-    py_js_object_type.tp_basicsize = sizeof(py_js_object);
-    py_js_object_type.tp_flags = Py_TPFLAGS_DEFAULT;
-    py_js_object_type.tp_doc = "";
+int js_object_type_init() {
+    js_object_type.tp_name = "v8py.Object";
+    js_object_type.tp_basicsize = sizeof(js_object);
+    js_object_type.tp_flags = Py_TPFLAGS_DEFAULT;
+    js_object_type.tp_doc = "";
 
-    py_js_object_type.tp_new = py_fake_new;
-    py_js_object_type.tp_dealloc = (destructor) py_js_object_dealloc;
-    py_js_object_type.tp_getattro = (getattrofunc) py_js_object_getattro;
-    py_js_object_type.tp_setattro = (setattrofunc) py_js_object_setattro;
-    py_js_object_type.tp_repr = (reprfunc) py_js_object_repr;
-    py_js_object_type.tp_methods = py_js_object_methods;
-    py_js_object_type.tp_as_mapping = &py_js_object_mapping_methods;
-    return PyType_Ready(&py_js_object_type);
+    js_object_type.tp_new = py_fake_new;
+    js_object_type.tp_dealloc = (destructor) js_object_dealloc;
+    js_object_type.tp_getattro = (getattrofunc) js_object_getattro;
+    js_object_type.tp_setattro = (setattrofunc) js_object_setattro;
+    js_object_type.tp_repr = (reprfunc) js_object_repr;
+    js_object_type.tp_methods = js_object_methods;
+    js_object_type.tp_as_mapping = &js_object_mapping_methods;
+    return PyType_Ready(&js_object_type);
 }
 
-PyObject *py_js_object_fake_new(PyTypeObject *type, PyObject *args, PyObject *kwargs) {
+PyObject *js_object_fake_new(PyTypeObject *type, PyObject *args, PyObject *kwargs) {
     PyErr_SetString(PyExc_NotImplementedError, "JSObjects can't be created from Python");
     return NULL;
 }
 
-py_js_object *py_js_object_new(Local<Object> object, Local<Context> context) {
-    py_js_object *self;
+js_object *js_object_new(Local<Object> object, Local<Context> context) {
+    js_object *self;
     if (object->IsCallable()) {
-        self = (py_js_object *) py_js_function_type.tp_alloc(&py_js_function_type, 0);
-        ((py_js_function *) self)->js_this = new Persistent<Value>();
-        fprintf(stderr, "%p\n", ((py_js_function *) self)->js_this);
+        self = (js_object *) js_function_type.tp_alloc(&js_function_type, 0);
+        ((js_function *) self)->js_this = new Persistent<Value>();
+        fprintf(stderr, "%p\n", ((js_function *) self)->js_this);
     } else {
-        self = (py_js_object *) py_js_object_type.tp_alloc(&py_js_object_type, 0);
+        self = (js_object *) js_object_type.tp_alloc(&js_object_type, 0);
     }
 
     if (self != NULL) {
@@ -55,7 +55,7 @@ py_js_object *py_js_object_new(Local<Object> object, Local<Context> context) {
     return self;
 }
 
-PyObject *py_js_object_getattro(py_js_object *self, PyObject *name) {
+PyObject *js_object_getattro(js_object *self, PyObject *name) {
     HandleScope hs(isolate);
     Local<Object> object = self->object->Get(isolate);
     Local<Context> context = self->context->Get(isolate);
@@ -69,14 +69,14 @@ PyObject *py_js_object_getattro(py_js_object *self, PyObject *name) {
         return NULL;
     }
     PyObject *value = py_from_js(object->Get(context, js_name).ToLocalChecked(), context);
-    if (Py_TYPE(value) == &py_js_function_type) {
-        py_js_function *func = (py_js_function *) value;
+    if (Py_TYPE(value) == &js_function_type) {
+        js_function *func = (js_function *) value;
         func->js_this->Reset(isolate, object);
     }
     return value;
 }
 
-int py_js_object_setattro(py_js_object *self, PyObject *name, PyObject *value) {
+int js_object_setattro(js_object *self, PyObject *name, PyObject *value) {
     HandleScope hs(isolate);
     Local<Object> object = self->object->Get(isolate);
     Local<Context> context = self->context->Get(isolate);
@@ -88,7 +88,7 @@ int py_js_object_setattro(py_js_object *self, PyObject *name, PyObject *value) {
     return 0;
 }
 
-PyObject *py_js_object_dir(py_js_object *self) {
+PyObject *js_object_dir(js_object *self) {
     HandleScope hs(isolate);
     Local<Object> object = self->object->Get(isolate);
     Local<Context> context = self->context->Get(isolate);
@@ -104,7 +104,7 @@ PyObject *py_js_object_dir(py_js_object *self) {
     return py_properties;
 }
 
-PyObject *py_js_object_repr(py_js_object *self) {
+PyObject *js_object_repr(js_object *self) {
     Isolate::Scope is(isolate);
     HandleScope hs(isolate);
     Local<Object> object = self->object->Get(isolate);
@@ -114,20 +114,20 @@ PyObject *py_js_object_repr(py_js_object *self) {
 
 /////////////////////////////////////////////
 
-PyTypeObject py_js_function_type = {
+PyTypeObject js_function_type = {
     PyObject_HEAD_INIT(NULL)
 };
-int py_js_function_type_init() {
-    py_js_function_type.tp_name = "v8py.BoundFunction";
-    py_js_function_type.tp_basicsize = sizeof(py_js_function);
-    py_js_function_type.tp_flags = Py_TPFLAGS_DEFAULT;
-    py_js_function_type.tp_doc = "";
-    py_js_function_type.tp_call = (ternaryfunc) py_js_function_call;
-    py_js_function_type.tp_base = &py_js_object_type;
-    return PyType_Ready(&py_js_function_type);
+int js_function_type_init() {
+    js_function_type.tp_name = "v8py.BoundFunction";
+    js_function_type.tp_basicsize = sizeof(js_function);
+    js_function_type.tp_flags = Py_TPFLAGS_DEFAULT;
+    js_function_type.tp_doc = "";
+    js_function_type.tp_call = (ternaryfunc) js_function_call;
+    js_function_type.tp_base = &js_object_type;
+    return PyType_Ready(&js_function_type);
 }
 
-PyObject *py_js_function_call(py_js_function *self, PyObject *args, PyObject *kwargs) {
+PyObject *js_function_call(js_function *self, PyObject *args, PyObject *kwargs) {
     HandleScope hs(isolate);
     Local<Context> context = self->object.context->Get(isolate);
 
@@ -144,13 +144,13 @@ PyObject *py_js_function_call(py_js_function *self, PyObject *args, PyObject *kw
     return py_from_js(result, context);
 }
 
-void py_js_object_dealloc(py_js_object *self) {
+void js_object_dealloc(js_object *self) {
     delete self->object;
     delete self->context;
     self->ob_type->tp_free((PyObject *) self);
 }
 
-void py_js_function_dealloc(py_js_function *self) {
+void js_function_dealloc(js_function *self) {
     delete self->js_this;
-    py_js_object_dealloc((py_js_object *) self);
+    js_object_dealloc((js_object *) self);
 }
