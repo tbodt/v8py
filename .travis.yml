@@ -13,8 +13,18 @@ addons:
             - gcc-4.8
             - g++-4.8
             - clang
-            - libv8-dev
 
 install:
-    - export
+    # install depot_tools
+    - git clone https://chromium.googlesource.com/chromium/tools/depot_tools.git
+    - export PATH=`pwd`/depot_tools:$PATH
+    # install v8
+    - fetch v8
+    - cd v8
+    - git checkout branch-heads/5.4
+    - gclient sync
+    - tools/dev/v8gen.py x64.release
+    - echo "is_component_build = true" >> out.gn/x64.release/args.gn
+    - ninja -C out.gn/x64.release
+
     - if [ "$CXX" = "g++" ]; then export CXX="g++-4.8" CC="gcc-4.8"; fi
