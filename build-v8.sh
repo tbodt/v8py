@@ -1,5 +1,5 @@
 #!/bin/bash
-if [ -d v8 ]; then
+if [ -d v8 -a ! "$(ls -A v8)" ]; then
     echo 'v8 appears to already have been built'
     exit
 fi
