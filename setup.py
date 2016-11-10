@@ -21,7 +21,7 @@ setup(
                            'v8py/jsobject.cpp'
                            ],
                   include_dirs=['v8py', 'v8/include'],
-                  library_dirs=['v8/out/native'],
+                  library_dirs=['v8/out/native', 'v8/out/native/obj.target'],
                   libraries=['v8_nosnapshot', 'v8_base', 
                              'v8_libbase', 'v8_libplatform', 'v8_libsampler',
                              'icuuc', 'icui18n'],
