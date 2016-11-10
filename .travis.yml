@@ -1,6 +1,6 @@
 language: cpp
 compiler:
-    - gcc
+    - clang
 script: ./setup.py test
 
 sudo: false
@@ -9,8 +9,7 @@ addons:
         sources:
             - ubuntu-toolchain-r-test
         packages:
-            - gcc-4.8
-            - g++-4.8
+            - clang
 
 install:
     - ./build-v8.sh
