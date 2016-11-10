@@ -2,7 +2,7 @@
 #include <v8.h>
 #include "v8py.h"
 #include "pyfunction.h"
-#include "classtemplate.h"
+#include "pyclass.h"
 #include "jsobject.h"
 #include "convert.h"
 
@@ -32,8 +32,8 @@ PyObject *py_from_js(Local<Value> value, Local<Context> context) {
     if (value->IsObject()) {
         Local<Object> obj_value = value.As<Object>();
         if (obj_value->InternalFieldCount() == 2) {
-            if (obj_value->GetAlignedPointerFromInternalField(1) == OBJ_MAGIC) {
-                PyObject *object = (PyObject *) obj_value->GetInternalField(2).As<External>()->Value();
+            if (obj_value->GetAlignedPointerFromInternalField(0) == OBJ_MAGIC) {
+                PyObject *object = (PyObject *) obj_value->GetInternalField(1).As<External>()->Value();
                 Py_INCREF(object);
                 return object;
             }

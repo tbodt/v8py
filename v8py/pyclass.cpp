@@ -4,7 +4,7 @@
 #include "v8py.h"
 #include "convert.h"
 #include "pyfunction.h"
-#include "classtemplate.h"
+#include "pyclass.h"
 
 PyTypeObject py_class_type = {
     PyObject_HEAD_INIT(NULL)
@@ -102,7 +102,12 @@ PyObject *py_class_new(PyObject *cls) {
     // first one is magic object
     // second one is actual pointer
     templ->InstanceTemplate()->SetInternalFieldCount(2);
-    /* templ->InstanceTemplate()->SetHandler(NamedPropertyHandlerConfiguration(py_class_named_getter)); */
+    templ->InstanceTemplate()->SetHandler(NamedPropertyHandlerConfiguration(
+                py_class_getter_callback,
+                py_class_setter_callback,
+                py_class_query_callback,
+                py_class_deleter_callback,
+                py_class_enumerator_callback));
 
     self->templ = new Persistent<FunctionTemplate>();
     self->templ->Reset(isolate, templ);
@@ -145,56 +150,6 @@ Local<Object> py_class_create_js_object(py_class *self, PyObject *py_object, Loc
     py_class_init_js_object(js_object, py_object);
     return hs.Escape(js_object);
 }
-
-void py_class_construct_callback(const FunctionCallbackInfo<Value> &info) {
-    Isolate::Scope is(isolate);
-    HandleScope hs(isolate);
-    py_class *self = (py_class *) info.Data().As<External>()->Value();
-    Local<Context> context = isolate->GetCurrentContext();
-
-    if (!info.IsConstructCall()) {
-        // TODO: throw a JS exception
-        // "this is supposed to be called like a constructor" or something to that effect
-        // either that or self->templ->GetFunction(context)->CallAsConstructor()
-        return;
-    }
-
-    Local<Object> js_new_object = info.This();
-    PyObject *new_object = PyObject_Call(self->cls, pys_from_jss(info, context), NULL);
-    py_class_init_js_object(js_new_object, new_object);
-}
-
-void py_class_method_callback(const FunctionCallbackInfo<Value> &info) {
-    Isolate::Scope is(isolate);
-    HandleScope hs(isolate);
-    Local<Context> context = isolate->GetCurrentContext();
-
-    Local<Object> js_self = info.This();
-    PyObject *self = (PyObject *) js_self->GetInternalField(1).As<External>()->Value();
-    PyObject *args = pys_from_jss(info, context);
-
-    PyObject *method_name = py_from_js(info.Data(), context);
-    PyObject *method = PyObject_GetAttr(self, method_name);
-    PyObject *retval = PyObject_Call(method, args, NULL);
-
-    info.GetReturnValue().Set(js_from_py(retval, context));
-
-    Py_DECREF(method_name);
-    Py_DECREF(method);
-    Py_DECREF(args);
-    Py_DECREF(retval);
-}
-
-// Handler callbacks. There are TOO DAMN MANY
-
-/* void py_class_named_getter(Local<Name> name, const PropertyCallbackInfo<Value> &info) { */
-/*     HandleScope hs(isolate); */
-/*     Local<Context> context = isolate->GetCurrentContext(); */
-
-    /* assert(js_self->GetAlignedPointerInInternalField(0) == OBJ_MAGIC); */
-    /* PyObject *value = PyObject_GetAttr(py_from_js(info.This(), context), py_from_js(name, context)); */
-    /* info.GetReturnValue().Set(js_from_py(value)); */
-/* } */
 
 void py_class_dealloc(py_class *self) {
     printf("this should never happen\n");

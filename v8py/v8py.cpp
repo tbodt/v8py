@@ -7,7 +7,7 @@
 
 #include "v8py.h"
 #include "context.h"
-#include "classtemplate.h"
+#include "pyclass.h"
 #include "jsobject.h"
 
 using namespace v8;
