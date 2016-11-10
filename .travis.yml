@@ -15,18 +15,7 @@ addons:
             - clang
 
 install:
-    # install depot_tools
-    - git clone https://chromium.googlesource.com/chromium/tools/depot_tools.git
-    - export PATH=`pwd`/depot_tools:$PATH
-      # install v8
-    - ls -a
-    - fetch v8
-    - cd v8
-    - git checkout branch-heads/5.4
-    - gclient sync
-    - make native -j2
-    - cd ..
-
+    - ./build-v8.sh
     - if [ "$CXX" = "g++" ]; then export CXX="g++-4.8" CC="gcc-4.8"; fi
 
 # it takes ages to compile v8 so don't do it too often
