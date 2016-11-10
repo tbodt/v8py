@@ -1,4 +1,6 @@
 engine
+v8
+depot_tools
 
 *.pyc
 v8py.so
