@@ -15,6 +15,7 @@ addons:
 install:
     - ./build-v8.sh
     - ls v8/out/native
+    - ls v8/out/native/obj.target
     - if [ "$CXX" = "g++" ]; then export CXX="g++-4.8" CC="gcc-4.8"; fi
 
 # it takes ages to compile v8 so don't do it too often
