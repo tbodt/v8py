@@ -18,6 +18,8 @@ fi
 # google wants to use their own compiler, and I don't want to stop them
 run unset CC
 run unset CXX
+# but it does need to be done all position-independently
+run set CFLAGS=-fPIC
 
 # install depot_tools
 # honestly, fuck google and their idiot build system
@@ -31,8 +33,4 @@ run fetch v8
 run cd v8
 run git checkout branch-heads/5.4
 run gclient sync
-# v8 uses clang warning flags that are too bleeding edge
-# this would be ok, but they also use -Werror
-# run sed -i.bak /no-undefined-var-template/d gypfiles/standalone.gypi
-# run sed -i.bak /no-nonportable-include-path/d gypfiles/standalone.gypi
 run make native -j2
