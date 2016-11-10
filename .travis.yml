@@ -15,7 +15,6 @@ addons:
             - clang
 
 install:
-    - ls -la v8
     - ./build-v8.sh
     - if [ "$CXX" = "g++" ]; then export CXX="g++-4.8" CC="gcc-4.8"; fi
 

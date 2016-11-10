@@ -58,32 +58,22 @@ PyObject *context_new(PyTypeObject *type, PyObject *args, PyObject *kwargs) {
 }
 
 PyObject *context_eval(context *self, PyObject *program) {
-    Isolate::Scope isolate_scope(isolate);
-    HandleScope handle_scope(isolate);
+    Isolate::Scope is(isolate);
+    HandleScope hs(isolate);
     Local<Context> context = self->js_context.Get(isolate);
-    Context::Scope context_scope(context);
+    Context::Scope cs(context);
 
-    if (PyString_CheckExact(program)) {
-        program = PyUnicode_FromObject(program);
-    } else {
-        Py_INCREF(program);
-    }
-
-    Local<String> js_program = String::NewFromTwoByte(isolate, PyUnicode_AS_UNICODE(program), NewStringType::kNormal).ToLocalChecked();
-    MaybeLocal<Script> script = Script::Compile(context, js_program);
+    MaybeLocal<Script> script = Script::Compile(context, js_from_py(program, context).As<String>());
     if (script.IsEmpty()) {
         PyErr_SetString(PyExc_ValueError, "javascript compilation error");
-        Py_DECREF(program);
         return NULL;
     }
     MaybeLocal<Value> result = script.ToLocalChecked()->Run(context);
     if (result.IsEmpty()) {
         PyErr_SetString(PyExc_ValueError, "javascript runtime error");
-        Py_DECREF(program);
         return NULL;
     }
 
-    Py_DECREF(program);
     return py_from_js(result.ToLocalChecked(), context);
 }
 
