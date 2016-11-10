@@ -6,18 +6,18 @@
 #include "pyfunction.h"
 #include "classtemplate.h"
 
-PyTypeObject py_class_template_type = {
+PyTypeObject py_class_type = {
     PyObject_HEAD_INIT(NULL)
 };
 
-int py_class_template_type_init() {
-    py_class_template_type.tp_name = "v8py.ClassTemplate";
-    py_class_template_type.tp_basicsize = sizeof(py_class_template);
-    py_class_template_type.tp_dealloc = (destructor) py_class_template_dealloc;
-    py_class_template_type.tp_flags = Py_TPFLAGS_DEFAULT;
-    py_class_template_type.tp_doc = "";
-    py_class_template_type.tp_new = py_fake_new;
-    return PyType_Ready(&py_class_template_type);
+int py_class_type_init() {
+    py_class_type.tp_name = "v8py.Class";
+    py_class_type.tp_basicsize = sizeof(py_class);
+    py_class_type.tp_dealloc = (destructor) py_class_dealloc;
+    py_class_type.tp_flags = Py_TPFLAGS_DEFAULT;
+    py_class_type.tp_doc = "";
+    py_class_type.tp_new = py_fake_new;
+    return PyType_Ready(&py_class_type);
 }
 
 int py_bool(PyObject *obj) {
@@ -43,12 +43,12 @@ PyObject *py_class_to_template(PyObject *cls) {
         return templ;
     }
 
-    templ = py_class_template_new(cls);
+    templ = py_class_new(cls);
     PyDict_SetItem(template_dict, cls, templ);
     return templ;
 }
 
-PyObject *py_class_template_new(PyObject *cls) {
+PyObject *py_class_new(PyObject *cls) {
     Isolate::Scope is(isolate);
     HandleScope hs(isolate);
 
@@ -57,7 +57,7 @@ PyObject *py_class_template_new(PyObject *cls) {
     // functions.
     Local<Context> no_ctx;
 
-    py_class_template *self = (py_class_template *) py_class_template_type.tp_alloc(&py_class_template_type, 0);
+    py_class *self = (py_class *) py_class_type.tp_alloc(&py_class_type, 0);
     if (self == NULL) {
         return NULL;
     }
@@ -110,7 +110,7 @@ PyObject *py_class_template_new(PyObject *cls) {
     return (PyObject *) self;
 }
 
-Local<Function> py_class_get_constructor(py_class_template *self, Local<Context> context) {
+Local<Function> py_class_get_constructor(py_class *self, Local<Context> context) {
     EscapableHandleScope hs(isolate);
     Local<Function> function = self->templ->Get(isolate)->GetFunction(context).ToLocalChecked();
     function->SetName(js_from_py(self->cls_name, context).As<String>());
@@ -138,7 +138,7 @@ void py_class_init_js_object(Local<Object> js_object, PyObject *py_object) {
     obj_handle->SetWeak(obj_handle, py_class_object_weak_callback, WeakCallbackType::kFinalizer);
 }
 
-Local<Object> py_class_create_js_object(py_class_template *self, PyObject *py_object, Local<Context> context) {
+Local<Object> py_class_create_js_object(py_class *self, PyObject *py_object, Local<Context> context) {
     EscapableHandleScope hs(isolate);
     Local<Object> js_object = self->templ->Get(isolate)->InstanceTemplate()->NewInstance(context).ToLocalChecked();
     Py_INCREF(py_object);
@@ -149,7 +149,7 @@ Local<Object> py_class_create_js_object(py_class_template *self, PyObject *py_ob
 void py_class_construct_callback(const FunctionCallbackInfo<Value> &info) {
     Isolate::Scope is(isolate);
     HandleScope hs(isolate);
-    py_class_template *self = (py_class_template *) info.Data().As<External>()->Value();
+    py_class *self = (py_class *) info.Data().As<External>()->Value();
     Local<Context> context = isolate->GetCurrentContext();
 
     if (!info.IsConstructCall()) {
@@ -196,7 +196,7 @@ void py_class_method_callback(const FunctionCallbackInfo<Value> &info) {
     /* info.GetReturnValue().Set(js_from_py(value)); */
 /* } */
 
-void py_class_template_dealloc(py_class_template *self) {
+void py_class_dealloc(py_class *self) {
     printf("this should never happen\n");
     assert(0);
 }

@@ -106,7 +106,7 @@ Local<Value> js_from_py(PyObject *value, Local<Context> context) {
     }
 
     if (PyType_Check(value) || PyClass_Check(value)) {
-        py_class_template *templ = (py_class_template *) py_class_to_template(value);
+        py_class *templ = (py_class *) py_class_to_template(value);
         return hs.Escape(py_class_get_constructor(templ, context));
     }
 
@@ -127,7 +127,7 @@ Local<Value> js_from_py(PyObject *value, Local<Context> context) {
         type = (PyObject *) Py_TYPE(value);
         Py_INCREF(type);
     }
-    py_class_template *templ = (py_class_template *) py_class_to_template(type);
+    py_class *templ = (py_class *) py_class_to_template(type);
     Py_DECREF(type);
     return hs.Escape(py_class_create_js_object(templ, value, context));
 }

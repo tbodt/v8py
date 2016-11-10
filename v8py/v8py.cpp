@@ -70,10 +70,10 @@ PyMODINIT_FUNC initv8py() {
     if (py_function_type_init() < 0)
         return;
 
-    if (py_class_template_type_init() < 0)
+    if (py_class_type_init() < 0)
         return;
-    Py_INCREF(&py_class_template_type);
-    PyModule_AddObject(module, "ClassTemplate", (PyObject *) &py_class_template_type);
+    Py_INCREF(&py_class_type);
+    PyModule_AddObject(module, "ClassTemplate", (PyObject *) &py_class_type);
 
     if (js_object_type_init() < 0)
         return;
