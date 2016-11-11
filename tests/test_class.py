@@ -13,4 +13,9 @@ def test_class_name(class_ctx):
 
 def test_calling_methods_from_python(class_ctx):
     class_ctx.eval('test = new Test()')
-    assert class_ctx.glob.test.method() == 'thing'
+    assert class_ctx.eval('test.method()') == 'thing'
+
+def test_magic_getter(class_ctx):
+    test = class_ctx.eval('test = new Test()')
+    test.foo = 'bar'
+    assert class_ctx.eval('test.foo') == 'bar'

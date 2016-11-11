@@ -42,10 +42,23 @@ void py_class_method_callback(const FunctionCallbackInfo<Value> &info) {
     Py_DECREF(retval);
 }
 
-void py_class_getter_callback(Local<Name> name, const PropertyCallbackInfo<Value> &info) {
+void py_class_getter_callback(Local<Name> js_name, const PropertyCallbackInfo<Value> &info) {
     Isolate::Scope is(isolate);
     HandleScope hs(isolate);
-    printf("getter\n");
+    Local<Context> context = isolate->GetCurrentContext();
+    
+    Local<Object> js_self = info.This();
+    PyObject *self = (PyObject *) js_self->GetInternalField(1).As<External>()->Value();
+    PyObject *dict = PyObject_GetAttrString(self, "__dict__");
+    // TODO if dict == NULL throw JS exception
+    PyObject *name = py_from_js(js_name, context);
+    PyObject *value = PyObject_GetItem(dict, name);
+    if (value != NULL) {
+        info.GetReturnValue().Set(js_from_py(value, context));
+    }
+    Py_DECREF(dict);
+    Py_DECREF(name);
+    Py_XDECREF(value);
 }
 
 void py_class_setter_callback(Local<Name> name, Local<Value> value, const PropertyCallbackInfo<Value> &info) {
