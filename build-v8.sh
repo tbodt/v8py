@@ -18,8 +18,6 @@ fi
 # google wants to use their own compiler, and I don't want to stop them
 run unset CC
 run unset CXX
-# but it does need to be done all position-independently
-run set CFLAGS=-fPIC
 
 # install depot_tools
 # honestly, fuck google and their idiot build system
@@ -33,4 +31,4 @@ run fetch v8
 run cd v8
 run git checkout branch-heads/5.4
 run gclient sync
-run make native -j2
+run make native CFLAGS=-fPIC CXXFLAGS=-fPIC -j2
