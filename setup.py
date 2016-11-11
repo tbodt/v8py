@@ -22,7 +22,7 @@ setup(
                            ],
                   include_dirs=['v8py', 'v8/include'],
                   library_dirs=['v8/out/native',
-                                'v8/out/native/obj.target/src'
+                                'v8/out/native/obj.target/src',
                                 'v8/out/native/obj.target/third_party/icu'],
                   libraries=['v8_nosnapshot', 'v8_base', 
                              'v8_libbase', 'v8_libplatform', 'v8_libsampler',
