@@ -28,6 +28,7 @@ setup(
                              'v8_libbase', 'v8_libsampler',
                              'icuuc', 'icui18n'],
                   extra_compile_args=['-std=c++11'],
+                  ),
     ],
 
     setup_requires=['pytest-runner'],
