@@ -24,18 +24,10 @@ setup(
                   library_dirs=['v8/out/native',
                                 'v8/out/native/obj.target/src',
                                 'v8/out/native/obj.target/third_party/icu'],
-                  libraries=['v8_nosnapshot', 'v8_base', 
-                             'v8_libbase', 'v8_libplatform', 'v8_libsampler',
+                  libraries=['v8_libplatform', 'v8_base', 'v8_nosnapshot',
+                             'v8_libbase', 'v8_libsampler',
                              'icuuc', 'icui18n'],
-                  extra_compile_args=[
-                      '-std=c++11', 
-                      '-Wno-writable-strings', # fucking warnings
-                      # '-g', '-O0', # debugging
-                      '-fsanitize=address', '-fno-omit-frame-pointer', # make it possible to fix segfaults
-                  ],
-                  extra_link_args=[
-                      '-fsanitize=address', '-fno-omit-frame-pointer', # make it possible to fix segfaults
-                  ]),
+                  extra_compile_args=['-std=c++11'],
     ],
 
     setup_requires=['pytest-runner'],
