@@ -26,7 +26,7 @@ setup(
                                 'v8/out/native/obj.target/third_party/icu'],
                   libraries=['v8_libplatform', 'v8_base', 'v8_nosnapshot',
                              'v8_libbase', 'v8_libsampler',
-                             'icui18n', 'icuuc'],
+                             'icui18n', 'icuuc', 'rt'],
                   extra_compile_args=['-std=c++11'],
                   ),
     ],
