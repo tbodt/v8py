@@ -9,6 +9,10 @@
 PyObject *py_from_js(Local<Value> value, Local<Context> context) {
     HandleScope hs(isolate);
 
+    if (value->IsSymbol()) {
+        value = value.As<Symbol>()->Name();
+    }
+
     if (value->IsNull()) {
         Py_INCREF(Py_None);
         return Py_None;
