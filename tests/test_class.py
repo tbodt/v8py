@@ -19,3 +19,5 @@ def test_magic_getter(class_ctx):
     test = class_ctx.eval('test = new Test()')
     test.foo = 'bar'
     assert class_ctx.eval('test.foo') == 'bar'
+    assert class_ctx.eval('test.getitem') == 'value'
+

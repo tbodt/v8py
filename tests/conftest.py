@@ -11,11 +11,17 @@ def Test(request):
         class Test(object):
             def method(self):
                 return 'thing'
+            def __getitem__(self, name):
+                if name == 'getitem':
+                    return 'value'
         return Test
     else:
         class Test:
             def method(self):
                 return 'thing'
+            def __getitem__(self, name):
+                if name == 'getitem':
+                    return 'value'
         return Test
 
 @pytest.fixture

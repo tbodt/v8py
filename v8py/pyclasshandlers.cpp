@@ -42,23 +42,45 @@ void py_class_method_callback(const FunctionCallbackInfo<Value> &info) {
     Py_DECREF(retval);
 }
 
+// Returns whether the property is provided by the object's class, as opposed to the object (via __dict__, __getattr__, etc.).
+// Basically, true for methods and class properties.
+// If false, interceptors should not do anything and let default behavior happen.
+// TODO return false for descriptors, maybe? or maybe specific handlers override general handlers?
+int is_own_property(PyObject *object, PyObject *name) {
+    PyObject *type;
+    if (PyInstance_Check(object)) {
+        type = PyObject_GetAttrString(object, "__class__");
+    } else {
+        type = (PyObject *) Py_TYPE(object);
+        Py_INCREF(type);
+    }
+    int result = !PyObject_HasAttr(type, name);
+    Py_DECREF(type);
+    return result;
+}
+
 void py_class_getter_callback(Local<Name> js_name, const PropertyCallbackInfo<Value> &info) {
     Isolate::Scope is(isolate);
     HandleScope hs(isolate);
     Local<Context> context = isolate->GetCurrentContext();
     
+    PyObject *name = py_from_js(js_name, context);
     Local<Object> js_self = info.This();
     PyObject *self = (PyObject *) js_self->GetInternalField(1).As<External>()->Value();
-    PyObject *dict = PyObject_GetAttrString(self, "__dict__");
-    // TODO if dict == NULL throw JS exception
-    PyObject *name = py_from_js(js_name, context);
-    PyObject *value = PyObject_GetItem(dict, name);
-    if (value != NULL) {
-        info.GetReturnValue().Set(js_from_py(value, context));
+    if (is_own_property(self, name)) {
+        PyObject *value = PyObject_GetItem(self, name);
+        if (value != NULL && value != Py_None) {
+            info.GetReturnValue().Set(js_from_py(value, context));
+            Py_DECREF(value);
+        } else {
+            value = PyObject_GetAttr(self, name);
+            if (value != NULL) {
+                info.GetReturnValue().Set(js_from_py(value, context));
+                Py_DECREF(value);
+            }
+        }
     }
-    Py_DECREF(dict);
     Py_DECREF(name);
-    Py_XDECREF(value);
 }
 
 void py_class_setter_callback(Local<Name> name, Local<Value> value, const PropertyCallbackInfo<Value> &info) {
