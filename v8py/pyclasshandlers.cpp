@@ -42,6 +42,12 @@ void py_class_method_callback(const FunctionCallbackInfo<Value> &info) {
     Py_DECREF(retval);
 }
 
+// --- Interceptors ---
+
+PyObject *get_self(const PropertyCallbackInfo<Value> &info) {
+    return (PyObject *) info.This()->GetInternalField(1).As<External>()->Value();
+}
+
 // Returns whether the property is provided by the object's class, as opposed to the object (via __dict__, __getattr__, etc.).
 // Basically, true for methods and class properties.
 // If false, interceptors should not do anything and let default behavior happen.
@@ -65,8 +71,7 @@ void py_class_getter_callback(Local<Name> js_name, const PropertyCallbackInfo<Va
     Local<Context> context = isolate->GetCurrentContext();
     
     PyObject *name = py_from_js(js_name, context);
-    Local<Object> js_self = info.This();
-    PyObject *self = (PyObject *) js_self->GetInternalField(1).As<External>()->Value();
+    PyObject *self = get_self(info);
     if (is_own_property(self, name)) {
         PyObject *value = PyObject_GetItem(self, name);
         if (value != NULL && value != Py_None) {
