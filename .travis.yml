@@ -13,8 +13,11 @@ addons:
 
 install:
     - ./build-v8.sh
-    - find v8/out -name '*.a'
+    - export CFLAGS='-g -O0 --coverage'
     - if [ "$CXX" = "g++" ]; then export CXX="g++-4.8" CC="gcc-4.8"; fi
+
+after_success:
+    - bash <(curl -s https://codecov.io/bash)
 
 # it takes ages to compile v8 so don't do it too often
 cache:
