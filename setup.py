@@ -46,6 +46,8 @@ def run(command):
 
 def v8_exists():
     def library_exists(library):
+        if library == 'rt':
+            return True
         lib_filename = 'lib{}.a'.format(library)
         for lib_dir in library_dirs:
             lib_path = os.path.join(lib_dir, lib_filename)
