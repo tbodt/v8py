@@ -42,15 +42,18 @@ COMMAND_ENV.pop('CC', None)
 COMMAND_ENV.pop('CXX', None)
 
 def run(command):
-    check_call(command, shell=True, env=DEPOT_TOOLS_ENV)
+    check_call(command, shell=True, env=COMMAND_ENV)
 
 def v8_exists():
     def library_exists(library):
         lib_filename = 'lib{}.a'.format(library)
         for lib_dir in library_dirs:
             lib_path = os.path.join(lib_dir, lib_filename)
+            print 'checking', lib_path
             if os.path.isfile(lib_path):
+                print library, 'exists'
                 return True
+        print library, 'does not exist'
         return False
     return all(library_exists(lib) for lib in libraries)
 
