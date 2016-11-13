@@ -68,6 +68,8 @@ def get_v8():
         with cd('depot_tools'):
             run('git pull')
 
+    run('gclient sync')
+
     if not os.path.isdir('v8'):
         print 'downloading v8'
         run('fetch v8')
