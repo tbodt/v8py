@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+import sys
 from setuptools import setup, find_packages, Extension
 
 setup(
@@ -26,7 +27,8 @@ setup(
                                 'v8/out/native/obj.target/third_party/icu'],
                   libraries=['v8_libplatform', 'v8_base', 'v8_nosnapshot',
                              'v8_libbase', 'v8_libsampler',
-                             'icui18n', 'icuuc', 'rt'],
+                             'icui18n', 'icuuc']
+                  + (['rt'] if sys.platform.startswith('linux') else []),
                   extra_compile_args=['-std=c++11'],
                   ),
     ],
