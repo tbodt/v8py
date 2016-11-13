@@ -90,7 +90,7 @@ PyObject *js_object_dir(js_object *self) {
     HandleScope hs(isolate);
     Local<Object> object = self->object.Get(isolate);
     Local<Context> context = self->context.Get(isolate);
-    Local<Array> properties = object->GetPropertyNames(context).ToLocalChecked();
+    Local<Array> properties = object->GetOwnPropertyNames(context, ALL_PROPERTIES).ToLocalChecked();
     PyObject *py_properties = PyList_New(properties->Length());
     if (py_properties == NULL) {
         return NULL;
