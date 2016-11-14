@@ -75,6 +75,7 @@ PyObject *py_class_new(PyObject *cls) {
     PyObject *attributes = PyObject_Dir(cls);
     for (int i = 0; i < PySequence_Length(attributes); i++) {
         PyObject *attrib_name = PySequence_ITEM(attributes, i);
+        // skip names with too many underscores
         if (py_bool(PyObject_CallMethod(attrib_name, "startswith", "s", "__")) &&
                 py_bool(PyObject_CallMethod(attrib_name, "endswith", "s", "__"))) {
             Py_DECREF(attrib_name);
@@ -85,11 +86,20 @@ PyObject *py_class_new(PyObject *cls) {
         Local<Data> js_value;
 
         if (PyMethod_Check(attrib_value)) {
-            js_value = FunctionTemplate::New(isolate, py_class_method_callback, js_name, signature);
+            PyObject *im_self = PyObject_GetAttrString(attrib_value, "im_self");
+            if (im_self == Py_None) {
+                js_value = FunctionTemplate::New(isolate, py_class_method_callback, js_name, signature);
+            } else {
+                goto method_counts_as_function;
+            }
+            Py_DECREF(im_self);
         } else if (PyFunction_Check(attrib_value)) {
+method_counts_as_function:
             js_value = ((py_function *) py_function_to_template(attrib_value))->js_template->Get(isolate);
+            templ->Set(js_name, js_value);
         } else {
             js_value = js_from_py(attrib_value, no_ctx);
+            templ->Set(js_name, js_value);
         }
 
         prototype_templ->Set(js_name, js_value);

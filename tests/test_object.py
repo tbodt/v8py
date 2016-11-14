@@ -16,8 +16,3 @@ def test_array_getitem(context):
     assert arr[1] == 2
     assert arr[2] == 3
 
-def test_converting_objects(Test, context):
-    context.glob.test = Test()
-    assert context.glob.test.method() == 'thing'
-    assert context.eval('test.method()') == 'thing'
-
