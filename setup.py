@@ -91,7 +91,8 @@ class BuildV8Command(Command):
     def run(self):
         if not v8_exists():
             get_v8()
-            run('make native -j{} CFLAGS=-fPIC CXXFLAGS=-fPIC'.format(multiprocessing.cpu_count()))
+            with cd('v8'):
+                run('make native -j{} CFLAGS=-fPIC CXXFLAGS=-fPIC'.format(multiprocessing.cpu_count()))
 
 class build_ext(distutils_build_ext):
     def build_extension(self, ext):
