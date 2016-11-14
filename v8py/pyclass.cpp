@@ -85,16 +85,9 @@ PyObject *py_class_new(PyObject *cls) {
         Local<Name> js_name = js_from_py(attrib_name, no_ctx).As<Name>();
         Local<Data> js_value;
 
-        if (PyMethod_Check(attrib_value)) {
-            PyObject *im_self = PyObject_GetAttrString(attrib_value, "im_self");
-            if (im_self == Py_None) {
-                js_value = FunctionTemplate::New(isolate, py_class_method_callback, js_name, signature);
-            } else {
-                goto method_counts_as_function;
-            }
-            Py_DECREF(im_self);
-        } else if (PyFunction_Check(attrib_value)) {
-method_counts_as_function:
+        if (PyMethod_Check(attrib_value) && PyMethod_GET_SELF(attrib_value) == NULL) {
+            js_value = FunctionTemplate::New(isolate, py_class_method_callback, js_name, signature);
+        } else if (PyMethod_Check(attrib_value) || PyFunction_Check(attrib_value)) {
             js_value = ((py_function *) py_function_to_template(attrib_value))->js_template->Get(isolate);
             templ->Set(js_name, js_value);
         } else {
