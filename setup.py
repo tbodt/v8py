@@ -68,7 +68,7 @@ def get_v8():
         with cd('depot_tools'):
             run('git pull')
 
-    if not os.path.isdir('v8'):
+    if not os.path.isdir('v8/.git'):
         print 'downloading v8'
         run('fetch v8')
     else:
