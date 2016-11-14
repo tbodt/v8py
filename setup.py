@@ -52,11 +52,8 @@ def v8_exists():
         lib_filename = 'lib{}.a'.format(library)
         for lib_dir in library_dirs:
             lib_path = os.path.join(lib_dir, lib_filename)
-            print 'checking', lib_path
             if os.path.isfile(lib_path):
-                print library, 'exists'
                 return True
-        print library, 'does not exist'
         return False
     return all(library_exists(lib) for lib in libraries)
 
