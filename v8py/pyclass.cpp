@@ -86,12 +86,16 @@ PyObject *py_class_new(PyObject *cls) {
         Local<Data> js_value;
 
         if (PyMethod_Check(attrib_value) && PyMethod_GET_SELF(attrib_value) == NULL) {
+            // if it's an unbound method, create a method
             js_value = FunctionTemplate::New(isolate, py_class_method_callback, js_name, signature);
-        } else if (PyMethod_Check(attrib_value) || PyFunction_Check(attrib_value)) {
-            js_value = ((py_function *) py_function_to_template(attrib_value))->js_template->Get(isolate);
-            templ->Set(js_name, js_value);
         } else {
-            js_value = js_from_py(attrib_value, no_ctx);
+            if (PyCallable_Check(attrib_value)) {
+                // if it's some kind of callable, create a function
+                js_value = ((py_function *) py_function_to_template(attrib_value))->js_template->Get(isolate);
+            } else {
+                // otherwise just convert
+                js_value = js_from_py(attrib_value, no_ctx);
+            }
             templ->Set(js_name, js_value);
         }
 
