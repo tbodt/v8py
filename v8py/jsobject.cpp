@@ -15,7 +15,7 @@ PyMethodDef js_object_methods[] = {
     {NULL}
 };
 PyMappingMethods js_object_mapping_methods = {
-    NULL, (binaryfunc) js_object_getattro, (objobjargproc) js_object_setattro
+    (lenfunc) js_object_length, (binaryfunc) js_object_getattro, (objobjargproc) js_object_setattro
 };
 int js_object_type_init() {
     js_object_type.tp_name = "v8py.Object";
@@ -84,6 +84,18 @@ int js_object_setattro(js_object *self, PyObject *name, PyObject *value) {
         return -1;
     }
     return 0;
+}
+
+Py_ssize_t js_object_length(js_object *self) {
+    PyObject *length_name = PyString_FromString("length");
+    PyObject *length_obj = js_object_getattro(self, length_name);
+    if (length_obj == NULL) {
+        return -1;
+    }
+    Py_ssize_t length = PyNumber_AsSsize_t(length_obj, NULL);
+    Py_DECREF(length_name);
+    Py_DECREF(length_obj);
+    return length;
 }
 
 PyObject *js_object_dir(js_object *self) {

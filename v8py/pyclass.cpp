@@ -102,15 +102,27 @@ PyObject *py_class_new(PyObject *cls) {
     Py_DECREF(attributes);
 
     templ->SetClassName(js_from_py(self->cls_name, no_ctx).As<String>());
-    // first one is magic object
-    // second one is actual pointer
+    // first one is magic pointer
+    // second one is actual object
     templ->InstanceTemplate()->SetInternalFieldCount(2);
-    templ->InstanceTemplate()->SetHandler(NamedPropertyHandlerConfiguration(
-                py_class_getter_callback,
-                py_class_setter_callback,
-                py_class_query_callback,
-                py_class_deleter_callback,
-                py_class_enumerator_callback));
+
+    // if the class defines __getitem__ and keys(), it's a mapping.
+    // if __setitem__ is implemented, the properties are writable.
+    // if __delitem__ is implemented, the properties are configurable.
+    if (PyObject_HasAttrString(cls, "__getitem__") &&
+            PyObject_HasAttrString(cls, "keys")) {
+        NamedPropertyHandlerConfiguration callbacks;
+        callbacks.getter = py_class_getter_callback;
+        callbacks.enumerator = py_class_enumerator_callback;
+        callbacks.query = py_class_query_callback;
+        if (PyObject_HasAttrString(cls, "__setitem__")) {
+            callbacks.setter = py_class_setter_callback;
+        }
+        if (PyObject_HasAttrString(cls, "__delitem__")) {
+            callbacks.deleter = py_class_deleter_callback;
+        }
+        templ->InstanceTemplate()->SetHandler(callbacks);
+    }
 
     self->templ = new Persistent<FunctionTemplate>();
     self->templ->Reset(isolate, templ);

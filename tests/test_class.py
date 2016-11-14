@@ -8,9 +8,6 @@ def Test(request):
         class Test(object):
             def method(self):
                 return 'thing'
-            def __getitem__(self, name):
-                if name == 'getitem':
-                    return 'value'
             @staticmethod
             def static_method():
                 return 'static'
@@ -22,9 +19,6 @@ def Test(request):
         class Test:
             def method(self):
                 return 'thing'
-            def __getitem__(self, name):
-                if name == 'getitem':
-                    return 'value'
             @staticmethod
             def static_method():
                 return 'static'
@@ -56,12 +50,6 @@ def test_calling_methods_from_python(context):
 def test_object_passthrough(context):
     test = context.eval('test = new Test()')
     assert test is context.test
-
-def test_getter(context):
-    test = context.eval('test = new Test()')
-    test.foo = 'bar'
-    assert context.eval('test.foo') == 'bar'
-    assert context.eval('test.getitem') == 'value'
 
 def test_static_method(context):
     assert context.eval('Test.static_method()') == 'static'

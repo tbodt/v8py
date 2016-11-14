@@ -43,26 +43,10 @@ void py_class_method_callback(const FunctionCallbackInfo<Value> &info) {
 }
 
 // --- Interceptors ---
+// TODO everything needs to be fixed with regards to exception handling
 
-PyObject *get_self(const PropertyCallbackInfo<Value> &info) {
-    return (PyObject *) info.This()->GetInternalField(1).As<External>()->Value();
-}
-
-// Returns whether the property is provided by the object's class, as opposed to the object (via __dict__, __getattr__, etc.).
-// Basically, true for methods and class properties.
-// If false, interceptors should not do anything and let default behavior happen.
-// TODO return false for descriptors, maybe? or maybe specific handlers override general handlers?
-int is_own_property(PyObject *object, PyObject *name) {
-    PyObject *type;
-    if (PyInstance_Check(object)) {
-        type = PyObject_GetAttrString(object, "__class__");
-    } else {
-        type = (PyObject *) Py_TYPE(object);
-        Py_INCREF(type);
-    }
-    int result = !PyObject_HasAttr(type, name);
-    Py_DECREF(type);
-    return result;
+template <class T> PyObject *get_self(const PropertyCallbackInfo<T> &info) {
+    return (PyObject *) info.This()->GetInternalField(1).template As<External>()->Value();
 }
 
 void py_class_getter_callback(Local<Name> js_name, const PropertyCallbackInfo<Value> &info) {
@@ -71,36 +55,67 @@ void py_class_getter_callback(Local<Name> js_name, const PropertyCallbackInfo<Va
     Local<Context> context = isolate->GetCurrentContext();
     
     PyObject *name = py_from_js(js_name, context);
-    PyObject *self = get_self(info);
-    if (is_own_property(self, name)) {
-        PyObject *value = PyObject_GetItem(self, name);
-        if (value != NULL && value != Py_None) {
-            info.GetReturnValue().Set(js_from_py(value, context));
-            Py_DECREF(value);
-        } else {
-            value = PyObject_GetAttr(self, name);
-            if (value != NULL) {
-                info.GetReturnValue().Set(js_from_py(value, context));
-                Py_DECREF(value);
-            }
-        }
+    PyObject *value = PyObject_GetItem(get_self(info), name);
+    if (value != NULL) {
+        info.GetReturnValue().Set(js_from_py(value, context));
+        Py_DECREF(value);
     }
     Py_DECREF(name);
 }
 
-void py_class_setter_callback(Local<Name> name, Local<Value> value, const PropertyCallbackInfo<Value> &info) {
-    printf("setter\n");
+void py_class_setter_callback(Local<Name> js_name, Local<Value> js_value, const PropertyCallbackInfo<Value> &info) {
+    Isolate::Scope is(isolate);
+    HandleScope hs(isolate);
+    Local<Context> context = isolate->GetCurrentContext();
+
+    PyObject *name = py_from_js(js_name, context);
+    PyObject *value = py_from_js(js_value, context);
+    if (PyObject_SetItem(get_self(info), name, value) >= 0) {
+        info.GetReturnValue().Set(js_value);
+    }
+    Py_DECREF(name);
+    Py_DECREF(value);
 }
 
-void py_class_query_callback(Local<Name> name, const PropertyCallbackInfo<Integer> &info) {
-    printf("query\n");
+void py_class_query_callback(Local<Name> js_name, const PropertyCallbackInfo<Integer> &info) {
+    Isolate::Scope is(isolate);
+    HandleScope hs(isolate);
+
+    int descriptor = DontEnum;
+    PyObject *cls = (PyObject *) Py_TYPE(get_self(info));
+    if (!PyObject_HasAttrString(cls, "__setitem__")) {
+        descriptor |= ReadOnly;
+    }
+    if (!PyObject_HasAttrString(cls, "__delitem__")) {
+        descriptor |= DontDelete;
+    }
+    info.GetReturnValue().Set(descriptor);
 }
 
-void py_class_deleter_callback(Local<Name> name, const PropertyCallbackInfo<Boolean> &info) {
-    printf("deleter\n");
+void py_class_deleter_callback(Local<Name> js_name, const PropertyCallbackInfo<Boolean> &info) {
+    Isolate::Scope is(isolate);
+    HandleScope hs(isolate);
+    Local<Context> context = isolate->GetCurrentContext();
+
+    PyObject *name = py_from_js(js_name, context);
+    if (PyObject_DelItem(get_self(info), name) >= 0) {
+        info.GetReturnValue().Set(True(isolate));
+    } else {
+        info.GetReturnValue().Set(False(isolate));
+    }
+    Py_DECREF(name);
 }
 
 void py_class_enumerator_callback(const PropertyCallbackInfo<Array> &info) {
-    printf("enumerator\n");
+    Isolate::Scope is(isolate);
+    HandleScope hs(isolate);
+    Local<Context> context = isolate->GetCurrentContext();
+
+    PyObject *keys = PyObject_CallMethod(get_self(info), "keys", "");
+    Local<Array> js_keys = Array::New(isolate, PySequence_Length(keys));
+    for (int i = 0; i < PySequence_Length(keys); i++) {
+        js_keys->Set(context, i, js_from_py(PySequence_ITEM(keys, i), context)).FromJust();
+    }
+    info.GetReturnValue().Set(js_keys);
 }
 
