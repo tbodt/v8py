@@ -42,6 +42,7 @@ COMMAND_ENV.pop('CC', None)
 COMMAND_ENV.pop('CXX', None)
 
 def run(command):
+    print command
     check_call(command, shell=True, env=COMMAND_ENV)
 
 def v8_exists():
@@ -70,6 +71,7 @@ def get_v8():
 
     if not os.path.isdir('v8/.git'):
         print 'downloading v8'
+        os.remove('.gclient')
         run('fetch v8')
     else:
         print 'updating v8'
