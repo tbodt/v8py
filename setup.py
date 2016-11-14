@@ -71,9 +71,7 @@ def get_v8():
 
     if not os.path.isdir('v8/.git'):
         print 'downloading v8'
-        if os.path.exists('.gclient'):
-            os.remove('.gclient')
-        run('fetch v8')
+        run('fetch --force --no-history v8')
     else:
         print 'updating v8'
         with cd('v8'):
