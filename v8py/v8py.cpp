@@ -12,24 +12,6 @@
 
 using namespace v8;
 
-class MallocAllocator : public ArrayBuffer::Allocator {
-    public:
-    virtual void *Allocate(size_t size) {
-        void *data = AllocateUninitialized(size);
-        if (data != NULL)
-            memset(data, 0, size);
-        return data;
-    }
-
-    virtual void *AllocateUninitialized(size_t size) {
-        return malloc(size);
-    }
-
-    virtual void Free(void *data, size_t size) {
-        free(data);
-    }
-};
-
 static Platform *current_platform = NULL;
 Isolate *isolate = NULL;
 void initialize_v8() {
@@ -42,7 +24,7 @@ void initialize_v8() {
         V8::SetFlagsFromString("--expose_gc", strlen("--expose_gc"));
 
         Isolate::CreateParams create_params;
-        create_params.array_buffer_allocator = new MallocAllocator();
+        create_params.array_buffer_allocator = ArrayBuffer::Allocator::NewDefaultAllocator();
         isolate = Isolate::New(create_params);
     }
 }
