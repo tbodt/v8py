@@ -14,7 +14,6 @@ def Test(request):
                 if key == 'getitem':
                     self.value = value
             def __delitem__(self, key):
-                print 'DELITEM FTW'
                 if key == 'getitem':
                     self.value = None
             def keys(self):
@@ -30,7 +29,6 @@ def Test(request):
                 if key == 'getitem':
                     self.value = value
             def __delitem__(self, key):
-                print 'DELITEM FTW'
                 if key == 'getitem':
                     self.value = None
             def keys(self):
