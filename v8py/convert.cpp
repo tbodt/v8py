@@ -49,6 +49,9 @@ PyObject *py_from_js(Local<Value> value, Local<Context> context) {
         Local<String> str_value = value.As<String>();
         size_t bufsize = str_value->Length() * sizeof(uint16_t);
         uint16_t *buf = (uint16_t *) malloc(bufsize);
+        if (buf == NULL) {
+            return NULL;
+        }
         str_value->Write(buf, 0, bufsize, String::WriteOptions::NO_NULL_TERMINATION);
         PyObject *py_value = PyUnicode_DecodeUTF16((const char *) buf, bufsize, NULL, NULL);
         free(buf);
@@ -64,8 +67,7 @@ PyObject *py_from_js(Local<Value> value, Local<Context> context) {
     // i'm not quite ready to turn this into an assert quite yet
     // i'll do that when I've special-cased every primitive type
     printf("cannot convert\n");
-    Py_INCREF(Py_None);
-    return Py_None;
+    PY_RETURN_NONE;
 }
 
 Local<Value> js_from_py(PyObject *value, Local<Context> context) {
