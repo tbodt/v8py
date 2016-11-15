@@ -35,7 +35,9 @@ PyObject *js_array_concat(js_array *self, PyObject *other) {
     if (self_list == NULL) {
         return NULL;
     }
-    return PySequence_Concat(self_list, other);
+    PyObject *result = PySequence_Concat(self_list, other);
+    Py_DECREF(self_list);
+    return result;
 }
 
 PyObject *js_array_repeat(js_array *self, Py_ssize_t count) {
@@ -43,7 +45,9 @@ PyObject *js_array_repeat(js_array *self, Py_ssize_t count) {
     if (self_list == NULL) {
         return NULL;
     }
-    return PySequence_Repeat(self_list, count);
+    PyObject *result = PySequence_Repeat(self_list, count);
+    Py_DECREF(self_list);
+    return result;
 }
 
 PyObject *js_array_getitem(js_array *self, Py_ssize_t i) {
