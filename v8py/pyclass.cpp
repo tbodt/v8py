@@ -53,9 +53,9 @@ PyObject *py_class_to_template(PyObject *cls) {
 // 1 is true, 0 is false, -1 is failure
 int generic_has_attr_string(PyObject *obj, const char *name_str) {
     PyObject *name = PyString_FromString(name_str);
-    PyObject *value = PyObject_GenericGetAttr(obj, name_str);
+    PyObject *value = PyObject_GenericGetAttr(obj, name);
     if (value == NULL) {
-        PyExc_Clear();
+        PyErr_Clear();
         Py_DECREF(name);
         return 1;
     }
