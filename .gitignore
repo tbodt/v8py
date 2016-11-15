@@ -1,6 +1,8 @@
 engine
 v8
 depot_tools
+.gclient
+.gclient_entries
 
 *.pyc
 v8py.so
@@ -10,3 +12,4 @@ dist
 .eggs
 
 Session.vim
+TODO
