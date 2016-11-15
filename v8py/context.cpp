@@ -114,7 +114,7 @@ int context_setattro(context *self, PyObject *name, PyObject *value) {
 int context_setitem(context *self, PyObject *name, PyObject *value) {
     PyObject *global = context_get_global(self, NULL);
     if (global == NULL) {
-        return NULL;
+        return -1;
     }
     return PyObject_SetAttr(global, name, value);
 }
