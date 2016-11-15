@@ -33,14 +33,11 @@ int js_object_type_init() {
     return PyType_Ready(&js_object_type);
 }
 
-PyObject *js_object_fake_new(PyTypeObject *type, PyObject *args, PyObject *kwargs) {
-    PyErr_SetString(PyExc_NotImplementedError, "JSObjects can't be created from Python");
-    return NULL;
-}
-
 js_object *js_object_new(Local<Object> object, Local<Context> context) {
     js_object *self;
-    if (object->IsCallable()) {
+    if (object->IsArray()) {
+        self = (js_object *) js_array_type.tp_alloc(&js_array_type, 0);
+    } else if (object->IsCallable()) {
         self = (js_object *) js_function_type.tp_alloc(&js_function_type, 0);
     } else {
         self = (js_object *) js_object_type.tp_alloc(&js_object_type, 0);
@@ -54,6 +51,15 @@ js_object *js_object_new(Local<Object> object, Local<Context> context) {
 }
 
 PyObject *js_object_getattro(js_object *self, PyObject *name) {
+    // Sadly, an object is not supposed to be a sequence and a mapping at the same time.
+    if (PyIndex_Check(name)) {
+        Py_ssize_t index = PyNumber_AsSsize_t(name, PyExc_IndexError);
+        if (index < 0 && PyErr_Occurred()) {
+            return NULL;
+        }
+        return PySequence_GetItem((PyObject *) self, index);
+    }
+
     HandleScope hs(isolate);
     Local<Object> object = self->object.Get(isolate);
     Local<Context> context = self->context.Get(isolate);
@@ -75,6 +81,15 @@ PyObject *js_object_getattro(js_object *self, PyObject *name) {
 }
 
 int js_object_setattro(js_object *self, PyObject *name, PyObject *value) {
+    // Sadly, an object is not supposed to be a sequence and a mapping at the same time.
+    if (PyIndex_Check(name)) {
+        Py_ssize_t index = PyNumber_AsSsize_t(name, PyExc_IndexError);
+        if (index < 0 && PyErr_Occurred()) {
+            return NULL;
+        }
+        return PySequence_SetItem((PyObject *) self, index, value);
+    }
+
     HandleScope hs(isolate);
     Local<Object> object = self->object.Get(isolate);
     Local<Context> context = self->context.Get(isolate);
