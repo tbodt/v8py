@@ -137,3 +137,9 @@ PyObject *js_object_repr(js_object *self) {
     return py_from_js(object->ToString(), context);
 }
 
+void js_object_dealloc(js_object *self) {
+    self->object.Reset();
+    self->context.Reset();
+    self->ob_type->tp_free((PyObject *) self);
+}
+

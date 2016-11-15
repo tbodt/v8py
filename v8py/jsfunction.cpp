@@ -37,12 +37,6 @@ PyObject *js_function_call(js_function *self, PyObject *args, PyObject *kwargs) 
     return py_from_js(result, context);
 }
 
-void js_object_dealloc(js_object *self) {
-    self->object.Reset();
-    self->context.Reset();
-    self->ob_type->tp_free((PyObject *) self);
-}
-
 void js_function_dealloc(js_function *self) {
     self->js_this.Reset();
     js_object_dealloc((js_object *) self);
