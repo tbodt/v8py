@@ -66,6 +66,7 @@ PyObject *js_object_getattro(js_object *self, PyObject *name) {
     Local<Value> js_name = js_from_py(name, context);
 
     if (!object->Has(context, js_name).FromJust()) {
+        // TODO fix this so that it works
         PyObject *class_name = py_from_js(object->GetConstructorName(), context);
         PyErr_Format(PyExc_AttributeError, "'%.50s' JavaScript object has no attribute '%.400s'", 
                 PyString_AS_STRING(class_name), PyString_AS_STRING(name));
@@ -73,6 +74,10 @@ PyObject *js_object_getattro(js_object *self, PyObject *name) {
         return NULL;
     }
     PyObject *value = py_from_js(object->Get(context, js_name).ToLocalChecked(), context);
+    if (value == NULL) {
+        return NULL;
+    }
+    // if this was called like object.method() then bind the return value to make it callable
     if (Py_TYPE(value) == &js_function_type) {
         js_function *func = (js_function *) value;
         func->js_this.Reset(isolate, object);
@@ -103,8 +108,12 @@ int js_object_setattro(js_object *self, PyObject *name, PyObject *value) {
 
 Py_ssize_t js_object_length(js_object *self) {
     PyObject *length_name = PyString_FromString("length");
+    if (length_name == NULL) {
+        return -1;
+    }
     PyObject *length_obj = js_object_getattro(self, length_name);
     if (length_obj == NULL) {
+        Py_DECREF(length_name);
         return -1;
     }
     Py_ssize_t length = PyNumber_AsSsize_t(length_obj, NULL);
