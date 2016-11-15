@@ -65,3 +65,7 @@ PyMODINIT_FUNC initv8py() {
         return;
 }
 
+NORETURN void assert_failed(const char *condition, const char *file, int line) {
+    fprintf(stderr, "assert(%s) %s:%d\n", condition, file, line);
+    abort();
+}
