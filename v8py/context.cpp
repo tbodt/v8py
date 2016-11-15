@@ -65,12 +65,12 @@ PyObject *context_eval(context *self, PyObject *program) {
 
     MaybeLocal<Script> script = Script::Compile(context, js_from_py(program, context).As<String>());
     if (script.IsEmpty()) {
-        PyErr_SetString(PyExc_ValueError, "javascript compilation error");
+        PyErr_SetString(PyExc_ValueError, "JavaScript compilation error");
         return NULL;
     }
     MaybeLocal<Value> result = script.ToLocalChecked()->Run(context);
     if (result.IsEmpty()) {
-        PyErr_SetString(PyExc_ValueError, "javascript runtime error");
+        PyErr_SetString(PyExc_ValueError, "JavaScript runtime error");
         return NULL;
     }
 

@@ -87,7 +87,7 @@ static void py_function_callback(const FunctionCallbackInfo<Value> &info) {
     PyObject *result = PyObject_CallObject(self->function, args);
     if (result == NULL) {
         // function threw an exception
-        // TODO throw an actual javascript exception
+        // TODO throw an actual JavaScript exception
         printf("exception was thrown");
         Py_INCREF(Py_None);
         result = Py_None;
