@@ -85,7 +85,7 @@ int js_object_setattro(js_object *self, PyObject *name, PyObject *value) {
     if (PyIndex_Check(name)) {
         Py_ssize_t index = PyNumber_AsSsize_t(name, PyExc_IndexError);
         if (index < 0 && PyErr_Occurred()) {
-            return NULL;
+            return -1;
         }
         return PySequence_SetItem((PyObject *) self, index, value);
     }

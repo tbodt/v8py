@@ -98,6 +98,7 @@ Local<Value> js_from_py(PyObject *value, Local<Context> context) {
         } else if (PyInt_Check(value)) {
             js_value = Integer::New(isolate, PyInt_AS_LONG(value));
         } else {
+            // TODO make this work right
             printf("what the hell kind of number is this?!");
             return hs.Escape(Undefined(isolate));
         }
@@ -144,12 +145,10 @@ PyObject *pys_from_jss(const FunctionCallbackInfo<Value> &js_args, Local<Context
     return py_args;
 }
 
-Local<Value> *pys_from_jss(PyObject *py_args, Local<Context> context, int *argc) {
-    *argc = PyTuple_GET_SIZE(py_args);
-    Local<Value> *js_args = new Local<Value>[*argc];
-    for (int i = 0; i < *argc; i++) {
+// js_args is an out parameter, expected to contain enough space
+void jss_from_pys(PyObject *py_args, Local<Value> *js_args, Local<Context> context) {
+    for (int i = 0; i < PyTuple_GET_SIZE(py_args); i++) {
         js_args[i] = js_from_py(PyTuple_GET_ITEM(py_args, i), context);
     }
-    return js_args;
 }
 

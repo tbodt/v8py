@@ -29,9 +29,11 @@ PyObject *js_function_call(js_function *self, PyObject *args, PyObject *kwargs) 
     } else {
         js_this = self->js_this.Get(isolate);
     }
-    int argc;
-    Local<Value> *argv = pys_from_jss(args, context, &argc);
+    int argc = PyTuple_GET_SIZE(args);
+    Local<Value> *argv = new Local<Value>[argc];
+    jss_from_pys(args, argv, context);
     Local<Value> result = object->CallAsFunction(context, js_this, argc, argv).ToLocalChecked();
+    delete[] argv;
     return py_from_js(result, context);
 }
 
