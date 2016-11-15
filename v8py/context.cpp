@@ -124,6 +124,6 @@ PyObject *context_gc(context *self) {
 
     isolate->RequestGarbageCollectionForTesting(Isolate::GarbageCollectionType::kFullGarbageCollection);
 
-    PY_RETURN_NONE;
+    Py_RETURN_NONE;
 }
 

@@ -67,7 +67,7 @@ PyObject *py_from_js(Local<Value> value, Local<Context> context) {
     // i'm not quite ready to turn this into an assert quite yet
     // i'll do that when I've special-cased every primitive type
     printf("cannot convert\n");
-    PY_RETURN_NONE;
+    Py_RETURN_NONE;
 }
 
 Local<Value> js_from_py(PyObject *value, Local<Context> context) {
