@@ -39,13 +39,29 @@ PyObject *py_class_to_template(PyObject *cls) {
 
     PyObject *templ = PyDict_GetItem(template_dict, cls);
     if (templ != NULL) {
+        // PyDict_GetItem returns a borrowed reference
         Py_INCREF(templ);
         return templ;
     }
 
     templ = py_class_new(cls);
     PyDict_SetItem(template_dict, cls, templ);
+    Py_DECREF(templ);
     return templ;
+}
+
+// 1 is true, 0 is false, -1 is failure
+int generic_has_attr_string(PyObject *obj, const char *name_str) {
+    PyObject *name = PyString_FromString(name_str);
+    PyObject *value = PyObject_GenericGetAttr(obj, name_str);
+    if (value == NULL) {
+        PyExc_Clear();
+        Py_DECREF(name);
+        return 1;
+    }
+    Py_DECREF(value);
+    Py_DECREF(name);
+    return 0;
 }
 
 PyObject *py_class_new(PyObject *cls) {
@@ -64,8 +80,12 @@ PyObject *py_class_new(PyObject *cls) {
     // See template.cpp for why I'm doing this.
     Py_INCREF(self);
 
+    Py_INCREF(cls);
     self->cls = cls;
     self->cls_name = PyObject_GetAttrString(cls, "__name__");
+    if (self->cls_name == NULL) {
+        Py_DECREF(self->cls);
+    }
 
     Local<External> js_self = External::New(isolate, self);
     Local<FunctionTemplate> templ = FunctionTemplate::New(isolate, py_class_construct_callback, js_self);
@@ -73,8 +93,14 @@ PyObject *py_class_new(PyObject *cls) {
     Local<Signature> signature = Signature::New(isolate, templ);
 
     PyObject *attributes = PyObject_Dir(cls);
+    if (attributes == NULL) {
+        goto attributes_failed;
+    }
     for (int i = 0; i < PySequence_Length(attributes); i++) {
         PyObject *attrib_name = PySequence_ITEM(attributes, i);
+        if (attrib_name == NULL) {
+            goto attrib_failed;
+        }
         // skip names with too many underscores
         if (py_bool(PyObject_CallMethod(attrib_name, "startswith", "s", "__")) &&
                 py_bool(PyObject_CallMethod(attrib_name, "endswith", "s", "__"))) {
@@ -82,6 +108,10 @@ PyObject *py_class_new(PyObject *cls) {
             continue;
         }
         PyObject *attrib_value = PyObject_GetAttr(cls, attrib_name);
+        if (attrib_value == NULL) {
+            Py_DECREF(attrib_value);
+            goto attrib_failed;
+        }
         Local<Name> js_name = js_from_py(attrib_name, no_ctx).As<Name>();
         Local<Data> js_value;
 
@@ -91,7 +121,13 @@ PyObject *py_class_new(PyObject *cls) {
         } else {
             if (PyCallable_Check(attrib_value)) {
                 // if it's some kind of callable, create a function
-                js_value = ((py_function *) py_function_to_template(attrib_value))->js_template->Get(isolate);
+                py_function *function = (py_function *) py_function_to_template(attrib_value);
+                if (function == NULL) {
+                    Py_DECREF(attrib_name);
+                    Py_DECREF(attrib_value);
+                    goto attrib_failed;
+                }
+                js_value = function->js_template->Get(isolate);
             } else {
                 // otherwise just convert
                 js_value = js_from_py(attrib_value, no_ctx);
@@ -103,7 +139,6 @@ PyObject *py_class_new(PyObject *cls) {
         Py_DECREF(attrib_name);
         Py_DECREF(attrib_value);
     }
-    Py_DECREF(attributes);
 
     templ->SetClassName(js_from_py(self->cls_name, no_ctx).As<String>());
     // first one is magic pointer
@@ -113,16 +148,16 @@ PyObject *py_class_new(PyObject *cls) {
     // if the class defines __getitem__ and keys(), it's a mapping.
     // if __setitem__ is implemented, the properties are writable.
     // if __delitem__ is implemented, the properties are configurable.
-    if (PyObject_HasAttrString(cls, "__getitem__") &&
-            PyObject_HasAttrString(cls, "keys")) {
+    if (generic_has_attr_string(cls, "__getitem__") &&
+            generic_has_attr_string(cls, "keys")) {
         NamedPropertyHandlerConfiguration callbacks;
         callbacks.getter = py_class_getter_callback;
         callbacks.enumerator = py_class_enumerator_callback;
         callbacks.query = py_class_query_callback;
-        if (PyObject_HasAttrString(cls, "__setitem__")) {
+        if (generic_has_attr_string(cls, "__setitem__")) {
             callbacks.setter = py_class_setter_callback;
         }
-        if (PyObject_HasAttrString(cls, "__delitem__")) {
+        if (generic_has_attr_string(cls, "__delitem__")) {
             callbacks.deleter = py_class_deleter_callback;
         }
         templ->InstanceTemplate()->SetHandler(callbacks);
@@ -131,7 +166,16 @@ PyObject *py_class_new(PyObject *cls) {
     self->templ = new Persistent<FunctionTemplate>();
     self->templ->Reset(isolate, templ);
 
+    Py_DECREF(attributes);
     return (PyObject *) self;
+
+attrib_failed:
+    Py_DECREF(attributes);
+attributes_failed:
+    Py_DECREF(self->cls_name);
+    Py_DECREF(self->cls);
+    Py_DECREF(self);
+    return NULL;
 }
 
 Local<Function> py_class_get_constructor(py_class *self, Local<Context> context) {
