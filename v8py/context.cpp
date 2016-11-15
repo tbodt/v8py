@@ -51,7 +51,6 @@ PyObject *context_new(PyTypeObject *type, PyObject *args, PyObject *kwargs) {
         HandleScope handle_scope(isolate);
 
         Local<Context> context = Context::New(isolate);
-
         self->js_context.Reset(isolate, context);
     }
     return (PyObject *) self;
@@ -92,21 +91,32 @@ PyObject *context_getattro(context *self, PyObject *name) {
     return value;
 }
 PyObject *context_getitem(context *self, PyObject *name) {
+    PyObject *global = context_get_global(self, NULL);
+    if (global == NULL) {
+        return NULL;
+    }
     return PyObject_GetAttr(context_get_global(self, NULL), name);
 }
 
 int context_setattro(context *self, PyObject *name, PyObject *value) {
     // use GenericGetAttr to find out if Context defines the property
-    if (PyObject_GenericGetAttr((PyObject *) self, name) == NULL) {
+    PyObject *ctx_value = PyObject_GenericGetAttr((PyObject *) self, name);
+    if (ctx_value == NULL) {
         // if the property is not defined by Context, set it on the global
         PyErr_Clear();
         return context_setitem(self, name, value);
+    } else {
+        Py_DECREF(ctx_value);
     }
     // if the property is defined by Context, delegate
     return PyObject_GenericSetAttr((PyObject *) self, name, value);
 }
 int context_setitem(context *self, PyObject *name, PyObject *value) {
-    return PyObject_SetAttr(context_get_global(self, NULL), name, value);
+    PyObject *global = context_get_global(self, NULL);
+    if (global == NULL) {
+        return NULL;
+    }
+    return PyObject_SetAttr(global, name, value);
 }
 
 PyObject *context_gc(context *self) {
@@ -114,7 +124,6 @@ PyObject *context_gc(context *self) {
 
     isolate->RequestGarbageCollectionForTesting(Isolate::GarbageCollectionType::kFullGarbageCollection);
 
-    Py_INCREF(Py_None);
-    return Py_None;
+    PY_RETURN_NONE;
 }
 
