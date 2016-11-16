@@ -68,6 +68,7 @@ PyObject *py_function_to_template(PyObject *func) {
 
     templ = py_function_new(func);
     PyDict_SetItem(template_dict, func, templ);
+    Py_DECREF(templ);
     return templ;
 }
 
@@ -84,6 +85,10 @@ static void py_function_callback(const FunctionCallbackInfo<Value> &info) {
 
     py_function *self = (py_function *) info.Data().As<External>()->Value();
     PyObject *args = pys_from_jss(info, context);
+    if (args == NULL) {
+        // TODO
+        return;
+    }
     PyObject *result = PyObject_CallObject(self->function, args);
     if (result == NULL) {
         // function threw an exception
@@ -100,6 +105,6 @@ static void py_function_callback(const FunctionCallbackInfo<Value> &info) {
 
 void py_function_dealloc(py_function *self) {
     printf("this should never happen\n");
-    (void) *((char *)NULL); // intentional segfault
+    assert(0);
 }
 
