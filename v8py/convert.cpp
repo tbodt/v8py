@@ -32,6 +32,20 @@ PyObject *py_from_js(Local<Value> value, Local<Context> context) {
             return Py_False;
         }
     }
+
+    if (value->IsArray()) {
+        Local<Array> array = value.As<Array>();
+        PyObject *list = PyList_New(array->Length());
+        for (int i = 0; i < array->Length(); i++) {
+            PyObject *obj = py_from_js(array->Get(context, i).ToLocalChecked(), context);
+            if (obj == NULL) {
+                Py_DECREF(list);
+                return NULL;
+            }
+            PyList_SET_ITEM(list, i, obj);
+        }
+        return list;
+    }
     
     if (value->IsObject()) {
         Local<Object> obj_value = value.As<Object>();
@@ -105,6 +119,17 @@ Local<Value> js_from_py(PyObject *value, Local<Context> context) {
             return hs.Escape(Undefined(isolate));
         }
         return hs.Escape(js_value);
+    }
+
+    if (PyList_Check(value) || PyTuple_Check(value)) {
+        int length = PySequence_Length(value);
+        Local<Array> array = Array::New(isolate, length);
+        for (int i = 0; i < length; i++) {
+            PyObject *item = PySequence_ITEM(value, i);
+            array->Set(context, i, js_from_py(item, context));
+            /* Py_DECREF(item); */
+        }
+        return hs.Escape(array);
     }
 
     if (PyFunction_Check(value)) {
