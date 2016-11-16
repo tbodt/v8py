@@ -14,8 +14,8 @@ PyObject *py_from_js(Local<Value> value, Local<Context> context) {
     }
 
     if (value->IsNull()) {
-        Py_INCREF(Py_None);
-        return Py_None;
+        Py_INCREF(null_object);
+        return null_object;
     }
     if (value->IsUndefined()) {
         Py_INCREF(Py_None);
@@ -87,6 +87,19 @@ PyObject *py_from_js(Local<Value> value, Local<Context> context) {
 Local<Value> js_from_py(PyObject *value, Local<Context> context) {
     EscapableHandleScope hs(isolate);
 
+    if (value == Py_False) {
+        return hs.Escape(False(isolate));
+    }
+    if (value == Py_True) {
+        return hs.Escape(True(isolate));
+    }
+    if (value == Py_None) {
+        return hs.Escape(Undefined(isolate));
+    }
+    if (value == null_object) {
+        return hs.Escape(Null(isolate));
+    }
+
     if (PyUnicode_Check(value)) {
         PyObject *value_encoded = PyUnicode_EncodeUTF8(PyUnicode_AS_UNICODE(value), PyUnicode_GET_SIZE(value), NULL);
         Local<String> js_value = String::NewFromUtf8(isolate, PyString_AS_STRING(value_encoded), NewStringType::kNormal, PyString_GET_SIZE(value_encoded)).ToLocalChecked();
@@ -96,13 +109,6 @@ Local<Value> js_from_py(PyObject *value, Local<Context> context) {
     if (PyString_Check(value)) {
         Local<String> js_value = String::NewFromUtf8(isolate, PyString_AS_STRING(value), NewStringType::kNormal, PyString_GET_SIZE(value)).ToLocalChecked();
         return hs.Escape(js_value);
-    }
-
-    if (value == Py_False) {
-        return hs.Escape(False(isolate));
-    }
-    if (value == Py_True) {
-        return hs.Escape(True(isolate));
     }
 
     if (PyNumber_Check(value) && !PyInstance_Check(value)) {
@@ -145,10 +151,6 @@ Local<Value> js_from_py(PyObject *value, Local<Context> context) {
     if (PyObject_TypeCheck(value, &js_object_type)) {
         js_object *py_value = (js_object *) value;
         return hs.Escape(py_value->object.Get(isolate));
-    }
-
-    if (value == Py_None) {
-        return hs.Escape(Undefined(isolate));
     }
 
     // it's an arbitrary object

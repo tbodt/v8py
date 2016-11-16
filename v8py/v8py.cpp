@@ -38,6 +38,23 @@ PyObject *py_fake_new(PyTypeObject *type, PyObject *args, PyObject *kwargs) {
     return NULL;
 }
 
+void null_dealloc(void *thing) {
+    printf("null dealloc %p\n", thing);
+}
+PyObject *null_object = NULL;
+typedef struct {PyObject_HEAD} null_t;
+PyTypeObject null_type = {PyObject_HEAD_INIT(NULL)};
+int null_type_init() {
+    null_type.tp_name = "v8py.NullType";
+    null_type.tp_basicsize = sizeof(null_t);
+    null_type.tp_flags = Py_TPFLAGS_DEFAULT;
+    null_type.tp_doc = "";
+    if (PyType_Ready(&null_type) < 0)
+        return -1;
+    null_object = null_type.tp_alloc(&null_type, 0);
+    return 0;
+}
+
 PyMODINIT_FUNC initv8py() {
     initialize_v8();
     PyObject *module = Py_InitModule("v8py", v8_methods);
@@ -51,16 +68,18 @@ PyMODINIT_FUNC initv8py() {
 
     if (py_function_type_init() < 0)
         return;
-
     if (py_class_type_init() < 0)
         return;
-    Py_INCREF(&py_class_type);
-    PyModule_AddObject(module, "ClassTemplate", (PyObject *) &py_class_type);
 
     if (js_object_type_init() < 0)
         return;
     if (js_function_type_init() < 0)
         return;
+
+    if (null_type_init() < 0)
+        return;
+    Py_INCREF(null_object);
+    PyModule_AddObject(module, "Null", null_object);
 }
 
 NORETURN void assert_failed(const char *condition, const char *file, int line) {

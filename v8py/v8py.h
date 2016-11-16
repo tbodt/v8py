@@ -3,6 +3,7 @@
 using namespace v8;
 
 extern Isolate *isolate;
+extern PyObject *null_object;
 
 #define NORETURN __attribute__ ((noreturn))
 

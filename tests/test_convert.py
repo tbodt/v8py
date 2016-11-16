@@ -1,10 +1,12 @@
+from v8py import Null
+
 def test_convert_to_py(context):
     assert context.eval('"Hello, world!"') == 'Hello, world!'
     assert context.eval('124987234789413') == 124987234789413
     assert context.eval('189329854.18894627') == 189329854.18894627
     assert context.eval('true') == True
     assert context.eval('false') == False
-    assert context.eval('null') == None
+    assert context.eval('null') == Null
     assert context.eval('undefined') == None
     assert context.eval('[1, 2, 3]') == [1, 2, 3]
 
