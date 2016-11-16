@@ -50,20 +50,6 @@ PyObject *py_class_to_template(PyObject *cls) {
     return templ;
 }
 
-// 1 is true, 0 is false, -1 is failure
-int generic_has_attr_string(PyObject *obj, const char *name_str) {
-    PyObject *name = PyString_FromString(name_str);
-    PyObject *value = PyObject_GenericGetAttr(obj, name);
-    if (value == NULL) {
-        PyErr_Clear();
-        Py_DECREF(name);
-        return 1;
-    }
-    Py_DECREF(value);
-    Py_DECREF(name);
-    return 0;
-}
-
 PyObject *py_class_new(PyObject *cls) {
     Isolate::Scope is(isolate);
     HandleScope hs(isolate);
@@ -148,16 +134,16 @@ PyObject *py_class_new(PyObject *cls) {
     // if the class defines __getitem__ and keys(), it's a mapping.
     // if __setitem__ is implemented, the properties are writable.
     // if __delitem__ is implemented, the properties are configurable.
-    if (generic_has_attr_string(cls, "__getitem__") &&
-            generic_has_attr_string(cls, "keys")) {
+    if (PyObject_HasAttrString(cls, "__getitem__") &&
+            PyObject_HasAttrString(cls, "keys")) {
         NamedPropertyHandlerConfiguration callbacks;
         callbacks.getter = py_class_getter_callback;
         callbacks.enumerator = py_class_enumerator_callback;
         callbacks.query = py_class_query_callback;
-        if (generic_has_attr_string(cls, "__setitem__")) {
+        if (PyObject_HasAttrString(cls, "__setitem__")) {
             callbacks.setter = py_class_setter_callback;
         }
-        if (generic_has_attr_string(cls, "__delitem__")) {
+        if (PyObject_HasAttrString(cls, "__delitem__")) {
             callbacks.deleter = py_class_deleter_callback;
         }
         templ->InstanceTemplate()->SetHandler(callbacks);
