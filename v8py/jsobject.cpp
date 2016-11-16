@@ -78,6 +78,7 @@ int js_object_setattro(js_object *self, PyObject *name, PyObject *value) {
     HandleScope hs(isolate);
     Local<Object> object = self->object.Get(isolate);
     Local<Context> context = self->context.Get(isolate);
+    Context::Scope cs(context);
 
     if (!object->Set(context, js_from_py(name, context), js_from_py(value, context)).FromJust()) {
         PyErr_SetString(PyExc_AttributeError, "Object->Set completely failed for some reason");
