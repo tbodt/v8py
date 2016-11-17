@@ -26,6 +26,7 @@ int js_dictionary_type_init() {
 
     js_dictionary_type.tp_methods = js_dictionary_methods;
     js_dictionary_type.tp_as_mapping = &js_dictionary_mapping_methods;
+    js_dictionary_type.tp_iter = (getiterfunc) js_dictionary_iter;
     return PyType_Ready(&js_dictionary_type);
 }
 
@@ -76,5 +77,16 @@ int js_dictionary_setitem(js_dictionary *self, PyObject *key, PyObject *value) {
         }
     }
     return 0;
+}
+
+PyObject *js_dictionary_iter(js_dictionary *self) {
+    // Implemented as iter(self.keys())
+    PyObject *keys = js_dictionary_keys(self);
+    if (keys == NULL) {
+        return NULL;
+    }
+    PyObject *keys_iter = PyObject_GetIter(keys);
+    Py_DECREF(keys);
+    return keys_iter;
 }
 
