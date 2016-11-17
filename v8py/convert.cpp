@@ -132,7 +132,8 @@ Local<Value> js_from_py(PyObject *value, Local<Context> context) {
         Local<Array> array = Array::New(isolate, length);
         for (int i = 0; i < length; i++) {
             PyObject *item = PySequence_ITEM(value, i);
-            array->Set(context, i, js_from_py(item, context));
+            bool set_worked = array->Set(context, i, js_from_py(item, context)).FromJust();
+            assert(set_worked);
             Py_DECREF(item);
         }
         return hs.Escape(array);
