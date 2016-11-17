@@ -23,7 +23,6 @@ int js_object_type_init() {
     js_object_type.tp_flags = Py_TPFLAGS_DEFAULT;
     js_object_type.tp_doc = "";
 
-    js_object_type.tp_new = py_fake_new;
     js_object_type.tp_dealloc = (destructor) js_object_dealloc;
     js_object_type.tp_getattro = (getattrofunc) js_object_getattro;
     js_object_type.tp_setattro = (setattrofunc) js_object_setattro;

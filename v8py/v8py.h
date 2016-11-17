@@ -18,4 +18,3 @@ NORETURN void assert_failed(const char *condition, const char *file, int line);
 
 #define JSTR(str) String::NewFromUtf8(isolate, str, NewStringType::kNormal).ToLocalChecked()
 
-PyObject *py_fake_new(PyTypeObject *type, PyObject *args, PyObject *kwargs);

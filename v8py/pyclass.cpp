@@ -16,7 +16,6 @@ int py_class_type_init() {
     py_class_type.tp_dealloc = (destructor) py_class_dealloc;
     py_class_type.tp_flags = Py_TPFLAGS_DEFAULT;
     py_class_type.tp_doc = "";
-    py_class_type.tp_new = py_fake_new;
     return PyType_Ready(&py_class_type);
 }
 

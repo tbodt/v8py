@@ -33,11 +33,6 @@ static PyMethodDef v8_methods[] = {
     {NULL},
 };
 
-PyObject *py_fake_new(PyTypeObject *type, PyObject *args, PyObject *kwargs) {
-    PyErr_SetString(PyExc_NotImplementedError, "this type can't be created from Python");
-    return NULL;
-}
-
 void null_dealloc(void *thing) {
     printf("null dealloc %p\n", thing);
 }

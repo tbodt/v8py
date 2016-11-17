@@ -17,7 +17,6 @@ int py_function_type_init() {
     py_function_type.tp_dealloc = (destructor) py_function_dealloc;
     py_function_type.tp_flags = Py_TPFLAGS_DEFAULT;
     py_function_type.tp_doc = "";
-    py_function_type.tp_new = py_fake_new;
     return PyType_Ready(&py_function_type);
 }
 
