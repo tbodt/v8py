@@ -70,6 +70,8 @@ PyMODINIT_FUNC initv8py() {
         return;
     if (js_function_type_init() < 0)
         return;
+    if (js_dictionary_type_init() < 0)
+        return;
 
     if (null_type_init() < 0)
         return;

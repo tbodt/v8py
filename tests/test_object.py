@@ -1,18 +1,21 @@
-def test_jsobject(context):
-    obj = context.eval('({})')
-    obj.foo = 'bar'
-    assert obj['foo'] == 'bar'
-    obj['foo'] = 'bar'
-    assert obj.foo == 'bar'
-    assert dir(obj) == ['foo']
-    assert str(obj) == '[object Object]'
-    # TODO
-    # assert vars(obj) == {'foo': 'bar'}
+import pytest
 
-def test_array_getitem(context):
-    context.eval('arr = [1, 2, 3]')
-    arr = context.glob.arr
-    assert arr[0] == 1
-    assert arr[1] == 2
-    assert arr[2] == 3
+@pytest.fixture
+def obj(context):
+    return context.eval('({})')
+
+def test_attrs(obj):
+    obj.foo = 'bar'
+    assert obj.foo == 'bar'
+def test_items(obj):
+    obj['foo'] = 'bar'
+    assert obj['foo'] == 'bar'
+
+def test_dir(context, obj):
+    obj.foo = 'bar'
+    assert dir(obj) == ['foo']
+
+def test_str(obj):
+    assert str(obj) == '[object Object]'
+    assert repr(obj) == '[object Object]'
 

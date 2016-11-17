@@ -33,8 +33,15 @@ int js_object_type_init() {
 }
 
 js_object *js_object_new(Local<Object> object, Local<Context> context) {
+    Isolate::Scope is(isolate);
+    HandleScope hs(isolate);
+    // TODO use an embedder-specific slot on the context to get Object.prototype
+    Context::Scope cs(context);
+    Local<Object> obj_literal_proto = Object::New(isolate)->GetPrototype().As<Object>();
     js_object *self;
-    if (object->IsCallable()) {
+    if (object->GetPrototype()->StrictEquals(obj_literal_proto)) {
+        self = (js_object *) js_dictionary_type.tp_alloc(&js_dictionary_type, 0);
+    } else if (object->IsCallable()) {
         self = (js_object *) js_function_type.tp_alloc(&js_function_type, 0);
     } else {
         self = (js_object *) js_object_type.tp_alloc(&js_object_type, 0);
@@ -48,6 +55,10 @@ js_object *js_object_new(Local<Object> object, Local<Context> context) {
 }
 
 PyObject *js_object_getattro(js_object *self, PyObject *name) {
+    if (PyObject_GenericHasAttr((PyObject *) self, name)) {
+        return PyObject_GenericGetAttr((PyObject *) self, name);
+    }
+
     HandleScope hs(isolate);
     Local<Object> object = self->object.Get(isolate);
     Local<Context> context = self->context.Get(isolate);
@@ -74,6 +85,10 @@ PyObject *js_object_getattro(js_object *self, PyObject *name) {
 }
 
 int js_object_setattro(js_object *self, PyObject *name, PyObject *value) {
+    if (PyObject_GenericHasAttr((PyObject *) self, name)) {
+        return PyObject_GenericSetAttr((PyObject *) self, name, value);
+    }
+
     HandleScope hs(isolate);
     Local<Object> object = self->object.Get(isolate);
     Local<Context> context = self->context.Get(isolate);
