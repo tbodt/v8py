@@ -133,7 +133,7 @@ Local<Value> js_from_py(PyObject *value, Local<Context> context) {
         for (int i = 0; i < length; i++) {
             PyObject *item = PySequence_ITEM(value, i);
             array->Set(context, i, js_from_py(item, context));
-            /* Py_DECREF(item); */
+            Py_DECREF(item);
         }
         return hs.Escape(array);
     }
@@ -174,7 +174,7 @@ PyObject *pys_from_jss(const FunctionCallbackInfo<Value> &js_args, Local<Context
     for (int i = 0; i < js_args.Length(); i++) {
         PyObject *arg = py_from_js(js_args[i], context);
         if (arg == NULL) {
-            /* Py_DECREF(py_args); */
+            Py_DECREF(py_args);
             return NULL;
         }
         PyTuple_SET_ITEM(py_args, i, arg);
