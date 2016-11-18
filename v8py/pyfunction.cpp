@@ -14,7 +14,6 @@ PyTypeObject py_function_type = {
 int py_function_type_init() {
     py_function_type.tp_name = "v8py.Function";
     py_function_type.tp_basicsize = sizeof(py_function);
-    py_function_type.tp_dealloc = (destructor) py_function_dealloc;
     py_function_type.tp_flags = Py_TPFLAGS_DEFAULT;
     py_function_type.tp_doc = "";
     return PyType_Ready(&py_function_type);
@@ -96,10 +95,5 @@ static void py_function_callback(const FunctionCallbackInfo<Value> &info) {
     Local<Value> js_result = js_from_py(result, context);
     Py_DECREF(result);
     info.GetReturnValue().Set(js_result);
-}
-
-void py_function_dealloc(py_function *self) {
-    printf("this should never happen\n");
-    assert(0);
 }
 

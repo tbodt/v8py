@@ -13,7 +13,6 @@ PyTypeObject py_class_type = {
 int py_class_type_init() {
     py_class_type.tp_name = "v8py.Class";
     py_class_type.tp_basicsize = sizeof(py_class);
-    py_class_type.tp_dealloc = (destructor) py_class_dealloc;
     py_class_type.tp_flags = Py_TPFLAGS_DEFAULT;
     py_class_type.tp_doc = "";
     return PyType_Ready(&py_class_type);
@@ -193,10 +192,5 @@ Local<Object> py_class_create_js_object(py_class *self, PyObject *py_object, Loc
     Py_INCREF(py_object);
     py_class_init_js_object(js_object, py_object);
     return hs.Escape(js_object);
-}
-
-void py_class_dealloc(py_class *self) {
-    printf("this should never happen\n");
-    assert(0);
 }
 

@@ -11,6 +11,7 @@ PyTypeObject js_function_type = {
 int js_function_type_init() {
     js_function_type.tp_name = "v8py.BoundFunction";
     js_function_type.tp_basicsize = sizeof(js_function);
+    js_function_type.tp_dealloc = (destructor) js_function_dealloc;
     js_function_type.tp_flags = Py_TPFLAGS_DEFAULT;
     js_function_type.tp_doc = "";
     js_function_type.tp_call = (ternaryfunc) js_function_call;

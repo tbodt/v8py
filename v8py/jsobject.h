@@ -50,5 +50,6 @@ extern PyTypeObject js_function_type;
 int js_function_type_init();
 
 PyObject *js_function_call(js_function *self, PyObject *args, PyObject *kwargs);
+void js_function_dealloc(js_function *self);
 
 #endif
