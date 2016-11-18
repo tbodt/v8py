@@ -94,9 +94,7 @@ PyObject *context_getattro(context *self, PyObject *name) {
 }
 PyObject *context_getitem(context *self, PyObject *name) {
     PyObject *global = context_get_global(self, NULL);
-    if (global == NULL) {
-        return NULL;
-    }
+    PyErr_PROPAGATE(global);
     return PyObject_GetAttr(context_get_global(self, NULL), name);
 }
 
@@ -115,9 +113,7 @@ int context_setattro(context *self, PyObject *name, PyObject *value) {
 }
 int context_setitem(context *self, PyObject *name, PyObject *value) {
     PyObject *global = context_get_global(self, NULL);
-    if (global == NULL) {
-        return -1;
-    }
+    PyErr_PROPAGATE_(global);
     return PyObject_SetAttr(global, name, value);
 }
 

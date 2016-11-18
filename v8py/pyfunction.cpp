@@ -24,9 +24,7 @@ static void py_function_callback(const FunctionCallbackInfo<Value> &info);
 
 PyObject *py_function_new(PyObject *function) {
     py_function *self = (py_function *) py_function_type.tp_alloc(&py_function_type, 0);
-    if (self == NULL) {
-        return NULL;
-    }
+    PyErr_PROPAGATE(self);
     self->js_template = new Persistent<FunctionTemplate>();
     Py_INCREF(function);
     self->function = function;
@@ -54,9 +52,7 @@ static PyObject *template_dict = NULL;
 PyObject *py_function_to_template(PyObject *func) {
     if (template_dict == NULL) {
         template_dict = PyDict_New();
-        if (template_dict == NULL) {
-            return NULL;
-        }
+        PyErr_PROPAGATE(template_dict);
     }
 
     PyObject *templ = PyDict_GetItem(template_dict, func);

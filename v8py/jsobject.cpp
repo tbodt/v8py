@@ -64,23 +64,17 @@ PyObject *js_object_getattro(js_object *self, PyObject *name) {
     if (!object->Has(context, js_name).FromJust()) {
         // TODO fix this so that it works
         PyObject *class_name = py_from_js(object->GetConstructorName(), context);
-        if (class_name == NULL) {
-            return NULL;
-        }
+        PyErr_PROPAGATE(class_name);
         PyObject *class_name_string = PyObject_Str(class_name);
         Py_DECREF(class_name);
-        if (class_name_string == NULL) {
-            return NULL;
-        }
+        PyErr_PROPAGATE(class_name_string);
         PyErr_Format(PyExc_AttributeError, "'%.50s' JavaScript object has no attribute '%.400s'", 
                 PyString_AS_STRING(class_name_string), PyString_AS_STRING(name));
         Py_DECREF(class_name_string);
         return NULL;
     }
     PyObject *value = py_from_js(object->Get(context, js_name).ToLocalChecked(), context);
-    if (value == NULL) {
-        return NULL;
-    }
+    PyErr_PROPAGATE(value);
     // if this was called like object.method() then bind the return value to make it callable
     if (Py_TYPE(value) == &js_function_type) {
         js_function *func = (js_function *) value;
@@ -108,16 +102,11 @@ int js_object_setattro(js_object *self, PyObject *name, PyObject *value) {
 
 Py_ssize_t js_object_length(js_object *self) {
     PyObject *length_name = PyString_FromString("length");
-    if (length_name == NULL) {
-        return -1;
-    }
+    PyErr_PROPAGATE_(length_name);
     PyObject *length_obj = js_object_getattro(self, length_name);
-    if (length_obj == NULL) {
-        Py_DECREF(length_name);
-        return -1;
-    }
-    Py_ssize_t length = PyNumber_AsSsize_t(length_obj, NULL);
     Py_DECREF(length_name);
+    PyErr_PROPAGATE_(length_obj);
+    Py_ssize_t length = PyNumber_AsSsize_t(length_obj, NULL);
     Py_DECREF(length_obj);
     return length;
 }
@@ -128,9 +117,7 @@ PyObject *js_object_dir(js_object *self) {
     Local<Context> context = self->context.Get(isolate);
     Local<Array> properties = object->GetOwnPropertyNames(context, ALL_PROPERTIES).ToLocalChecked();
     PyObject *py_properties = PyList_New(properties->Length());
-    if (py_properties == NULL) {
-        return NULL;
-    }
+    PyErr_PROPAGATE(py_properties);
     for (int i = 0; i < properties->Length(); i++) {
         PyObject *py_property = py_from_js(properties->Get(context, i).ToLocalChecked(), context);
         PyList_SET_ITEM(py_properties, i, py_property);

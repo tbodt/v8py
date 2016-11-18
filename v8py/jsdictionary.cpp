@@ -84,9 +84,7 @@ int js_dictionary_setitem(js_dictionary *self, PyObject *key, PyObject *value) {
 PyObject *js_dictionary_iter(js_dictionary *self) {
     // Implemented as iter(self.keys())
     PyObject *keys = js_dictionary_keys(self);
-    if (keys == NULL) {
-        return NULL;
-    }
+    PyErr_PROPAGATE(keys);
     PyObject *keys_iter = PyObject_GetIter(keys);
     Py_DECREF(keys);
     return keys_iter;
@@ -94,14 +92,10 @@ PyObject *js_dictionary_iter(js_dictionary *self) {
 
 PyObject *js_dictionary_repr(js_dictionary *self) {
     PyObject *args = Py_BuildValue("(O)", self);
-    if (args == NULL) {
-        return NULL;
-    }
+    PyErr_PROPAGATE(args);
     PyObject *dict = PyObject_Call((PyObject *) &PyDict_Type, args, NULL);
     Py_DECREF(args);
-    if (dict == NULL) {
-        return NULL;
-    }
+    PyErr_PROPAGATE(dict);
     return PyObject_Repr(dict);
 }
 

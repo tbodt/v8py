@@ -42,8 +42,8 @@ void py_class_method_callback(const FunctionCallbackInfo<Value> &info) {
         return;
     }
     PyObject *method = PyObject_GetAttr(self, method_name);
+    Py_DECREF(method_name);
     if (method == NULL) {
-        Py_DECREF(method_name);
         Py_DECREF(args);
         return;
     }
@@ -56,7 +56,6 @@ void py_class_method_callback(const FunctionCallbackInfo<Value> &info) {
 
     Py_DECREF(retval);
     Py_DECREF(method);
-    Py_DECREF(method_name);
     Py_DECREF(args);
 }
 

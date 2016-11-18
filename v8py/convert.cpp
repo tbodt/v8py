@@ -66,9 +66,7 @@ PyObject *py_from_js(Local<Value> value, Local<Context> context) {
         Local<String> str_value = value.As<String>();
         size_t bufsize = str_value->Length() * sizeof(uint16_t);
         uint16_t *buf = (uint16_t *) malloc(bufsize);
-        if (buf == NULL) {
-            return NULL;
-        }
+        PyErr_PROPAGATE(buf);
         str_value->Write(buf, 0, bufsize, String::WriteOptions::NO_NULL_TERMINATION);
         PyObject *py_value = PyUnicode_DecodeUTF16((const char *) buf, bufsize, NULL, NULL);
         free(buf);
@@ -176,9 +174,7 @@ Local<Value> js_from_py(PyObject *value, Local<Context> context) {
 
 PyObject *pys_from_jss(const FunctionCallbackInfo<Value> &js_args, Local<Context> context) {
     PyObject *py_args = PyTuple_New(js_args.Length());
-    if (py_args == NULL) {
-        return NULL;
-    }
+    PyErr_PROPAGATE(py_args);
     for (int i = 0; i < js_args.Length(); i++) {
         PyObject *arg = py_from_js(js_args[i], context);
         if (arg == NULL) {

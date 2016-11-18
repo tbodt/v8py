@@ -31,9 +31,7 @@ static PyObject *template_dict = NULL;
 PyObject *py_class_to_template(PyObject *cls) {
     if (template_dict == NULL) {
         template_dict = PyDict_New();
-        if (template_dict == NULL) {
-            return NULL;
-        }
+        PyErr_PROPAGATE(template_dict);
     }
 
     PyObject *templ = PyDict_GetItem(template_dict, cls);
@@ -59,9 +57,7 @@ PyObject *py_class_new(PyObject *cls) {
     Local<Context> no_ctx;
 
     py_class *self = (py_class *) py_class_type.tp_alloc(&py_class_type, 0);
-    if (self == NULL) {
-        return NULL;
-    }
+    PyErr_PROPAGATE(self);
     // See template.cpp for why I'm doing this.
     Py_INCREF(self);
 
