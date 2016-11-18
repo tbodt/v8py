@@ -24,6 +24,8 @@ int js_dictionary_type_init() {
     js_dictionary_type.tp_flags = Py_TPFLAGS_DEFAULT;
     js_dictionary_type.tp_doc = "";
 
+    js_dictionary_type.tp_repr = (reprfunc) js_dictionary_repr;
+    js_dictionary_type.tp_str = (reprfunc) js_dictionary_repr;
     js_dictionary_type.tp_methods = js_dictionary_methods;
     js_dictionary_type.tp_as_mapping = &js_dictionary_mapping_methods;
     js_dictionary_type.tp_iter = (getiterfunc) js_dictionary_iter;
@@ -88,5 +90,18 @@ PyObject *js_dictionary_iter(js_dictionary *self) {
     PyObject *keys_iter = PyObject_GetIter(keys);
     Py_DECREF(keys);
     return keys_iter;
+}
+
+PyObject *js_dictionary_repr(js_dictionary *self) {
+    PyObject *args = Py_BuildValue("(O)", self);
+    if (args == NULL) {
+        return NULL;
+    }
+    PyObject *dict = PyObject_Call((PyObject *) &PyDict_Type, args, NULL);
+    Py_DECREF(args);
+    if (dict == NULL) {
+        return NULL;
+    }
+    return PyObject_Repr(dict);
 }
 

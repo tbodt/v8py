@@ -27,6 +27,10 @@ class TestPythonProxy(object):
         assert 'foo' in o
         assert 'bar' not in o
 
+    def test_repr(self, o):
+        assert repr(o) == repr(dict(o))
+        assert str(o) == str(dict(o))
+
     def test_dictification(self, o):
         assert dict(o) == {'foo': 'bar'}
 
