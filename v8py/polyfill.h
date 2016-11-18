@@ -25,4 +25,6 @@ inline extern int PyObject_GenericHasAttr(PyObject *obj, PyObject *name) {
     return 1;
 }
 
+#define PyClass_GET_BASES(cls) (((PyClassObject *) cls)->cl_bases)
+
 #endif

@@ -33,21 +33,24 @@ void py_class_method_callback(const FunctionCallbackInfo<Value> &info) {
     PyObject *self = (PyObject *) js_self->GetInternalField(1).As<External>()->Value();
     PyObject *args = pys_from_jss(info, context);
     if (args == NULL) {
+        // TODO
         return;
+    }
+    // add self onto the beginning of the arg list
+    PyObject *all_args = PyTuple_New(PyTuple_Size(args) + 1);
+    Py_INCREF(self);
+    PyTuple_SetItem(all_args, 0, self);
+    for (int i = 0; i < PyTuple_Size(args); i++) {
+        PyObject *arg = PyTuple_GetItem(args, i);
+        Py_INCREF(arg);
+        PyTuple_SetItem(all_args, i + 1, arg);
     }
 
-    PyObject *method_name = py_from_js(info.Data(), context);
-    if (method_name == NULL) {
-        Py_DECREF(args);
-        return;
-    }
-    PyObject *method = PyObject_GetAttr(self, method_name);
-    Py_DECREF(method_name);
-    if (method == NULL) {
-        Py_DECREF(args);
-        return;
-    }
-    PyObject *retval = PyObject_Call(method, args, NULL);
+    method_callback_info *callback_info = (method_callback_info *) info.Data().As<External>()->Value();
+    PyObject *method = PyObject_GetAttr(callback_info->cls, callback_info->method_name);
+    assert(PyMethod_Check(method));
+    PyObject *retval = PyObject_Call(method, all_args, NULL);
+    Py_DECREF(method);
     if (retval == NULL) {
         // TODO implement exception handling
     }
