@@ -35,11 +35,8 @@ int js_object_type_init() {
 js_object *js_object_new(Local<Object> object, Local<Context> context) {
     Isolate::Scope is(isolate);
     HandleScope hs(isolate);
-    // TODO use an embedder-specific slot on the context to get Object.prototype
-    Context::Scope cs(context);
-    Local<Object> obj_literal_proto = Object::New(isolate)->GetPrototype().As<Object>();
     js_object *self;
-    if (object->GetPrototype()->StrictEquals(obj_literal_proto)) {
+    if (object->GetPrototype()->StrictEquals(context->GetEmbedderData(1))) {
         self = (js_object *) js_dictionary_type.tp_alloc(&js_dictionary_type, 0);
     } else if (object->IsCallable()) {
         self = (js_object *) js_function_type.tp_alloc(&js_function_type, 0);

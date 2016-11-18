@@ -51,7 +51,9 @@ PyObject *context_new(PyTypeObject *type, PyObject *args, PyObject *kwargs) {
         HandleScope handle_scope(isolate);
 
         Local<Context> context = Context::New(isolate);
+        Context::Scope cs(context);
         self->js_context.Reset(isolate, context);
+        context->SetEmbedderData(1, Object::New(isolate)->GetPrototype());
     }
     return (PyObject *) self;
 }
