@@ -64,7 +64,7 @@ void py_class_method_callback(const FunctionCallbackInfo<Value> &info) {
 // TODO everything needs to be fixed with regards to exception handling
 // one TODO comment for everything that needs to be fixed
 
-template <class T> PyObject *get_self(const PropertyCallbackInfo<T> &info) {
+template <class T> inline extern PyObject *get_self(const PropertyCallbackInfo<T> &info) {
     return (PyObject *) info.This()->GetInternalField(1).template As<External>()->Value();
 }
 

@@ -44,4 +44,35 @@ class TestPythonProxy(object):
         with pytest.raises(TypeError):
             del context.o['foo']
 
+class TestJavaScriptProxy(object):
+    @pytest.fixture
+    def obj(self, context):
+        obj = {'foo': 'bar'}
+        context.obj = obj
+        return obj
+
+    def test_get(self, context, obj):
+        assert context.eval('obj instanceof Object')
+        assert context.eval('obj.foo') == 'bar'
+        assert context.eval('obj') is obj
+
+    def test_set(self, context, obj):
+        context.eval('obj.foo = "baz"')
+        assert obj['foo'] == 'baz'
+
+    def test_delete(self, context, obj):
+        context.eval('delete obj.foo')
+        assert 'foo' not in obj
+    
+    def test_descriptor(self, context, obj):
+        descriptor = context.eval('Object.getOwnPropertyDescriptor(obj, "foo")')
+        assert dict(descriptor) == {
+            'configurable': True,
+            'enumerable': True,
+            'value': 'bar',
+            'writable': True
+        }
+
+    def test_enumerator(self, context, obj):
+        assert context.eval('Object.getOwnPropertyNames(obj)') == ['foo']
 

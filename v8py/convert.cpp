@@ -1,10 +1,12 @@
 #include <Python.h>
 #include <v8.h>
+
 #include "v8py.h"
+#include "convert.h"
 #include "pyfunction.h"
 #include "pyclass.h"
 #include "jsobject.h"
-#include "convert.h"
+#include "pydictionary.h"
 
 PyObject *py_from_js(Local<Value> value, Local<Context> context) {
     HandleScope hs(isolate);
@@ -50,7 +52,8 @@ PyObject *py_from_js(Local<Value> value, Local<Context> context) {
     if (value->IsObject()) {
         Local<Object> obj_value = value.As<Object>();
         if (obj_value->InternalFieldCount() == 2) {
-            if (obj_value->GetAlignedPointerFromInternalField(0) == OBJ_MAGIC) {
+            void *magic = obj_value->GetAlignedPointerFromInternalField(0);
+            if (magic == OBJ_MAGIC || magic == DICT_MAGIC) {
                 PyObject *object = (PyObject *) obj_value->GetInternalField(1).As<External>()->Value();
                 Py_INCREF(object);
                 return object;
@@ -125,6 +128,10 @@ Local<Value> js_from_py(PyObject *value, Local<Context> context) {
             return hs.Escape(Undefined(isolate));
         }
         return hs.Escape(js_value);
+    }
+
+    if (PyDict_Check(value)) {
+        return hs.Escape(py_dictionary_get_proxy(value, context));
     }
 
     if (PyList_Check(value) || PyTuple_Check(value)) {

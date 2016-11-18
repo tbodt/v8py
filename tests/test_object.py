@@ -2,7 +2,9 @@ import pytest
 
 @pytest.fixture
 def obj(context):
-    return context.eval('({})')
+    context.eval('o = {}')
+    context.eval('o.__proto__ = {}')
+    return context.eval('o')
 
 def test_attrs(obj):
     obj.foo = 'bar'

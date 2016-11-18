@@ -9,6 +9,7 @@
 #include "context.h"
 #include "pyclass.h"
 #include "jsobject.h"
+#include "pydictionary.h"
 
 using namespace v8;
 
@@ -65,6 +66,7 @@ PyMODINIT_FUNC initv8py() {
         return;
     if (py_class_type_init() < 0)
         return;
+    py_dictionary_init();
 
     if (js_object_type_init() < 0)
         return;
