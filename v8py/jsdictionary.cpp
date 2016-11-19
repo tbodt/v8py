@@ -2,6 +2,7 @@
 #include <v8.h>
 
 #include "v8py.h"
+#include "jsexception.h"
 #include "jsobject.h"
 #include "convert.h"
 
@@ -65,18 +66,16 @@ int js_dictionary_setitem(js_dictionary *self, PyObject *key, PyObject *value) {
     Local<Context> context = self->context.Get(isolate);
     Local<Object> object = self->object.Get(isolate);
     Local<String> js_key = js_from_py(key, context).As<String>();
+    JS_TRY
+
     if (value != NULL) {
         Local<Value> js_value = js_from_py(value, context);
-        if (!object->Set(context, js_key, js_value).FromJust()) {
-            // TODO
-            return -1;
-        }
+        Maybe<bool> result = object->Set(context, js_key, js_value);
+        PY_PROPAGATE_JS_;
     } else {
         // Python implements delitem by calling setitem with a NULL value.
-        if (!object->Delete(context, js_key).FromJust()) {
-            // TODO
-            return -1;
-        }
+        Maybe<bool> result = object->Delete(context, js_key);
+        PY_PROPAGATE_JS_;
     }
     return 0;
 }

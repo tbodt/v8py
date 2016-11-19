@@ -9,6 +9,7 @@
 #include "context.h"
 #include "pyclass.h"
 #include "jsobject.h"
+#include "jsexception.h"
 #include "pydictionary.h"
 
 using namespace v8;
@@ -27,6 +28,7 @@ void initialize_v8() {
         Isolate::CreateParams create_params;
         create_params.array_buffer_allocator = ArrayBuffer::Allocator::NewDefaultAllocator();
         isolate = Isolate::New(create_params);
+        isolate->SetCaptureStackTraceForUncaughtExceptions(true);
     }
 }
 
@@ -34,9 +36,6 @@ static PyMethodDef v8_methods[] = {
     {NULL},
 };
 
-void null_dealloc(void *thing) {
-    printf("null dealloc %p\n", thing);
-}
 PyObject *null_object = NULL;
 typedef struct {PyObject_HEAD} null_t;
 PyTypeObject null_type = {PyObject_HEAD_INIT(NULL)};
@@ -74,6 +73,10 @@ PyMODINIT_FUNC initv8py() {
         return;
     if (js_dictionary_type_init() < 0)
         return;
+    if (js_exception_type_init() < 0)
+        return;
+    Py_INCREF(&js_exception_type);
+    PyModule_AddObject(module, "JSException", (PyObject *) &js_exception_type);
 
     if (null_type_init() < 0)
         return;

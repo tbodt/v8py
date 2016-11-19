@@ -37,10 +37,10 @@ class TestPythonProxy(object):
     def test_listification(self, o):
         assert list(o) == ['foo']
 
-    @pytest.mark.xfail
+    @pytest.mark.xfail(reason='Object::Delete does not run in strict mode and delete only throws an exception in strict mode')
     def test_unconfigurable(self, context):
         context.eval('o = ({})')
-        context.eval('Object.defineProperty(o, "foo", {value: "bar", configurable: false})')
+        context.eval('Object.defineProperty(o, "foo", {value: "bar", enumerable: true, configurable: false})')
         with pytest.raises(TypeError):
             del context.o['foo']
 

@@ -1,10 +1,11 @@
 #include <Python.h>
 #include <v8.h>
 
-#include "context.h"
-#include "pyfunction.h"
-#include "convert.h"
 #include "v8py.h"
+#include "context.h"
+#include "convert.h"
+#include "pyfunction.h"
+#include "jsexception.h"
 
 using namespace v8;
 
@@ -63,18 +64,12 @@ PyObject *context_eval(context *self, PyObject *program) {
     HandleScope hs(isolate);
     Local<Context> context = self->js_context.Get(isolate);
     Context::Scope cs(context);
+    JS_TRY
 
     MaybeLocal<Script> script = Script::Compile(context, js_from_py(program, context).As<String>());
-    if (script.IsEmpty()) {
-        PyErr_SetString(PyExc_ValueError, "JavaScript compilation error");
-        return NULL;
-    }
+    PY_PROPAGATE_JS;
     MaybeLocal<Value> result = script.ToLocalChecked()->Run(context);
-    if (result.IsEmpty()) {
-        PyErr_SetString(PyExc_ValueError, "JavaScript runtime error");
-        return NULL;
-    }
-
+    PY_PROPAGATE_JS;
     return py_from_js(result.ToLocalChecked(), context);
 }
 

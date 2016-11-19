@@ -12,7 +12,7 @@ void py_class_construct_callback(const FunctionCallbackInfo<Value> &info) {
     Local<Context> context = isolate->GetCurrentContext();
 
     if (!info.IsConstructCall()) {
-        // TODO: throw a JS exception
+        isolate->ThrowException(Exception::TypeError(JSTR("Constructor requires 'new' operator")));
         return;
     }
 
