@@ -22,7 +22,7 @@ void py_dictionary_init() {
     HandleScope hs(isolate);
 
     Local<ObjectTemplate> templ = ObjectTemplate::New(isolate);
-    templ->SetInternalFieldCount(2);
+    templ->SetInternalFieldCount(DICT_INTERNAL_FIELDS);
     templ->SetHandler(NamedPropertyHandlerConfiguration(
                 py_dictionary_getter_callback,
                 py_dictionary_setter_callback,
@@ -38,7 +38,7 @@ Local<Object> py_dictionary_get_proxy(PyObject *dict, Local<Context> context) {
     Local<ObjectTemplate> templ = dict_templ.Get(isolate);
     Local<Object> proxy = templ->NewInstance();
 
-    proxy->SetAlignedPointerInInternalField(0, DICT_MAGIC);
+    proxy->SetInternalField(0, IZ_DAT_DICTINARY);
     Py_INCREF(dict);
     proxy->SetInternalField(1, External::New(isolate, dict));
 
@@ -54,7 +54,7 @@ Local<Object> py_dictionary_get_proxy(PyObject *dict, Local<Context> context) {
 void py_dictionary_weak_callback(const WeakCallbackInfo<Persistent<Object>> &info) {
     HandleScope hs(isolate);
     Local<Object> proxy = info.GetParameter()->Get(isolate);
-    assert(proxy->GetAlignedPointerFromInternalField(0) == DICT_MAGIC);
+    assert(proxy->GetInternalField(0) == IZ_DAT_DICTINARY);
     PyObject *dict = (PyObject *) proxy->GetInternalField(1).As<External>()->Value();
     assert(PyDict_Check(dict));
 
@@ -65,7 +65,7 @@ void py_dictionary_weak_callback(const WeakCallbackInfo<Persistent<Object>> &inf
 }
 
 template <class T> inline extern PyObject *get_self(const PropertyCallbackInfo<T> &info) {
-    assert(info.This()->GetAlignedPointerFromInternalField(0) == DICT_MAGIC);
+    assert(info.This()->GetInternalField(0) == IZ_DAT_DICTINARY);
     return (PyObject *) info.This()->GetInternalField(1).template As<External>()->Value();
 }
 

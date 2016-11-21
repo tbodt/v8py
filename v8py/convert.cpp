@@ -51,9 +51,10 @@ PyObject *py_from_js(Local<Value> value, Local<Context> context) {
     
     if (value->IsObject()) {
         Local<Object> obj_value = value.As<Object>();
-        if (obj_value->InternalFieldCount() == 2) {
-            void *magic = obj_value->GetAlignedPointerFromInternalField(0);
-            if (magic == OBJ_MAGIC || magic == DICT_MAGIC) {
+        if (obj_value->InternalFieldCount() == OBJECT_INTERNAL_FIELDS ||
+                obj_value->InternalFieldCount() == DICT_INTERNAL_FIELDS) {
+            Local<Value> magic = obj_value->GetInternalField(0);
+            if (magic == IZ_DAT_OBJECT || magic == IZ_DAT_DICTINARY) {
                 PyObject *object = (PyObject *) obj_value->GetInternalField(1).As<External>()->Value();
                 Py_INCREF(object);
                 return object;

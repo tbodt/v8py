@@ -17,9 +17,13 @@ PyObject *py_class_new(PyObject *cls);
 PyObject *py_class_to_template(PyObject *cls);
 Local<Function> py_class_get_constructor(py_class *self, Local<Context> context);
 Local<Object> py_class_create_js_object(py_class *self, PyObject *py_object, Local<Context> context);
-void py_class_init_js_object(Local<Object> js_object, PyObject *py_object);
+void py_class_init_js_object(Local<Object> js_object, PyObject *py_object, Local<Context> context);
 
-#define OBJ_MAGIC ((void *) 0xDaC1a550)
+// first one is magic pointer
+// second one is actual object
+// third is exception traceback (usually unused)
+// fourth is exception type (also usually unused)
+#define OBJECT_INTERNAL_FIELDS 4
 
 void py_class_construct_callback(const FunctionCallbackInfo<Value> &info);
 struct method_callback_info {
@@ -34,5 +38,7 @@ void py_class_setter_callback(Local<Name> name, Local<Value> value, const Proper
 void py_class_query_callback(Local<Name> name, const PropertyCallbackInfo<Integer> &info);
 void py_class_deleter_callback(Local<Name> name, const PropertyCallbackInfo<Boolean> &info);
 void py_class_enumerator_callback(const PropertyCallbackInfo<Array> &info);
+void py_class_property_getter(Local<Name> js_name, const PropertyCallbackInfo<Value> &info);
+void py_class_property_setter(Local<Name> js_name, Local<Value> js_value, const PropertyCallbackInfo<void> &info);
 
 #endif

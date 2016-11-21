@@ -4,16 +4,13 @@
 #include <Python.h>
 
 // on both, demand trailing semicolon
-#define PyErr_PROPAGATE(x) \
+#define PyErr_PROPAGATE_RET(x, retval) \
     if (x == NULL) { \
-        return NULL; \
+        return retval; \
     } else \
         (void) NULL
-#define PyErr_PROPAGATE_(x) \
-    if (x == NULL) { \
-        return -1; \
-    } else \
-        (void) NULL
+#define PyErr_PROPAGATE(x) PyErr_PROPAGATE_RET(x, NULL)
+#define PyErr_PROPAGATE_(x) PyErr_PROPAGATE_RET(x, -1)
 
 inline extern int PyObject_GenericHasAttr(PyObject *obj, PyObject *name) {
     PyObject *value = PyObject_GenericGetAttr(obj, name);

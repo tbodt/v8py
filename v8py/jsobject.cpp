@@ -4,6 +4,7 @@
 #include "v8py.h"
 #include "convert.h"
 #include "jsobject.h"
+#include "context.h"
 
 using namespace v8;
 
@@ -36,7 +37,7 @@ js_object *js_object_new(Local<Object> object, Local<Context> context) {
     Isolate::Scope is(isolate);
     HandleScope hs(isolate);
     js_object *self;
-    if (object->GetPrototype()->StrictEquals(context->GetEmbedderData(1))) {
+    if (object->GetPrototype()->StrictEquals(context->GetEmbedderData(OBJECT_PROTOTYPE_SLOT))) {
         self = (js_object *) js_dictionary_type.tp_alloc(&js_dictionary_type, 0);
     } else if (object->IsCallable()) {
         self = (js_object *) js_function_type.tp_alloc(&js_function_type, 0);
@@ -88,6 +89,7 @@ int js_object_setattro(js_object *self, PyObject *name, PyObject *value) {
         return PyObject_GenericSetAttr((PyObject *) self, name, value);
     }
 
+    Isolate::Scope is(isolate);
     HandleScope hs(isolate);
     Local<Object> object = self->object.Get(isolate);
     Local<Context> context = self->context.Get(isolate);

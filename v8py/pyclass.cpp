@@ -5,8 +5,9 @@
 #include "convert.h"
 #include "pyfunction.h"
 #include "pyclass.h"
+#include "context.h"
 
-int add_to_template(PyObject *cls, PyObject *member_name, PyObject *member_value, Local<FunctionTemplate> templ, Local<Signature> signature);
+int add_to_template(PyObject *cls, PyObject *member_name, PyObject *member_value, Local<FunctionTemplate> templ);
 
 PyTypeObject py_class_type = {
     PyObject_HEAD_INIT(NULL)
@@ -69,7 +70,8 @@ PyObject *py_class_to_template(PyObject *cls) {
         Py_DECREF(mro_list);
     } else {
         mro = ((PyTypeObject *) cls)->tp_mro;
-        Py_INCREF(mro);
+        assert(PyTuple_GetItem(mro, PyTuple_Size(mro) - 1) == (PyObject *) &PyBaseObject_Type);
+        mro = PyTuple_GetSlice(mro, 0, PyTuple_Size(mro) - 1);
     }
     PyObject *templ = py_class_for_mro(mro);
     Py_DECREF(mro);
@@ -98,7 +100,7 @@ PyObject *py_class_new(PyObject *mro) {
     HandleScope hs(isolate);
 
     // The convert functions require a context for function conversion, but we
-    // don't have a context. So we use a null context and special-case
+    // don't have a context. So we use an empty context and special-case
     // functions.
     Local<Context> no_ctx;
 
@@ -110,7 +112,6 @@ PyObject *py_class_new(PyObject *mro) {
 
     Local<External> js_self = External::New(isolate, self);
     Local<FunctionTemplate> templ = FunctionTemplate::New(isolate, py_class_construct_callback, js_self);
-    Local<Signature> signature = Signature::New(isolate, templ);
 
     PyObject *attributes = PyObject_Dir(cls);
     PyErr_PROPAGATE(attributes);
@@ -126,7 +127,7 @@ PyObject *py_class_new(PyObject *mro) {
             Py_DECREF(attributes);
             return NULL;
         }
-        int result = add_to_template(cls, member_name, member_value, templ, signature);
+        int result = add_to_template(cls, member_name, member_value, templ);
         Py_DECREF(member_name);
         Py_DECREF(member_value);
         if (result < 0) {
@@ -136,10 +137,7 @@ PyObject *py_class_new(PyObject *mro) {
     }
     Py_DECREF(attributes);
 
-    // first one is magic pointer
-    // second one is actual object
-    templ->InstanceTemplate()->SetInternalFieldCount(2);
-
+    templ->InstanceTemplate()->SetInternalFieldCount(OBJECT_INTERNAL_FIELDS);
     // if the class defines __getitem__ and keys(), it's a mapping.
     // if __setitem__ is implemented, the properties are writable.
     // if __delitem__ is implemented, the properties are configurable.
@@ -171,7 +169,20 @@ PyObject *py_class_new(PyObject *mro) {
     templ->SetClassName(js_from_py(self->cls_name, no_ctx).As<String>());
 
     PyObject *mro_rest = PyTuple_GetSlice(mro, 1, PyTuple_Size(mro));
-    if (PyTuple_Size(mro_rest) != 0 && PyTuple_GetItem(mro_rest, 0) != (PyObject *) &PyBaseObject_Type ) {
+    // if 1 left and it's object, don't inherit
+    // if 2 left and it's Exception -> BaseException, set magic internal field on prototype
+    // if 1 left and it's BaseException don't worry about it (can only happen if directly converting instance of BaseException)
+    if (PyTuple_Size(mro_rest) == 2 && 
+            PyTuple_GetItem(mro_rest, 0) == PyExc_Exception &&
+            PyTuple_GetItem(mro_rest, 1) == PyExc_BaseException) {
+        // if the superclass is Exception, ignore that fact and make the superclass Error
+        // we do this by putting a magic internal field count on the prototype which py_class_init_js_object detects
+        // and sets the prototype's prototype to Error.prototype, which it finds in an embedder data slot on the context
+        // it has to be a magic count instead of a field because you can't set an internal field on a template
+        // only an object
+        templ->PrototypeTemplate()->Set(JSTR("__proto__"), I_CAN_HAZ_ERROR_PROTOTYPE);
+    } else if (PyTuple_Size(mro_rest) > 0 && 
+            !(PyTuple_Size(mro_rest) == 1 && PyTuple_GetItem(mro_rest, 0) == (PyObject *) &PyBaseObject_Type)) {
         py_class *superclass_templ = (py_class *) py_class_for_mro(mro_rest);
         templ->Inherit(superclass_templ->templ->Get(isolate));
     }
@@ -180,9 +191,11 @@ PyObject *py_class_new(PyObject *mro) {
 }
 
 // 0 on success, -1 on failure
-int add_to_template(PyObject *cls, PyObject *member_name, PyObject *member_value, Local<FunctionTemplate> templ, Local<Signature> signature) {
+int add_to_template(PyObject *cls, PyObject *member_name, PyObject *member_value, Local<FunctionTemplate> templ) {
     HandleScope hs(isolate);
     Local<Context> no_ctx;
+    Local<Signature> sig = Signature::New(isolate, templ);
+    Local<AccessorSignature> accessor_sig = AccessorSignature::New(isolate, templ);
 
     // skip names with too many underscores
     if (py_bool(PyObject_CallMethod(member_name, "startswith", "s", "__")) &&
@@ -202,7 +215,7 @@ int add_to_template(PyObject *cls, PyObject *member_name, PyObject *member_value
         Py_INCREF(member_name);
         callback_info->method_name = member_name;
         Local<External> js_method = External::New(isolate, callback_info);
-        js_value = FunctionTemplate::New(isolate, py_class_method_callback, js_method, signature);
+        js_value = FunctionTemplate::New(isolate, py_class_method_callback, js_method, sig);
     } else {
         if (PyCallable_Check(member_value)) {
             // if it's some kind of callable, create a function
@@ -211,14 +224,21 @@ int add_to_template(PyObject *cls, PyObject *member_name, PyObject *member_value
                 return -1;
             }
             js_value = function->js_template->Get(isolate);
+        } else if (PyObject_HasAttrString(member_value, "__get__") && PyObject_HasAttrString(member_value, "__set__")) {
+            templ->InstanceTemplate()->SetAccessor(js_name, py_class_property_getter, py_class_property_setter, 
+                    js_name, DEFAULT, DontDelete, accessor_sig);
         } else {
             // otherwise just convert
             js_value = js_from_py(member_value, no_ctx);
         }
-        templ->Set(js_name, js_value);
+        if (!js_value.IsEmpty()) {
+            templ->Set(js_name, js_value);
+        }
     }
 
-    templ->PrototypeTemplate()->Set(js_name, js_value);
+    if (!js_value.IsEmpty()) {
+        templ->PrototypeTemplate()->Set(js_name, js_value);
+    }
 
     return 0;
 }
@@ -233,7 +253,7 @@ Local<Function> py_class_get_constructor(py_class *self, Local<Context> context)
 void py_class_object_weak_callback(const WeakCallbackInfo<Persistent<Object>> &info) {
     HandleScope hs(isolate);
     Local<Object> js_object = info.GetParameter()->Get(isolate);
-    assert(js_object->GetAlignedPointerFromInternalField(0) == OBJ_MAGIC);
+    assert(js_object->GetInternalField(0) == IZ_DAT_OBJECT);
     PyObject *py_object = (PyObject *) js_object->GetInternalField(1).As<External>()->Value();
 
     // the entire purpose of this weak callback
@@ -243,9 +263,30 @@ void py_class_object_weak_callback(const WeakCallbackInfo<Persistent<Object>> &i
     delete info.GetParameter();
 }
 
-void py_class_init_js_object(Local<Object> js_object, PyObject *py_object) {
-    js_object->SetAlignedPointerInInternalField(0, OBJ_MAGIC);
+void py_class_init_js_object(Local<Object> js_object, PyObject *py_object, Local<Context> context) {
+    js_object->SetInternalField(0, IZ_DAT_OBJECT);
     js_object->SetInternalField(1, External::New(isolate, py_object));
+
+    // find out if the object is supposed to inherit from Error
+    // the information is in an internal field on the last prototype
+    Local<Value> last_proto = js_object;
+    Local<Object> last_proto_object;
+    while (!last_proto->StrictEquals(context->GetEmbedderData(OBJECT_PROTOTYPE_SLOT))) {
+        last_proto_object = last_proto.As<Object>();
+        last_proto = last_proto_object->GetPrototype();
+        printf("last_proto: ");
+        JSDUMP(last_proto);
+        printf("last_proto_object: ");
+        JSDUMP(last_proto_object);
+    }
+    // last_proto is guaranteed to have a value because the loop is guaranteed
+    // to run at least once because last_proto_chain is initialized to js_object
+    assert(!last_proto.IsEmpty());
+    if (last_proto_object->Get(context, JSTR("__proto__")).ToLocalChecked()->StrictEquals(I_CAN_HAZ_ERROR_PROTOTYPE)) {
+        last_proto_object->Delete(context, JSTR("__proto__")).FromJust();
+        last_proto_object->SetPrototype(context->GetEmbedderData(ERROR_PROTOTYPE_SLOT));
+        printf("did magic error superclassing\n");
+    }
 
     Persistent<Object> *obj_handle = new Persistent<Object>(isolate, js_object);
     obj_handle->SetWeak(obj_handle, py_class_object_weak_callback, WeakCallbackType::kFinalizer);
@@ -255,7 +296,7 @@ Local<Object> py_class_create_js_object(py_class *self, PyObject *py_object, Loc
     EscapableHandleScope hs(isolate);
     Local<Object> js_object = self->templ->Get(isolate)->InstanceTemplate()->NewInstance(context).ToLocalChecked();
     Py_INCREF(py_object);
-    py_class_init_js_object(js_object, py_object);
+    py_class_init_js_object(js_object, py_object, context);
     return hs.Escape(js_object);
 }
 

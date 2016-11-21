@@ -1,6 +1,3 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 #include <Python.h>
 #include <v8.h>
 #include <libplatform/libplatform.h>
@@ -52,6 +49,8 @@ int null_type_init() {
 
 PyMODINIT_FUNC initv8py() {
     initialize_v8();
+    create_memes_plz_thx();
+
     PyObject *module = Py_InitModule("v8py", v8_methods);
     if (module == NULL)
         return;

@@ -21,7 +21,7 @@ void py_class_construct_callback(const FunctionCallbackInfo<Value> &info) {
     if (new_object == NULL) {
         // TODO implement exception handling for if new_object == NULL
     }
-    py_class_init_js_object(js_new_object, new_object);
+    py_class_init_js_object(js_new_object, new_object, context);
 }
 
 void py_class_method_callback(const FunctionCallbackInfo<Value> &info) {
@@ -175,5 +175,44 @@ void py_class_enumerator_callback(const PropertyCallbackInfo<Array> &info) {
         js_keys->Set(context, i, js_from_py(item, context)).FromJust();
     }
     info.GetReturnValue().Set(js_keys);
+}
+
+void py_class_property_getter(Local<Name> js_name, const PropertyCallbackInfo<Value> &info) {
+    Isolate::Scope is(isolate);
+    HandleScope hs(isolate);
+    Local<Context> context = isolate->GetCurrentContext();
+
+    PyObject *name = py_from_js(js_name, context);
+    if (name == NULL) {
+        // TODO
+        return;
+    }
+    PyObject *value = PyObject_GetAttr(get_self(info), name);
+    if (value == NULL) {
+        // TODO
+        return;
+    }
+    info.GetReturnValue().Set(js_from_py(value, context));
+}
+
+void py_class_property_setter(Local<Name> js_name, Local<Value> js_value, const PropertyCallbackInfo<void> &info) {
+    Isolate::Scope is(isolate);
+    HandleScope hs(isolate);
+    Local<Context> context = isolate->GetCurrentContext();
+
+    PyObject *name = py_from_js(js_name, context);
+    if (name == NULL) {
+        // TODO
+        return;
+    }
+    PyObject *value = py_from_js(js_value, context);
+    if (value == NULL) {
+        // TODO
+        return;
+    }
+    if (PyObject_SetAttr(get_self(info), name, value) < 0) {
+        // TODO
+        return;
+    }
 }
 

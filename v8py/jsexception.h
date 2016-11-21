@@ -20,15 +20,19 @@ PyObject *js_exception_new(Local<Value> exception, Local<Message> message);
 void js_exception_dealloc(js_exception *self);
 
 PyObject *js_exception_str(js_exception *self);
-        /* Py_DECREF(exception); \ */
 
 #define JS_TRY TryCatch tc(isolate);
 #define PY_PROPAGATE_JS_RET(retval) \
     if (tc.HasCaught()) { \
         PyObject *exception = js_exception_new(tc.Exception(), tc.Message()); \
-        PyErr_PROPAGATE(exception); \
+        PyErr_PROPAGATE_RET(exception, retval); \
         PyErr_SetObject((PyObject *) &js_exception_type, exception); \
         return retval; \
     }
 #define PY_PROPAGATE_JS PY_PROPAGATE_JS_RET(NULL)
 #define PY_PROPAGATE_JS_ PY_PROPAGATE_JS_RET(-1)
+
+
+#define JS_PROPAGATE_PY(value) \
+    if (value == NULL) { \
+

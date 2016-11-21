@@ -19,6 +19,11 @@ PyObject *context_new(PyTypeObject *type, PyObject *args, PyObject *kwargs);
 PyObject *context_eval(context *self, PyObject *program);
 PyObject *context_gc(context *self);
 
+// Embedder data slots
+// 0 is unused (for absolutely no reason)
+#define OBJECT_PROTOTYPE_SLOT 1
+#define ERROR_PROTOTYPE_SLOT 2
+
 PyObject *context_get_global(context *self, void *shit);
 
 PyObject *context_getattro(context *self, PyObject *name);
