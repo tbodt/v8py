@@ -98,15 +98,19 @@ class build_ext(distutils_build_ext):
         self.run_command('build_v8')
         distutils_build_ext.build_extension(self, ext)
 
+with open('README.rst', 'r') as f:
+    long_description = f.read()
+
 setup(
     name='v8py',
-    version='0.9',
+    version='0.9.2',
 
     author='Theodore Dubois',
     author_email='tblodt@icloud.com',
     url='https://github.com/tbodt/v8py',
 
     description='Write Python APIs, then call them from JavaScript using the V8 engine.',
+    long_description=long_description,
 
     license='LGPLv3',
     classifiers=[
