@@ -274,10 +274,6 @@ void py_class_init_js_object(Local<Object> js_object, PyObject *py_object, Local
     while (!last_proto->StrictEquals(context->GetEmbedderData(OBJECT_PROTOTYPE_SLOT))) {
         last_proto_object = last_proto.As<Object>();
         last_proto = last_proto_object->GetPrototype();
-        printf("last_proto: ");
-        JSDUMP(last_proto);
-        printf("last_proto_object: ");
-        JSDUMP(last_proto_object);
     }
     // last_proto is guaranteed to have a value because the loop is guaranteed
     // to run at least once because last_proto_chain is initialized to js_object
@@ -285,7 +281,6 @@ void py_class_init_js_object(Local<Object> js_object, PyObject *py_object, Local
     if (last_proto_object->Get(context, JSTR("__proto__")).ToLocalChecked()->StrictEquals(I_CAN_HAZ_ERROR_PROTOTYPE)) {
         last_proto_object->Delete(context, JSTR("__proto__")).FromJust();
         last_proto_object->SetPrototype(context->GetEmbedderData(ERROR_PROTOTYPE_SLOT));
-        printf("did magic error superclassing\n");
     }
 
     Persistent<Object> *obj_handle = new Persistent<Object>(isolate, js_object);
