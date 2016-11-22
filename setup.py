@@ -98,13 +98,20 @@ class build_ext(distutils_build_ext):
 
 setup(
     name='v8py',
-    version='0.5',
+    version='0.9',
 
     author='Theodore Dubois',
     author_email='tblodt@icloud.com',
     url='https://github.com/tbodt/v8py',
 
+    description='Write Python APIs, then call them from JavaScript using the V8 engine.',
+
     license='LGPLv3',
+    classifiers=[
+        'Development Status :: 3 - Alpha',
+        'License :: OSI Approved :: GNU Lesser General Public License v3 or later (LGPLv3+)',
+        'Topic :: Software Development :: Interpreters',
+    ],
 
     packages=find_packages(),
     ext_modules=[extension],
