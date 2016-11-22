@@ -75,6 +75,10 @@ PyMODINIT_FUNC initv8py() {
         return;
     Py_INCREF(&js_exception_type);
     PyModule_AddObject(module, "JSException", (PyObject *) &js_exception_type);
+    if (js_terminated_type_init() < 0)
+        return;
+    Py_INCREF(&js_terminated_type);
+    PyModule_AddObject(module, "JavaScriptTerminated", (PyObject *) &js_terminated_type);
 
     if (null_type_init() < 0)
         return;

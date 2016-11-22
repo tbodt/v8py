@@ -40,6 +40,18 @@ void js_exception_dealloc(js_exception *self) {
     self->ob_type->tp_free((PyObject *) self);
 }
 
+PyTypeObject js_terminated_type = {
+    PyObject_HEAD_INIT(NULL)
+};
+int js_terminated_type_init() {
+    js_terminated_type.tp_name = "v8py.JavaScriptTerminated";
+    js_terminated_type.tp_base = (PyTypeObject *) PyExc_Exception;
+    js_terminated_type.tp_basicsize = sizeof(PyBaseExceptionObject);
+    js_terminated_type.tp_flags = Py_TPFLAGS_DEFAULT;
+    js_terminated_type.tp_doc = "";
+    return PyType_Ready(&js_terminated_type);
+}
+
 void py_throw_js(Local<Value> js_exc, Local<Message> js_message) {
     if (js_exc->IsObject() && js_exc.As<Object>()->InternalFieldCount() == OBJECT_INTERNAL_FIELDS) {
         Local<Object> exc_object = js_exc.As<Object>();

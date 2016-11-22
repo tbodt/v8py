@@ -1,5 +1,6 @@
 #include <Python.h>
 #include <v8.h>
+#include <pthread.h>
 
 #include "v8py.h"
 #include "context.h"
@@ -9,7 +10,7 @@
 using namespace v8;
 
 PyMethodDef context_methods[] = {
-    {"eval", (PyCFunction) context_eval, METH_O, NULL},
+    {"eval", (PyCFunction) context_eval, METH_VARARGS | METH_KEYWORDS, NULL},
     {"gc", (PyCFunction) context_gc, METH_NOARGS, NULL},
     {NULL},
 };
@@ -60,7 +61,26 @@ PyObject *context_new(PyTypeObject *type, PyObject *args, PyObject *kwargs) {
     return (PyObject *) self;
 }
 
-PyObject *context_eval(context *self, PyObject *program) {
+void *breaker_thread(void *param) {
+    double timeout = *(double *) param;
+    usleep((int) (timeout * 1000000));
+    pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, NULL);
+    isolate->TerminateExecution();
+    return NULL;
+}
+
+PyObject *context_eval(context *self, PyObject *args, PyObject *kwargs) {
+    PyObject *program;
+    double timeout = 0;
+    static char *keywords[] = {"program", "timeout", NULL};
+    if (PyArg_ParseTupleAndKeywords(args, kwargs, "O|d", keywords, &program, &timeout) < 0) {
+        return NULL;
+    }
+    if (!PyString_Check(program)) {
+        PyErr_SetString(PyExc_TypeError, "program must be a string");
+        return NULL;
+    }
+
     Isolate::Scope is(isolate);
     HandleScope hs(isolate);
     Local<Context> context = self->js_context.Get(isolate);
@@ -69,7 +89,27 @@ PyObject *context_eval(context *self, PyObject *program) {
 
     MaybeLocal<Script> script = Script::Compile(context, js_from_py(program, context).As<String>());
     PY_PROPAGATE_JS;
+
+    pthread_t breaker_id;
+    if (timeout > 0) {
+        errno = pthread_create(&breaker_id, NULL, breaker_thread, &timeout);
+        if (errno) {
+            PyErr_SetFromErrno(PyExc_OSError);
+            return NULL;
+        }
+    }
+
     MaybeLocal<Value> result = script.ToLocalChecked()->Run(context);
+
+    if (timeout > 0) {
+        pthread_cancel(breaker_id);
+        errno = pthread_join(breaker_id, NULL);
+        if (errno) {
+            PyErr_SetFromErrno(PyExc_OSError);
+            return NULL;
+        }
+    }
+
     PY_PROPAGATE_JS;
     return py_from_js(result.ToLocalChecked(), context);
 }

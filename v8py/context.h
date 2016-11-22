@@ -16,7 +16,7 @@ int context_type_init();
 
 void context_dealloc(context *self);
 PyObject *context_new(PyTypeObject *type, PyObject *args, PyObject *kwargs);
-PyObject *context_eval(context *self, PyObject *program);
+PyObject *context_eval(context *self, PyObject *args, PyObject *kwargs);
 PyObject *context_gc(context *self);
 
 // Embedder data slots
