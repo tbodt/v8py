@@ -8,6 +8,8 @@ import multiprocessing
 from setuptools import setup, find_packages, Extension, Command
 from distutils.command.build_ext import build_ext as distutils_build_ext
 
+os.chdir(os.path.abspath(os.path.dirname(__file__)))
+
 sources = map(lambda path: os.path.join('v8py', path),
               filter(lambda path: path.endswith('.cpp'),
                      os.listdir('v8py')))
