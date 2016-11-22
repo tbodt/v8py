@@ -2,7 +2,7 @@
 #include <v8.h>
 
 #include "v8py.h"
-#include "jsexception.h"
+#include "exception.h"
 #include "jsobject.h"
 #include "convert.h"
 

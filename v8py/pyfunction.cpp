@@ -6,6 +6,7 @@
 #include "context.h"
 #include "convert.h"
 #include "pyfunction.h"
+#include "exception.h"
 
 PyTypeObject py_function_type = {
     PyObject_HEAD_INIT(NULL)
@@ -84,13 +85,7 @@ static void py_function_callback(const FunctionCallbackInfo<Value> &info) {
         return;
     }
     PyObject *result = PyObject_CallObject(self->function, args);
-    if (result == NULL) {
-        // function threw an exception
-        // TODO throw an actual JavaScript exception
-        printf("exception was thrown");
-        Py_INCREF(Py_None);
-        result = Py_None;
-    }
+    JS_PROPAGATE_PY(result);
     Py_DECREF(args);
     Local<Value> js_result = js_from_py(result, context);
     Py_DECREF(result);

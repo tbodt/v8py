@@ -5,7 +5,7 @@
 #include "context.h"
 #include "convert.h"
 #include "pyfunction.h"
-#include "jsexception.h"
+#include "exception.h"
 
 using namespace v8;
 

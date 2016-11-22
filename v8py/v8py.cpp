@@ -6,7 +6,7 @@
 #include "context.h"
 #include "pyclass.h"
 #include "jsobject.h"
-#include "jsexception.h"
+#include "exception.h"
 #include "pydictionary.h"
 
 using namespace v8;
