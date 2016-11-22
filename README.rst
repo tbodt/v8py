@@ -3,6 +3,8 @@ V8Py
 
 Write Python APIs, then call them from JavaScript using the V8 engine. ::
 
+.. code-block:: python
+
     >>> from v8py import Context
     >>> context = Context()
 
@@ -24,12 +26,12 @@ That kind of thing.
 
 Almost everything you'd expect to work just works, including:
 
- * Functions
- * Classes (including old style classes, because I can)
- * Data descriptors
- * Static methods and class methods
- * Exceptions (they even subclass from Error!)
- * `Fully meme-compliant <https://github.com/tbodt/v8py/blob/master/v8py/kappa.h>`_
+* Functions
+* Classes (including old style classes, because I can)
+* Data descriptors
+* Static methods and class methods
+* Exceptions (they even subclass from Error!)
+* `Fully meme-compliant <https://github.com/tbodt/v8py/blob/master/v8py/kappa.h>`_
 
 Installation
 ------------
