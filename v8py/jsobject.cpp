@@ -36,6 +36,7 @@ int js_object_type_init() {
 js_object *js_object_new(Local<Object> object, Local<Context> context) {
     Isolate::Scope is(isolate);
     HandleScope hs(isolate);
+    Context::Scope cs(context);
     js_object *self;
     if (object->GetPrototype()->StrictEquals(context->GetEmbedderData(OBJECT_PROTOTYPE_SLOT))) {
         self = (js_object *) js_dictionary_type.tp_alloc(&js_dictionary_type, 0);
@@ -57,9 +58,11 @@ PyObject *js_object_getattro(js_object *self, PyObject *name) {
         return PyObject_GenericGetAttr((PyObject *) self, name);
     }
 
+    Isolate::Scope is(isolate);
     HandleScope hs(isolate);
     Local<Object> object = self->object.Get(isolate);
     Local<Context> context = self->context.Get(isolate);
+    Context::Scope cs(context);
     Local<Value> js_name = js_from_py(name, context);
 
     if (!object->Has(context, js_name).FromJust()) {
@@ -91,10 +94,10 @@ int js_object_setattro(js_object *self, PyObject *name, PyObject *value) {
 
     Isolate::Scope is(isolate);
     HandleScope hs(isolate);
-    Local<Object> object = self->object.Get(isolate);
     Local<Context> context = self->context.Get(isolate);
     Context::Scope cs(context);
 
+    Local<Object> object = self->object.Get(isolate);
     if (!object->Set(context, js_from_py(name, context), js_from_py(value, context)).FromJust()) {
         PyErr_SetString(PyExc_AttributeError, "Object->Set completely failed for some reason");
         return -1;
@@ -114,9 +117,12 @@ Py_ssize_t js_object_length(js_object *self) {
 }
 
 PyObject *js_object_dir(js_object *self) {
+    Isolate::Scope is(isolate);
     HandleScope hs(isolate);
-    Local<Object> object = self->object.Get(isolate);
     Local<Context> context = self->context.Get(isolate);
+    Context::Scope cs(context);
+
+    Local<Object> object = self->object.Get(isolate);
     Local<Array> properties = object->GetOwnPropertyNames(context, ALL_PROPERTIES).ToLocalChecked();
     PyObject *py_properties = PyList_New(properties->Length());
     PyErr_PROPAGATE(py_properties);
@@ -130,8 +136,10 @@ PyObject *js_object_dir(js_object *self) {
 PyObject *js_object_repr(js_object *self) {
     Isolate::Scope is(isolate);
     HandleScope hs(isolate);
-    Local<Object> object = self->object.Get(isolate);
     Local<Context> context = self->context.Get(isolate);
+    Context::Scope cs(context);
+
+    Local<Object> object = self->object.Get(isolate);
     return py_from_js(object->ToString(), context);
 }
 

@@ -35,6 +35,7 @@ void py_dictionary_init() {
 
 Local<Object> py_dictionary_get_proxy(PyObject *dict, Local<Context> context) {
     EscapableHandleScope hs(isolate);
+    Context::Scope cs(context);
     Local<ObjectTemplate> templ = dict_templ.Get(isolate);
     Local<Object> proxy = templ->NewInstance();
 

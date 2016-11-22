@@ -23,6 +23,9 @@ int py_function_type_init() {
 static void py_function_callback(const FunctionCallbackInfo<Value> &info);
 
 PyObject *py_function_new(PyObject *function) {
+    Isolate::Scope isolate_scope(isolate);
+    HandleScope handle_scope(isolate);
+
     py_function *self = (py_function *) py_function_type.tp_alloc(&py_function_type, 0);
     PyErr_PROPAGATE(self);
     self->js_template = new Persistent<FunctionTemplate>();
@@ -36,9 +39,6 @@ PyObject *py_function_new(PyObject *function) {
     // this is by design. This means that the FunctionTemplate python object
     // should never be freed either.
     Py_INCREF(self);
-
-    Isolate::Scope isolate_scope(isolate);
-    HandleScope handle_scope(isolate);
 
     Local<External> js_self = External::New(isolate, self);
     Local<FunctionTemplate> js_template = FunctionTemplate::New(isolate, py_function_callback, js_self);

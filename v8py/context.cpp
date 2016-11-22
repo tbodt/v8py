@@ -76,6 +76,7 @@ PyObject *context_eval(context *self, PyObject *program) {
 }
 
 PyObject *context_get_global(context *self, void *shit) {
+    Isolate::Scope is(isolate);
     HandleScope hs(isolate);
     Local<Context> context = self->js_context.Get(isolate);
     return py_from_js(context->Global(), context);
