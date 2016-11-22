@@ -4,6 +4,7 @@
 #include "v8py.h"
 #include "convert.h"
 #include "pydictionary.h"
+#include "exception.h"
 
 using namespace v8;
 
@@ -75,16 +76,10 @@ void py_dictionary_getter_callback(Local<Name> js_name, const PropertyCallbackIn
     Local<Context> context = isolate->GetCurrentContext();
     PyObject *self = get_self(info);
     PyObject *name = py_from_js(js_name, context);
-    if (name == NULL) {
-        // TODO
-        return;
-    }
+    JS_PROPAGATE_PY(name);
     PyObject *value = PyObject_GetItem(self, name);
     Py_DECREF(name);
-    if (value == NULL) {
-        // TODO
-        return;
-    }
+    JS_PROPAGATE_PY(value);
     info.GetReturnValue().Set(js_from_py(value, context));
 }
 
@@ -93,19 +88,12 @@ void py_dictionary_setter_callback(Local<Name> js_name, Local<Value> js_value, c
     Local<Context> context = isolate->GetCurrentContext();
     PyObject *self = get_self(info);
     PyObject *name = py_from_js(js_name, context);
-    if (name == NULL) {
-        // TODO
-        return;
-    }
+    JS_PROPAGATE_PY(name);
     PyObject *value = py_from_js(js_value, context);
     Py_DECREF(name);
-    if (value == NULL) {
-        // TODO
-        return;
-    }
-    if (PyDict_SetItem(self, name, value) < 0) {
-        // TODO
-    }
+    JS_PROPAGATE_PY(value);
+    int result = PyDict_SetItem(self, name, value);
+    JS_PROPAGATE_PY_(result);
     Py_DECREF(value);
 }
 
@@ -114,17 +102,19 @@ void py_dictionary_deleter_callback(Local<Name> js_name, const PropertyCallbackI
     Local<Context> context = isolate->GetCurrentContext();
     PyObject *self = get_self(info);
     PyObject *name = py_from_js(js_name, context);
-    if (name == NULL) {
-        // TODO
-        return;
-    }
-    Py_DECREF(name);
+    JS_PROPAGATE_PY(name);
     if (PyObject_DelItem(self, name) < 0) {
+        if (info.ShouldThrowOnError()) {
+            isolate->ThrowException(Exception::TypeError(JSTR("Unable to delete property.")));
+            Py_DECREF(name);
+            return;
+        }
         info.GetReturnValue().Set(false);
-        // TODO involving info.ShouldThrowOnError
+        Py_DECREF(name);
         return;
     }
     info.GetReturnValue().Set(true);
+    Py_DECREF(name);
 }
 
 void py_dictionary_enumerator_callback(const PropertyCallbackInfo<Array> &info) {
@@ -132,10 +122,7 @@ void py_dictionary_enumerator_callback(const PropertyCallbackInfo<Array> &info) 
     Local<Context> context = isolate->GetCurrentContext();
     PyObject *self = get_self(info);
     PyObject *keys = PyDict_Keys(self);
-    if (keys == NULL) {
-        // TODO
-        return;
-    }
+    JS_PROPAGATE_PY(keys);
     info.GetReturnValue().Set(js_from_py(keys, context).As<Array>());
 }
 
@@ -144,17 +131,14 @@ void py_dictionary_query_callback(Local<Name> js_name, const PropertyCallbackInf
     Local<Context> context = isolate->GetCurrentContext();
     PyObject *self = get_self(info);
     PyObject *name = py_from_js(js_name, context);
-    if (name == NULL) {
-        // TODO
-        return;
-    }
+    JS_PROPAGATE_PY(name);
     switch (PyDict_Contains(self, name)) {
         case 1:
             info.GetReturnValue().Set(None);
         case 0:
             break;
         default:
-            // TODO
+            js_throw_py();
             return;
     }
 }

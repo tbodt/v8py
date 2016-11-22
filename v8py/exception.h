@@ -37,4 +37,9 @@ void js_throw_py();
         js_throw_py(); \
         return; \
     }
+#define JS_PROPAGATE_PY_(value) \
+    if (value < 0) { \
+        js_throw_py(); \
+        return; \
+    }
 

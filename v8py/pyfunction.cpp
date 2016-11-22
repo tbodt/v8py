@@ -80,10 +80,7 @@ static void py_function_callback(const FunctionCallbackInfo<Value> &info) {
 
     py_function *self = (py_function *) info.Data().As<External>()->Value();
     PyObject *args = pys_from_jss(info, context);
-    if (args == NULL) {
-        // TODO
-        return;
-    }
+    JS_PROPAGATE_PY(args);
     PyObject *result = PyObject_CallObject(self->function, args);
     JS_PROPAGATE_PY(result);
     Py_DECREF(args);
