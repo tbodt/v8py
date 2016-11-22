@@ -40,10 +40,14 @@ If you have a Mac running OS X 10.12, you can do::
 
     pip install v8py
 
-If not, you can still try that, but there is no guarantee it will work.
+If not, you can still try that, but it'll be stuck at "Running setup.py install
+for v8py" for literally hours. (It's downloading and building V8, which is a
+really big program.) I hope to get more wheels built soon.
 
-Contributing
-------------
+Misc
+----
+
+I (sometimes) stream development of this and related projects at https://twitch.tv/tblodt.
 
 I'm writing this so I can create a really lightweight special-purpose webdriver
 (no visual rendering, no asynchronous XHRs), and I need some way of
