@@ -1,7 +1,7 @@
 V8Py
 ====
 
-Write Python APIs, then call them from JavaScript using the V8 engine. ::
+Write Python APIs, then call them from JavaScript using the V8 engine.
 
 .. code-block:: python
 
