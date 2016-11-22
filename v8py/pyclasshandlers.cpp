@@ -76,8 +76,8 @@ void py_class_getter_callback(Local<Name> js_name, const PropertyCallbackInfo<Va
     Local<Context> context = isolate->GetCurrentContext();
     
     PyObject *name = py_from_js(js_name, context);
-    if (name == NULL) {
-        // TODO
+    if (PyObject_HasAttr(get_self(info), name)) {
+        Py_DECREF(name);
         return;
     }
     PyObject *value = PyObject_GetItem(get_self(info), name);
@@ -96,8 +96,8 @@ void py_class_setter_callback(Local<Name> js_name, Local<Value> js_value, const 
     Local<Context> context = isolate->GetCurrentContext();
 
     PyObject *name = py_from_js(js_name, context);
-    if (name == NULL) {
-        // TODO
+    if (PyObject_HasAttr(get_self(info), name)) {
+        Py_DECREF(name);
         return;
     }
     PyObject *value = py_from_js(js_value, context);
@@ -121,6 +121,13 @@ void py_class_setter_callback(Local<Name> js_name, Local<Value> js_value, const 
 void py_class_query_callback(Local<Name> js_name, const PropertyCallbackInfo<Integer> &info) {
     Isolate::Scope is(isolate);
     HandleScope hs(isolate);
+    Local<Context> context = isolate->GetCurrentContext();
+
+    PyObject *name = py_from_js(js_name, context);
+    if (PyObject_HasAttr(get_self(info), name)) {
+        Py_DECREF(name);
+        return;
+    }
 
     int descriptor = DontEnum;
     PyObject *cls = (PyObject *) Py_TYPE(get_self(info));
@@ -139,8 +146,8 @@ void py_class_deleter_callback(Local<Name> js_name, const PropertyCallbackInfo<B
     Local<Context> context = isolate->GetCurrentContext();
 
     PyObject *name = py_from_js(js_name, context);
-    if (name == NULL) {
-        // TODO
+    if (PyObject_HasAttr(get_self(info), name)) {
+        Py_DECREF(name);
         return;
     }
     if (PyObject_DelItem(get_self(info), name) < 0) {
