@@ -16,6 +16,7 @@ install:
     - if [ "$CXX" = "g++" ]; then export CXX="g++-4.8" CC="gcc-4.8"; fi
 
 after_success:
+    - find build
     - bash <(curl -s https://codecov.io/bash)
 
 # it takes ages to compile v8 so don't do it too often
