@@ -1,5 +1,9 @@
+#ifndef V8PY_H
+#define V8PY_H
+
 #include <v8.h>
 #include "polyfill.h"
+#include "exception.h"
 #include "kappa.h"
 
 using namespace v8;
@@ -25,3 +29,4 @@ NORETURN void assert_failed(const char *condition, const char *file, int line);
         printf("%s\n", *value); \
     } while (0)
 
+#endif

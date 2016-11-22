@@ -1,3 +1,6 @@
+#ifndef EXCEPTION_H
+#define EXCEPTION_H
+
 #include <Python.h>
 #include <v8.h>
 
@@ -43,3 +46,4 @@ void js_throw_py();
         return; \
     }
 
+#endif

@@ -6,7 +6,6 @@
 #include "context.h"
 #include "convert.h"
 #include "pyfunction.h"
-#include "exception.h"
 
 PyTypeObject py_function_type = {
     PyObject_HEAD_INIT(NULL)

@@ -4,7 +4,6 @@
 #include "v8py.h"
 #include "pyclass.h"
 #include "convert.h"
-#include "exception.h"
 
 PyTypeObject js_exception_type = {
     PyObject_HEAD_INIT(NULL)

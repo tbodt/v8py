@@ -2,7 +2,6 @@
 #include <v8.h>
 
 #include "v8py.h"
-#include "exception.h"
 #include "jsobject.h"
 #include "convert.h"
 
@@ -39,9 +38,11 @@ PyObject *js_dictionary_keys(js_dictionary *self) {
     Local<Context> context = self->context.Get(isolate);
     Context::Scope cs(context);
     Local<Object> object = self->object.Get(isolate);
+    JS_TRY
 
-    Local<Array> properties = object->GetOwnPropertyNames(context, ONLY_ENUMERABLE).ToLocalChecked();
-    return py_from_js(properties, context);
+    MaybeLocal<Array> properties = object->GetOwnPropertyNames(context, ONLY_ENUMERABLE);
+    PY_PROPAGATE_JS;
+    return py_from_js(properties.ToLocalChecked(), context);
 }
 
 Py_ssize_t js_dictionary_length(js_dictionary *self) {
@@ -57,12 +58,16 @@ PyObject *js_dictionary_getitem(js_dictionary *self, PyObject *key) {
     Local<Context> context = self->context.Get(isolate);
     Context::Scope cs(context);
     Local<Object> object = self->object.Get(isolate);
+    JS_TRY
+
     Local<String> js_key = js_from_py(key, context).As<String>();
     if (!object->Has(context, js_key).FromJust()) {
         PyErr_Format(PyExc_KeyError, "%s", PyString_AS_STRING(key));
         return NULL;
     }
-    return py_from_js(object->Get(context, js_key).ToLocalChecked(), context);
+    MaybeLocal<Value> value = object->Get(context, js_key);
+    PY_PROPAGATE_JS;
+    return py_from_js(value.ToLocalChecked(), context);
 }
 
 int js_dictionary_setitem(js_dictionary *self, PyObject *key, PyObject *value) {

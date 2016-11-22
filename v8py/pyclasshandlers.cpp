@@ -4,7 +4,6 @@
 #include "v8py.h"
 #include "convert.h"
 #include "pyclass.h"
-#include "exception.h"
 
 void py_class_construct_callback(const FunctionCallbackInfo<Value> &info) {
     HandleScope hs(isolate);

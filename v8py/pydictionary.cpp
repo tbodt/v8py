@@ -4,7 +4,6 @@
 #include "v8py.h"
 #include "convert.h"
 #include "pydictionary.h"
-#include "exception.h"
 
 using namespace v8;
 
