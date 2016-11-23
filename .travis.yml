@@ -12,6 +12,7 @@ addons:
             - clang
 
 install:
+    - pip install twine
     - export CFLAGS='-g -O0 --coverage'
     - if [ "$CXX" = "g++" ]; then export CXX="g++-4.8" CC="gcc-4.8"; fi
 
@@ -27,7 +28,7 @@ deploy:
     provider: pypi
     user: tbodt
     password:
-        secure: iChPq/sctkIcFpxjXBgdL5e4GT9U9sJtgTwV+Ay4LigmMkfMX+PF8eq3RqqbtmSnYCtP2hDDa0g/T8pX59fCnk+E/MgeR+OtmDyoOrlKZV3wbhA+XAhjoQWnGcdADdzq2vxaNcC6HjS+Iug4Wf0jSQ2XFFDGzqKTWKTGOVDPcRxLPBypaHKfBUp3W0NIkiiSieIyEK4EYyPtSOiLT7ias56DEEnoLMWeCRTJqYrzziR/mNuraRXGd2nFxnvW/0IHu9OoPrwJrB5Umr3j8GBdLbwruIKJSMXvyrgskEDKZycxX59/RlOvq+8vLZbxJf0byN6GCKNjZFPZXcWQk4tHpen5k6VN+CNZTP9ONABFfllAPliUoKVXb/6bUwsXAlo6o8KwUk0csAqkFyzph4//ZU0TaCWqcPgmYarhMKRtP0h1IdzR2CNxFcZDXnFXf8/2nGQ4j+b/mHXE0BISX+Wku4Td9JYQbNyY5p5ImA53ql61xTLl2sgakf96qgnW+puNJd4OW3vZlncuRAlwGmwB/1Y+cXy79MfLv/FMgFZSm7kvT8xA8DbLGX91R9eevfB4pxOYb4pVHL7Ar8uWwYmJBwsrdt1WsJkk+DeCkuwJmMggqg1WYFkugxthtyh7OtfiVQRq0hhLKwZrVVZYobdaY1U0I/mo2FLpCP6Dxn7Z74Q=
+        secure: "KKVEq10cNqkFlSLlHidGUeGfjWTASOG8LXWOvuSnlpc9A4crHmtQLfJNkl7EEyyy3hcQY1r30Vq/baG3Iar60W3GYYD53ifewpSfeGUMqZN8Bfcl98Cu8T9XmTC4m+FP3k7ybFTh8KzgN/ivtUfHG8b50SVBccXqcro/Oh4VE8YryK/uhAFFV0hbuB4kURe5JVqO6lBo+4ssOyjKzFJ68kAkjry10yR7EtBW/+/4WpZGhLbhaDJCKWekGfwg8XR3PSg6zGJYSexRkJqJIoHq+PB/8yK/RusrAQXqWLb0fCEhMOkQWK+FBB41LWyayfMo7MhDQYv6GslkIu1eAeNitLFeT1wnb+0tVqVpIRsUhTNzzIASHq0zOeav8YriHHqdXd5xceRHPGu103k2ybceLg/I2ReRq2aO/yeJvC8IGL+2vhgN5UruvxxSWfo63ukRyqf9TEBZTIque6s9bFW/K+2wn7XDMNa1LBBcg+KKpDoXzqYc5oqJvjGMydJj+SfNo66aNaQ1WY2c0a+gA88B7+TaoWD6wOWquHHyCbGDGuuIbBw2n072FDwc4lP0dUa0zCOAKP15dTm6VO3xcuS2SMshQjAXgZ2hp4Z/cW5ghYiqwdfBZosT9gY/675o37Wdt80/lG8RWn0ByuM045pUjsYSCkBxzucMAzHTPPWYCxI="
     on:
         tags: true
         distributions: sdist bdist_wheel
