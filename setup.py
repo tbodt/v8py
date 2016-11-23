@@ -13,7 +13,7 @@ os.chdir(os.path.abspath(os.path.dirname(__file__)))
 sources = map(lambda path: os.path.join('v8py', path),
               filter(lambda path: path.endswith('.cpp'),
                      os.listdir('v8py')))
-libraries = ['v8_libplatform', 'v8_base', 'v8_nosnapshot',
+libraries = ['v8_libplatform', 'v8_base', 'v8_snapshot',
              'v8_libbase', 'v8_libsampler',
              'icui18n', 'icuuc']
 library_dirs = ['v8/out/native',
@@ -40,6 +40,7 @@ def cd(path):
 DEPOT_TOOLS_PATH = os.path.join(os.getcwd(), 'depot_tools')
 COMMAND_ENV = os.environ.copy()
 COMMAND_ENV['PATH'] = DEPOT_TOOLS_PATH + os.path.pathsep + os.environ['PATH']
+COMMAND_ENV['GYP_DEFINES'] = 'v8_use_external_startup_data=0'
 COMMAND_ENV.pop('CC', None)
 COMMAND_ENV.pop('CXX', None)
 
@@ -91,7 +92,7 @@ class BuildV8Command(Command):
         if not v8_exists():
             get_v8()
             with cd('v8'):
-                run('make native -j{} CFLAGS=-fPIC CXXFLAGS=-fPIC'.format(multiprocessing.cpu_count()))
+                run('make native snapshot=on -j{} CFLAGS=-fPIC CXXFLAGS=-fPIC'.format(multiprocessing.cpu_count()))
 
 class build_ext(distutils_build_ext):
     def build_extension(self, ext):
