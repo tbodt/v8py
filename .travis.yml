@@ -12,7 +12,7 @@ addons:
             - clang
 
 install:
-    - pip install twine
+    - pip install --user twine pytest
     - export CFLAGS='-g -O0 --coverage'
     - if [ "$CXX" = "g++" ]; then export CXX="g++-4.8" CC="gcc-4.8"; fi
 
