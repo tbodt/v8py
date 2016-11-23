@@ -22,8 +22,7 @@ cache:
         - v8
 
 after_success:
-    - find . -type f -name '*.gcno' -exec echo {} +
-    - bash <(curl -s https://codecov.io/bash) -v -X fix
+    - bash <(curl -s https://codecov.io/bash) -v -X fix -x gcov-4.8
 
 deploy:
     provider: pypi
