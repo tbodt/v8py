@@ -15,11 +15,20 @@ install:
     - export CFLAGS='-g -O0 --coverage'
     - if [ "$CXX" = "g++" ]; then export CXX="g++-4.8" CC="gcc-4.8"; fi
 
-after_success:
-    - find build
-    - bash <(curl -s https://codecov.io/bash)
-
 # it takes ages to compile v8 so don't do it too often
 cache:
     directories:
-        v8
+        - v8
+
+after_success:
+    - bash <(curl -s https://codecov.io/bash)
+
+deploy:
+    provider: pypi
+    user: tbodt
+    password:
+        secure: iChPq/sctkIcFpxjXBgdL5e4GT9U9sJtgTwV+Ay4LigmMkfMX+PF8eq3RqqbtmSnYCtP2hDDa0g/T8pX59fCnk+E/MgeR+OtmDyoOrlKZV3wbhA+XAhjoQWnGcdADdzq2vxaNcC6HjS+Iug4Wf0jSQ2XFFDGzqKTWKTGOVDPcRxLPBypaHKfBUp3W0NIkiiSieIyEK4EYyPtSOiLT7ias56DEEnoLMWeCRTJqYrzziR/mNuraRXGd2nFxnvW/0IHu9OoPrwJrB5Umr3j8GBdLbwruIKJSMXvyrgskEDKZycxX59/RlOvq+8vLZbxJf0byN6GCKNjZFPZXcWQk4tHpen5k6VN+CNZTP9ONABFfllAPliUoKVXb/6bUwsXAlo6o8KwUk0csAqkFyzph4//ZU0TaCWqcPgmYarhMKRtP0h1IdzR2CNxFcZDXnFXf8/2nGQ4j+b/mHXE0BISX+Wku4Td9JYQbNyY5p5ImA53ql61xTLl2sgakf96qgnW+puNJd4OW3vZlncuRAlwGmwB/1Y+cXy79MfLv/FMgFZSm7kvT8xA8DbLGX91R9eevfB4pxOYb4pVHL7Ar8uWwYmJBwsrdt1WsJkk+DeCkuwJmMggqg1WYFkugxthtyh7OtfiVQRq0hhLKwZrVVZYobdaY1U0I/mo2FLpCP6Dxn7Z74Q=
+    on:
+        tags: true
+        distributions: sdist bdist_wheel
+        repo: tbodt/v8py

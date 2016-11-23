@@ -36,9 +36,11 @@ Almost everything you'd expect to work just works, including:
 Installation
 ------------
 
-If you have a Mac running OS X 10.12, you can do::
+If you have a Mac running OS X 10.12, you can do
 
-    pip install v8py
+.. code-block:: bash
+
+    $ pip install v8py
 
 If not, you can still try that, but it'll be stuck at "Running setup.py install
 for v8py" for literally hours. (It's downloading and building V8, which is a
@@ -48,6 +50,9 @@ Misc
 ----
 
 I (sometimes) stream development of this and related projects at https://twitch.tv/tblodt.
+
+There is no documentation of any of this yet. No docstrings. The best place to
+look to find out how to use it is the tests.
 
 I'm writing this so I can create a really lightweight special-purpose webdriver
 (no visual rendering, no asynchronous XHRs), and I need some way of

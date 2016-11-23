@@ -117,9 +117,12 @@ setup(
         'Development Status :: 3 - Alpha',
         'License :: OSI Approved :: GNU Lesser General Public License v3 or later (LGPLv3+)',
         'Topic :: Software Development :: Interpreters',
+        'Programming Language :: Python :: 2.7',
     ],
 
-    packages=find_packages(),
+    keywords=['v8', 'javascript'],
+
+    packages=find_packages(exclude=['tests']),
     ext_modules=[extension],
 
     setup_requires=['pytest-runner'],
