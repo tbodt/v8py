@@ -22,7 +22,7 @@ cache:
         - v8
 
 after_success:
-    - bash <(curl -s https://codecov.io/bash) -v
+    - bash <(curl -s https://codecov.io/bash) -v -X fix
 
 deploy:
     provider: pypi
