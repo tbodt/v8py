@@ -4,17 +4,10 @@ script: ./setup.py test
 dist: trusty
 sudo: false
 group: beta
-addons:
-    apt:
-        sources:
-            - ubuntu-toolchain-r-test
-        packages:
-            - g++-5
 
 install:
     - pip install --user twine pytest
     - export CFLAGS='-g -O0 --coverage'
-    - if [ "$CXX" = "g++" ]; then export CXX="g++-5" CC="gcc-5"; fi
 
 # it takes ages to compile v8 so don't do it too often
 cache:
@@ -22,7 +15,7 @@ cache:
         - v8
 
 after_success:
-    - bash <(curl -s https://codecov.io/bash) -x gcov-5
+    - bash <(curl -s https://codecov.io/bash)
 
 deploy:
     provider: pypi
