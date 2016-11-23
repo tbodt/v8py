@@ -1,6 +1,4 @@
 language: cpp
-compiler:
-    - clang
 script: ./setup.py test
 
 sudo: false
@@ -9,12 +7,12 @@ addons:
         sources:
             - ubuntu-toolchain-r-test
         packages:
-            - clang
+            - g++-5
 
 install:
     - pip install --user twine pytest
     - export CFLAGS='-g -O0 --coverage'
-    - if [ "$CXX" = "g++" ]; then export CXX="g++-4.8" CC="gcc-4.8"; fi
+    - if [ "$CXX" = "g++" ]; then export CXX="g++-5" CC="gcc-5"; fi
 
 # it takes ages to compile v8 so don't do it too often
 cache:
@@ -22,7 +20,7 @@ cache:
         - v8
 
 after_success:
-    - bash <(curl -s https://codecov.io/bash) -v -X fix -x gcov-4.8
+    - bash <(curl -s https://codecov.io/bash) -v -X fix -x gcov-5
 
 deploy:
     provider: pypi
