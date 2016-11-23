@@ -1,7 +1,9 @@
 language: cpp
 script: ./setup.py test
 
+dist: trusty
 sudo: false
+group: beta
 addons:
     apt:
         sources:
