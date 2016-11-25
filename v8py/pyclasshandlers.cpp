@@ -26,6 +26,9 @@ void py_class_method_callback(const FunctionCallbackInfo<Value> &info) {
     Local<Context> context = isolate->GetCurrentContext();
 
     Local<Object> js_self = info.This();
+    if (js_self == context->Global()) {
+        js_self = js_self->GetPrototype().As<Object>();
+    }
     PyObject *self = (PyObject *) js_self->GetInternalField(1).As<External>()->Value();
     PyObject *args = pys_from_jss(info, context);
     JS_PROPAGATE_PY(args);

@@ -5,12 +5,14 @@
 #include "v8py.h"
 #include "context.h"
 #include "convert.h"
-#include "pyfunction.h"
+#include "pyclass.h"
 
 using namespace v8;
 
 PyMethodDef context_methods[] = {
     {"eval", (PyCFunction) context_eval, METH_VARARGS | METH_KEYWORDS, NULL},
+    {"expose", (PyCFunction) context_expose, METH_VARARGS | METH_KEYWORDS, NULL},
+    {"expose_module", (PyCFunction) context_expose_module, METH_O, NULL},
     {"gc", (PyCFunction) context_gc, METH_NOARGS, NULL},
     {NULL},
 };
@@ -46,19 +48,125 @@ void context_dealloc(context *self) {
 }
 
 PyObject *context_new(PyTypeObject *type, PyObject *args, PyObject *kwargs) {
-    context *self = (context *) type->tp_alloc(type, 0);
-    if (self != NULL) {
-        Isolate::Scope isolate_scope(isolate);
-        HandleScope handle_scope(isolate);
+    Isolate::Scope isolate_scope(isolate);
+    HandleScope handle_scope(isolate);
 
-        Local<Context> context = Context::New(isolate);
-        Context::Scope cs(context);
-        self->js_context.Reset(isolate, context);
-
-        context->SetEmbedderData(OBJECT_PROTOTYPE_SLOT, Object::New(isolate)->GetPrototype());
-        context->SetEmbedderData(ERROR_PROTOTYPE_SLOT, Exception::Error(String::Empty(isolate)).As<Object>()->GetPrototype());
+    PyObject *global = NULL;
+    if (PyArg_ParseTuple(args, "|O", &global) < 0) {
+        return NULL;
     }
+    if (global != NULL) {
+        if (PyType_Check(global) || PyClass_Check(global)) {
+            PyObject *no_args = PyTuple_New(0);
+            PyErr_PROPAGATE(no_args);
+            global = PyObject_Call(global, no_args, NULL);
+            Py_DECREF(no_args);
+            PyErr_PROPAGATE(global);
+        } else {
+            Py_INCREF(global);
+        }
+    }
+
+    context *self = (context *) type->tp_alloc(type, 0);
+    PyErr_PROPAGATE(self);
+
+    MaybeLocal<ObjectTemplate> global_template;
+    if (global != NULL) {
+        PyObject *global_type;
+        if (PyInstance_Check(global)) {
+            global_type = PyObject_GetAttrString(global, "__class__");
+        } else {
+            global_type = (PyObject *) Py_TYPE(global);
+            Py_INCREF(global_type);
+        }
+        py_class *templ;
+        templ = (py_class *) py_class_to_template(global_type);
+        Py_DECREF(global_type);
+        global_template = templ->templ->Get(isolate)->InstanceTemplate();
+    }
+
+    Local<Context> context = Context::New(isolate, NULL, global_template);
+    Context::Scope cs(context);
+    self->js_context.Reset(isolate, context);
+
+    context->SetEmbedderData(OBJECT_PROTOTYPE_SLOT, Object::New(isolate)->GetPrototype());
+    context->SetEmbedderData(ERROR_PROTOTYPE_SLOT, Exception::Error(String::Empty(isolate)).As<Object>()->GetPrototype());
+
+    if (global != NULL) {
+        py_class_init_js_object(context->Global()->GetPrototype().As<Object>(), global, context);
+    }
+
     return (PyObject *) self;
+}
+
+PyObject *context_expose(context *self, PyObject *args, PyObject *kwargs) {
+    Isolate::Scope is(isolate);
+    HandleScope hs(isolate);
+    Local<Context> context = self->js_context.Get(isolate);
+    Local<Object> global = context->Global();
+
+    args = PySequence_Fast(args, "sequence required");
+    PyErr_PROPAGATE(args);
+    for (int i = 0; i < PySequence_Fast_GET_SIZE(args); i++) {
+        PyObject *object = PySequence_Fast_GET_ITEM(args, i);
+        PyErr_PROPAGATE(object);
+        if (!PyObject_HasAttrString(object, "__name__")) {
+            PyErr_SetString(PyExc_TypeError, "Object passed to expose must have a __name__");
+            return NULL;
+        }
+    }
+    for (int i = 0; i < PySequence_Fast_GET_SIZE(args); i++) {
+        PyObject *object = PySequence_Fast_GET_ITEM(args, i);
+        PyErr_PROPAGATE(object);
+        PyObject *name = PyObject_GetAttrString(object, "__name__");
+        PyErr_PROPAGATE(name);
+        global->CreateDataProperty(context, js_from_py(name, context).As<String>(), js_from_py(object, context));
+    }
+    Py_DECREF(args);
+
+    PyObject *name, *object;
+    Py_ssize_t pos = 0;
+    while (PyDict_Next(kwargs, &pos, &name, &object)) {
+        global->CreateDataProperty(context, js_from_py(name, context).As<String>(), js_from_py(object, context));
+    }
+
+    Py_RETURN_NONE;
+}
+
+PyObject *context_expose_module(context *self, PyObject *module) {
+    if (!PyModule_Check(module)) {
+        PyErr_SetString(PyExc_TypeError, "context_expose_module requires a module");
+        return NULL;
+    }
+
+    PyObject *module_all_slow = PyObject_Dir(module);
+    PyErr_PROPAGATE(module_all_slow);
+    PyObject *module_all = PySequence_Fast(module_all_slow, "o noes");
+    Py_DECREF(module_all_slow);
+    PyErr_PROPAGATE(module_all);
+    PyObject *members = PyDict_New();
+    PyErr_PROPAGATE(members);
+    for (int i = 0; i < PySequence_Fast_GET_SIZE(module_all); i++) {
+        PyObject *name = PySequence_Fast_GET_ITEM(module_all, i);
+        if (!PyString_StartsWithString(name, "_")) {
+            PyObject *value = PyObject_GetAttr(module, name);
+            if (value == NULL) {
+                Py_DECREF(members);
+                return NULL;
+            }
+            if (PyDict_SetItem(members, name, value) < 0) {
+                Py_DECREF(members);
+                return NULL;
+            }
+        }
+    }
+
+    PyObject *no_args = PyTuple_New(0);
+    PyErr_PROPAGATE(no_args);
+    PyObject *result = context_expose(self, no_args, members);
+    Py_DECREF(no_args);
+    Py_DECREF(members);
+    return result;
 }
 
 void *breaker_thread(void *param) {
