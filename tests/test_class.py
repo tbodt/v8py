@@ -1,4 +1,5 @@
 import pytest
+import v8py
 
 @pytest.fixture(params=['new', 'old'])
 def Test(request):
@@ -14,6 +15,9 @@ def Test(request):
             @classmethod
             def class_method(cls):
                 return 'class'
+            @v8py.hidden
+            def hidden_method(self):
+                return 'hidden'
         return Test
     else:
         class Test:
@@ -25,6 +29,9 @@ def Test(request):
             @classmethod
             def class_method(cls):
                 return 'class'
+            @v8py.hidden
+            def hidden_method(self):
+                return 'hidden'
         return Test
 
 @pytest.fixture
@@ -55,3 +62,6 @@ def test_static_method(context):
     assert context.eval('Test.static_method()') == 'static'
     assert context.eval('Test.class_method()') == 'class'
 
+def test_hidden_method(context):
+    with pytest.raises(v8py.JSException):
+        context.eval('new Test().hidden_method()')
