@@ -28,7 +28,25 @@ void initialize_v8() {
     }
 }
 
+PyObject *mark_hidden(PyObject *shit, PyObject *thing) {
+    if (PyObject_SetAttrString(thing, "__v8py_hidden__", Py_True) < 0) {
+        return NULL;
+    }
+    Py_INCREF(thing);
+    return thing;
+}
+
+PyObject *mark_unconstructable(PyObject *shit, PyObject *thing) {
+    if (PyObject_SetAttrString(thing, "__v8py_unconstructable__", Py_True) < 0) {
+        return NULL;
+    }
+    Py_INCREF(thing);
+    return thing;
+}
+
 static PyMethodDef v8_methods[] = {
+    {"hidden", mark_hidden, METH_O, ""},
+    {"unconstructable", mark_unconstructable, METH_O, ""},
     {NULL},
 };
 

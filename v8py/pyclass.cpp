@@ -21,13 +21,6 @@ int py_class_type_init() {
     return PyType_Ready(&py_class_type);
 }
 
-int py_bool(PyObject *obj) {
-    assert(PyBool_Check(obj));
-    int retval = (obj == Py_True);
-    Py_DECREF(obj);
-    return retval;
-}
-
 static PyObject *template_dict = NULL;
 
 PyObject *py_class_for_mro(PyObject *mro) {
@@ -111,7 +104,16 @@ PyObject *py_class_new(PyObject *mro) {
     PyErr_PROPAGATE(self);
 
     Local<External> js_self = External::New(isolate, self);
-    Local<FunctionTemplate> templ = FunctionTemplate::New(isolate, py_class_construct_callback, js_self);
+    ConstructorBehavior construct_allowed = ConstructorBehavior::kAllow;
+    // Sadly, this can't work because V8 allocates objects constructed from a
+    // template with kThrow with 0 internal fields, regardless of how many are
+    // specified on the InstanceTemplate. Instead, I throw an exception in the
+    // construct callback.
+    // if (PyObject_HasAttrString(cls, "__v8py_unconstructable__")) {
+        // construct_allowed = ConstructorBehavior::kThrow;
+    // }
+    Local<FunctionTemplate> templ = FunctionTemplate::New(isolate, py_class_construct_callback, js_self,
+            Local<Signature>(), 0, construct_allowed);
 
     PyObject *attributes = PyObject_Dir(cls);
     PyErr_PROPAGATE(attributes);
@@ -197,9 +199,9 @@ int add_to_template(PyObject *cls, PyObject *member_name, PyObject *member_value
     Local<Signature> sig = Signature::New(isolate, templ);
     Local<AccessorSignature> accessor_sig = AccessorSignature::New(isolate, templ);
 
-    // skip names with too many underscores
-    if (py_bool(PyObject_CallMethod(member_name, "startswith", "s", "__")) &&
-            py_bool(PyObject_CallMethod(member_name, "endswith", "s", "__"))) {
+    // skip names that start with _ or are marked __v8py_hidden__
+    if (PyString_StartsWithString(member_name, "_") ||
+            PyObject_HasAttrString(member_value, "__v8py_hidden__")) {
         return 0;
     }
     Local<Name> js_name = js_from_py(member_name, no_ctx).As<Name>();

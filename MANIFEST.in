@@ -1,0 +1,6 @@
+recursive-include v8py *.cpp *.h
+recursive-exclude tests *.py
+
+include README.rst
+include LICENSE
+include COPYING.LESSER

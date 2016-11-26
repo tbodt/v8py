@@ -14,6 +14,19 @@ void py_class_construct_callback(const FunctionCallbackInfo<Value> &info) {
         isolate->ThrowException(Exception::TypeError(JSTR("Constructor requires 'new' operator")));
         return;
     }
+    if (PyObject_HasAttrString(self->cls, "__v8py_unconstructable__")) {
+        PyObject *format_args = Py_BuildValue("O", self->cls_name);
+        JS_PROPAGATE_PY(format_args);
+        PyObject *format_string = PyUnicode_FromString("%s is not a constructor");
+        if (format_string == NULL) {
+            Py_DECREF(format_args);
+            js_throw_py();
+            return;
+        }
+        PyObject *message = PyUnicode_Format(format_string, format_args);
+        JS_PROPAGATE_PY(message);
+        isolate->ThrowException(Exception::TypeError(js_from_py(message, context).As<String>()));
+    }
 
     Local<Object> js_new_object = info.This();
     PyObject *new_object = PyObject_Call(self->cls, pys_from_jss(info, context), NULL);
@@ -61,8 +74,6 @@ void py_class_method_callback(const FunctionCallbackInfo<Value> &info) {
 }
 
 // --- Interceptors ---
-// TODO everything needs to be fixed with regards to exception handling
-// one TODO comment for everything that needs to be fixed
 
 template <class T> inline extern PyObject *get_self(const PropertyCallbackInfo<T> &info) {
     return (PyObject *) info.This()->GetInternalField(1).template As<External>()->Value();

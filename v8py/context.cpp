@@ -124,10 +124,12 @@ PyObject *context_expose(context *self, PyObject *args, PyObject *kwargs) {
     }
     Py_DECREF(args);
 
-    PyObject *name, *object;
-    Py_ssize_t pos = 0;
-    while (PyDict_Next(kwargs, &pos, &name, &object)) {
-        global->CreateDataProperty(context, js_from_py(name, context).As<String>(), js_from_py(object, context));
+    if (kwargs != NULL) {
+        PyObject *name, *object;
+        Py_ssize_t pos = 0;
+        while (PyDict_Next(kwargs, &pos, &name, &object)) {
+            global->CreateDataProperty(context, js_from_py(name, context).As<String>(), js_from_py(object, context));
+        }
     }
 
     Py_RETURN_NONE;
