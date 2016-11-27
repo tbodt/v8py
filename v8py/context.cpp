@@ -228,7 +228,7 @@ PyObject *context_get_global(context *self, void *shit) {
     Isolate::Scope is(isolate);
     HandleScope hs(isolate);
     Local<Context> context = self->js_context.Get(isolate);
-    return py_from_js(context->Global(), context);
+    return py_from_js(context->Global()->GetPrototype(), context);
 }
 
 PyObject *context_getattro(context *self, PyObject *name) {
