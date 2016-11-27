@@ -197,7 +197,6 @@ int add_to_template(PyObject *cls, PyObject *member_name, PyObject *member_value
     HandleScope hs(isolate);
     Local<Context> no_ctx;
     Local<Signature> sig = Signature::New(isolate, templ);
-    Local<AccessorSignature> accessor_sig = AccessorSignature::New(isolate, templ);
 
     // skip names that start with _ or are marked __v8py_hidden__
     if (PyString_StartsWithString(member_name, "_") ||
@@ -228,7 +227,7 @@ int add_to_template(PyObject *cls, PyObject *member_name, PyObject *member_value
             js_value = function->js_template->Get(isolate);
         } else if (PyObject_HasAttrString(member_value, "__get__") && PyObject_HasAttrString(member_value, "__set__")) {
             templ->InstanceTemplate()->SetAccessor(js_name, py_class_property_getter, py_class_property_setter, 
-                    js_name, DEFAULT, DontDelete, accessor_sig);
+                    js_name, DEFAULT, DontDelete);
         } else {
             // otherwise just convert
             js_value = js_from_py(member_value, no_ctx);
