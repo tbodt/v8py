@@ -20,10 +20,8 @@ int js_function_type_init() {
 }
 
 PyObject *js_function_call(js_function *self, PyObject *args, PyObject *kwargs) {
-    Isolate::Scope is(isolate);
-    HandleScope hs(isolate);
-    Local<Context> context = self->context.Get(isolate);
-    Context::Scope cs(context);
+    IN_V8;
+    IN_CONTEXT(self->context.Get(isolate));
     JS_TRY
 
     Local<Object> object = self->object.Get(isolate);

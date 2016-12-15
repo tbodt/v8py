@@ -89,8 +89,7 @@ int compute_old_class_mro(PyObject *cls, PyObject *mro_list) {
 }
 
 PyObject *py_class_new(PyObject *mro) {
-    Isolate::Scope is(isolate);
-    HandleScope hs(isolate);
+    IN_V8;
 
     // The convert functions require a context for function conversion, but we
     // don't have a context. So we use an empty context and special-case

@@ -22,8 +22,7 @@ int py_function_type_init() {
 static void py_function_callback(const FunctionCallbackInfo<Value> &info);
 
 PyObject *py_function_new(PyObject *function) {
-    Isolate::Scope isolate_scope(isolate);
-    HandleScope handle_scope(isolate);
+    IN_V8;
 
     py_function *self = (py_function *) py_function_type.tp_alloc(&py_function_type, 0);
     PyErr_PROPAGATE(self);

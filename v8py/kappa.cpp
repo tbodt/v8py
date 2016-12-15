@@ -23,8 +23,7 @@ MAGIC_CONSTANT_STRING_LIST_KAPPA(DEFINE_MEME)
         ▀▀█▄▄▄▄▀              ▀▀█▄▄▄▄▀              ▀▀█▄▄▄▄▀              ▀▀█▄▄▄▄▀ */  
 
 void create_memes_plz_thx() {
-    Isolate::Scope is(isolate);
-    HandleScope hs(isolate);
+    IN_V8;
 #define CREATE_MEME(name, string) name##p.Reset(isolate, JSTR(string));
     MAGIC_CONSTANT_STRING_LIST_KAPPA(CREATE_MEME)
 #undef CREATE_MEME

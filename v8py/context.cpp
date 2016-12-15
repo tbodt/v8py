@@ -48,8 +48,7 @@ void context_dealloc(context *self) {
 }
 
 PyObject *context_new(PyTypeObject *type, PyObject *args, PyObject *kwargs) {
-    Isolate::Scope isolate_scope(isolate);
-    HandleScope handle_scope(isolate);
+    IN_V8;
 
     PyObject *global = NULL;
     if (PyArg_ParseTuple(args, "|O", &global) < 0) {
@@ -85,8 +84,7 @@ PyObject *context_new(PyTypeObject *type, PyObject *args, PyObject *kwargs) {
         global_template = templ->templ->Get(isolate)->InstanceTemplate();
     }
 
-    Local<Context> context = Context::New(isolate, NULL, global_template);
-    Context::Scope cs(context);
+    IN_CONTEXT(Context::New(isolate, NULL, global_template));
     self->js_context.Reset(isolate, context);
 
     context->SetEmbedderData(OBJECT_PROTOTYPE_SLOT, Object::New(isolate)->GetPrototype());
@@ -100,8 +98,7 @@ PyObject *context_new(PyTypeObject *type, PyObject *args, PyObject *kwargs) {
 }
 
 PyObject *context_expose(context *self, PyObject *args, PyObject *kwargs) {
-    Isolate::Scope is(isolate);
-    HandleScope hs(isolate);
+    IN_V8;
     Local<Context> context = self->js_context.Get(isolate);
     Local<Object> global = context->Global();
 
@@ -191,10 +188,8 @@ PyObject *context_eval(context *self, PyObject *args, PyObject *kwargs) {
         return NULL;
     }
 
-    Isolate::Scope is(isolate);
-    HandleScope hs(isolate);
-    Local<Context> context = self->js_context.Get(isolate);
-    Context::Scope cs(context);
+    IN_V8;
+    IN_CONTEXT(self->js_context.Get(isolate));
     JS_TRY
 
     MaybeLocal<Script> script = Script::Compile(context, js_from_py(program, context).As<String>());
@@ -225,8 +220,7 @@ PyObject *context_eval(context *self, PyObject *args, PyObject *kwargs) {
 }
 
 PyObject *context_get_global(context *self, void *shit) {
-    Isolate::Scope is(isolate);
-    HandleScope hs(isolate);
+    IN_V8;
     Local<Context> context = self->js_context.Get(isolate);
     return py_from_js(context->Global()->GetPrototype(), context);
 }
@@ -265,10 +259,8 @@ int context_setitem(context *self, PyObject *name, PyObject *value) {
 }
 
 PyObject *context_gc(context *self) {
-    Isolate::Scope isolate_scope(isolate);
-
+    IN_V8;
     isolate->RequestGarbageCollectionForTesting(Isolate::GarbageCollectionType::kFullGarbageCollection);
-
     Py_RETURN_NONE;
 }
 

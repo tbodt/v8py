@@ -18,8 +18,7 @@ void py_dictionary_enumerator_callback(const PropertyCallbackInfo<Array> &info);
 static Persistent<ObjectTemplate> dict_templ;
 
 void py_dictionary_init() {
-    Isolate::Scope is(isolate);
-    HandleScope hs(isolate);
+    IN_V8;
 
     Local<ObjectTemplate> templ = ObjectTemplate::New(isolate);
     templ->SetInternalFieldCount(DICT_INTERNAL_FIELDS);

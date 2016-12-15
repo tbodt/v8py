@@ -34,8 +34,7 @@ int js_object_type_init() {
 }
 
 js_object *js_object_new(Local<Object> object, Local<Context> context) {
-    Isolate::Scope is(isolate);
-    HandleScope hs(isolate);
+    IN_V8;
     Context::Scope cs(context);
     js_object *self;
     if (object->GetPrototype()->StrictEquals(context->GetEmbedderData(OBJECT_PROTOTYPE_SLOT))) {
@@ -58,11 +57,9 @@ PyObject *js_object_getattro(js_object *self, PyObject *name) {
         return PyObject_GenericGetAttr((PyObject *) self, name);
     }
 
-    Isolate::Scope is(isolate);
-    HandleScope hs(isolate);
+    IN_V8;
     Local<Object> object = self->object.Get(isolate);
-    Local<Context> context = self->context.Get(isolate);
-    Context::Scope cs(context);
+    IN_CONTEXT(self->context.Get(isolate));
     Local<Value> js_name = js_from_py(name, context);
     JS_TRY
 
@@ -95,10 +92,8 @@ int js_object_setattro(js_object *self, PyObject *name, PyObject *value) {
         return PyObject_GenericSetAttr((PyObject *) self, name, value);
     }
 
-    Isolate::Scope is(isolate);
-    HandleScope hs(isolate);
-    Local<Context> context = self->context.Get(isolate);
-    Context::Scope cs(context);
+    IN_V8;
+    IN_CONTEXT(self->context.Get(isolate));
 
     Local<Object> object = self->object.Get(isolate);
     if (!object->Set(context, js_from_py(name, context), js_from_py(value, context)).FromJust()) {
@@ -120,8 +115,7 @@ Py_ssize_t js_object_length(js_object *self) {
 }
 
 PyObject *js_object_dir(js_object *self) {
-    Isolate::Scope is(isolate);
-    HandleScope hs(isolate);
+    IN_V8;
     Local<Context> context = self->context.Get(isolate);
     Context::Scope cs(context);
     JS_TRY
@@ -142,8 +136,7 @@ PyObject *js_object_dir(js_object *self) {
 }
 
 PyObject *js_object_repr(js_object *self) {
-    Isolate::Scope is(isolate);
-    HandleScope hs(isolate);
+    IN_V8;
     Local<Context> context = self->context.Get(isolate);
     Context::Scope cs(context);
 

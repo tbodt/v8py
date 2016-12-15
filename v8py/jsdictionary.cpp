@@ -33,10 +33,8 @@ int js_dictionary_type_init() {
 }
 
 PyObject *js_dictionary_keys(js_dictionary *self) {
-    Isolate::Scope is(isolate);
-    HandleScope hs(isolate);
-    Local<Context> context = self->context.Get(isolate);
-    Context::Scope cs(context);
+    IN_V8;
+    IN_CONTEXT(self->context.Get(isolate));
     Local<Object> object = self->object.Get(isolate);
     JS_TRY
 
@@ -53,10 +51,8 @@ Py_ssize_t js_dictionary_length(js_dictionary *self) {
 }
 
 PyObject *js_dictionary_getitem(js_dictionary *self, PyObject *key) {
-    Isolate::Scope is(isolate);
-    HandleScope hs(isolate);
-    Local<Context> context = self->context.Get(isolate);
-    Context::Scope cs(context);
+    IN_V8;
+    IN_CONTEXT(self->context.Get(isolate));
     Local<Object> object = self->object.Get(isolate);
     JS_TRY
 
@@ -71,10 +67,8 @@ PyObject *js_dictionary_getitem(js_dictionary *self, PyObject *key) {
 }
 
 int js_dictionary_setitem(js_dictionary *self, PyObject *key, PyObject *value) {
-    Isolate::Scope is(isolate);
-    HandleScope hs(isolate);
-    Local<Context> context = self->context.Get(isolate);
-    Context::Scope cs(context);
+    IN_V8;
+    IN_CONTEXT(self->context.Get(isolate));
     Local<Object> object = self->object.Get(isolate);
     Local<String> js_key = js_from_py(key, context).As<String>();
     JS_TRY

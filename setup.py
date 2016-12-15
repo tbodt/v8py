@@ -21,9 +21,20 @@ library_dirs = ['v8/out/native',
                 'v8/out/native/obj.target/third_party/icu']
 if sys.platform.startswith('linux'):
     libraries.append('rt')
+
+import greenstack
+site_include = os.path.join(
+    os.path.dirname(
+        os.path.dirname(
+            os.path.dirname(
+                os.path.dirname(
+                    greenstack.__file__)))),
+    'include', 'site')
+site_include = os.path.join(site_include, os.listdir(site_include)[0])
+
 extension = Extension('v8py',
                       sources=sources,
-                      include_dirs=['v8py', 'v8/include'],
+                      include_dirs=['v8py', 'v8/include', site_include],
                       library_dirs=library_dirs,
                       libraries=libraries,
                       extra_compile_args=['-std=c++11'],
@@ -126,7 +137,7 @@ setup(
     packages=find_packages(exclude=['tests']),
     ext_modules=[extension],
 
-    setup_requires=['pytest-runner'],
+    setup_requires=['pytest-runner', 'greenstack'],
     tests_require=['pytest'],
     cmdclass={
         'build_ext': build_ext,

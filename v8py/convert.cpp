@@ -9,8 +9,7 @@
 #include "pydictionary.h"
 
 PyObject *py_from_js(Local<Value> value, Local<Context> context) {
-    Isolate::Scope is(isolate);
-    HandleScope hs(isolate);
+    IN_V8;
 
     if (value->IsSymbol()) {
         value = value.As<Symbol>()->Name();
@@ -88,8 +87,7 @@ PyObject *py_from_js(Local<Value> value, Local<Context> context) {
 }
 
 Local<Value> js_from_py(PyObject *value, Local<Context> context) {
-    Isolate::Scope is(isolate);
-    EscapableHandleScope hs(isolate);
+    ESCAPING_IN_V8;
 
     if (value == Py_False) {
         return hs.Escape(False(isolate));

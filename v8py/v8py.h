@@ -24,9 +24,27 @@ NORETURN void assert_failed(const char *condition, const char *file, int line);
 
 #define JSTR(str) String::NewFromUtf8(isolate, str, NewStringType::kNormal).ToLocalChecked()
 #define JSDUMP(obj) \
-    do { \
+    { \
         String::Utf8Value value(obj); \
         printf("%s\n", *value); \
-    } while (0)
+    }
+
+#define IN_V8 \
+    Locker locker(isolate); \
+    Isolate::Scope is(isolate); \
+    USING_V8
+#define ESCAPING_IN_V8 \
+    Locker locker(isolate); \
+    Isolate::Scope is(isolate); \
+    ESCAPING_V8
+
+#define USING_V8 \
+    HandleScope hs(isolate)
+#define ESCAPING_V8 \
+    EscapableHandleScope hs(isolate)
+
+#define IN_CONTEXT(ctx) \
+    Local<Context> context = ctx; \
+    Context::Scope cs(context);
 
 #endif
