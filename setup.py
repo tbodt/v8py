@@ -87,15 +87,15 @@ def get_v8():
 
     if not os.path.isdir('v8/.git'):
         print('downloading v8')
-        run('fetch --force v8')
+        run('python2 depot_tools/fetch --force v8')
     else:
         print('updating v8')
         with cd('v8'):
-            run('gclient fetch')
+            run('python2 depot_tools/gclient fetch')
 
     with cd('v8'):
         run('git checkout {}'.format('branch-heads/5.4'))
-        run('gclient sync')
+        run('python2 depot_tools/gclient sync')
 
 class BuildV8Command(Command):
     # currently no options
