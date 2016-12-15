@@ -1,4 +1,6 @@
 #!/usr/bin/env python
+from __future__ import print_function
+
 import sys
 import os
 from contextlib import contextmanager
@@ -8,17 +10,17 @@ import multiprocessing
 from setuptools import setup, find_packages, Extension, Command
 from distutils.command.build_ext import build_ext as distutils_build_ext
 
+MODE = 'native'
+
 os.chdir(os.path.abspath(os.path.dirname(__file__)))
 
-sources = map(lambda path: os.path.join('v8py', path),
+sources = list(map(lambda path: os.path.join('v8py', path),
               filter(lambda path: path.endswith('.cpp'),
-                     os.listdir('v8py')))
+                     os.listdir('v8py'))))
 libraries = ['v8_libplatform', 'v8_base', 'v8_snapshot',
-             'v8_libbase', 'v8_libsampler',
-             'icui18n', 'icuuc']
-library_dirs = ['v8/out/native',
-                'v8/out/native/obj.target/src',
-                'v8/out/native/obj.target/third_party/icu']
+             'v8_libbase', 'v8_libsampler']
+library_dirs = ['v8/out/{}'.format(MODE),
+                'v8/out/{}/obj.target/src'.format(MODE)]
 if sys.platform.startswith('linux'):
     libraries.append('rt')
 
@@ -29,7 +31,9 @@ site_include = os.path.join(
             os.path.dirname(
                 os.path.dirname(
                     greenstack.__file__)))),
-    'include', 'site')
+    'include')
+if 'site' in os.listdir(site_include):
+    site_include = os.path.join(site_include, 'site')
 site_include = os.path.join(site_include, os.listdir(site_include)[0])
 
 extension = Extension('v8py',
@@ -51,12 +55,12 @@ def cd(path):
 DEPOT_TOOLS_PATH = os.path.join(os.getcwd(), 'depot_tools')
 COMMAND_ENV = os.environ.copy()
 COMMAND_ENV['PATH'] = DEPOT_TOOLS_PATH + os.path.pathsep + os.environ['PATH']
-COMMAND_ENV['GYP_DEFINES'] = 'v8_use_external_startup_data=0'
+COMMAND_ENV['GYPFLAGS'] = '-Dv8_use_external_startup_data=0'
 COMMAND_ENV.pop('CC', None)
 COMMAND_ENV.pop('CXX', None)
 
 def run(command):
-    print command
+    print(command)
     check_call(command, shell=True, env=COMMAND_ENV)
 
 def v8_exists():
@@ -68,23 +72,24 @@ def v8_exists():
             lib_path = os.path.join(lib_dir, lib_filename)
             if os.path.isfile(lib_path):
                 return True
+        print(lib_filename, 'not found')
         return False
     return all(library_exists(lib) for lib in libraries)
 
 def get_v8():
     if not os.path.isdir('depot_tools'):
-        print 'installing depot tools'
+        print('installing depot tools')
         run('git clone https://chromium.googlesource.com/chromium/tools/depot_tools.git')
     else:
-        print 'updating depot tools'
+        print('updating depot tools')
         with cd('depot_tools'):
             run('git pull')
 
     if not os.path.isdir('v8/.git'):
-        print 'downloading v8'
+        print('downloading v8')
         run('fetch --force v8')
     else:
-        print 'updating v8'
+        print('updating v8')
         with cd('v8'):
             run('gclient fetch')
 
@@ -103,7 +108,7 @@ class BuildV8Command(Command):
         if not v8_exists():
             get_v8()
             with cd('v8'):
-                run('make native snapshot=on -j{} CFLAGS=-fPIC CXXFLAGS=-fPIC'.format(multiprocessing.cpu_count()))
+                run('make {} snapshot=on i18nsupport=off -j{} CFLAGS=-fPIC CXXFLAGS=-fPIC'.format(MODE, multiprocessing.cpu_count()))
 
 class build_ext(distutils_build_ext):
     def build_extension(self, ext):
