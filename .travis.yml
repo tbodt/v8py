@@ -1,4 +1,7 @@
-language: cpp
+language: python
+python:
+    - 2.7
+    - 3.5
 script: ./setup.py test
 
 dist: trusty
