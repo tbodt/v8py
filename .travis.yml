@@ -7,6 +7,7 @@ group: beta
 
 install:
     - pip install --user twine pytest greenstack
+    - ls -R ~/.local
     - export CFLAGS='-g -O0 --coverage'
 
 # it takes ages to compile v8 so don't do it too often
