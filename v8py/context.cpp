@@ -25,7 +25,7 @@ PyMappingMethods context_mapping = {
     NULL, (binaryfunc) context_getitem, (objobjargproc) context_setitem
 };
 PyTypeObject context_type = {
-    PyObject_HEAD_INIT(NULL)
+    PyVarObject_HEAD_INIT(NULL, 0)
 };
 int context_type_init() {
     context_type.tp_name = "v8py.Context";
@@ -44,7 +44,7 @@ int context_type_init() {
 
 void context_dealloc(context *self) {
     self->js_context.Reset();
-    self->ob_type->tp_free((PyObject *) self);
+    Py_TYPE(self)->tp_free((PyObject *) self);
 }
 
 PyObject *context_new(PyTypeObject *type, PyObject *args, PyObject *kwargs) {

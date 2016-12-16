@@ -6,7 +6,7 @@
 #include "convert.h"
 
 PyTypeObject js_exception_type = {
-    PyObject_HEAD_INIT(NULL)
+    PyVarObject_HEAD_INIT(NULL, 0)
 };
 int js_exception_type_init() {
     js_exception_type.tp_name = "v8py.JSException";
@@ -27,21 +27,26 @@ PyObject *js_exception_new(Local<Value> exception, Local<Message> message) {
     self->exception.Reset(isolate, exception);
     self->message.Reset(isolate, message);
 
-    self->py_message = py_from_js(exception->ToString(), no_ctx);
-    self->py_args = PyTuple_New(1);
-    Py_INCREF(self->py_message);
-    PyTuple_SetItem(self->py_args, 0, self->py_message);
+    PyObject *py_message = py_from_js(exception->ToString(), no_ctx);
+    PyErr_PROPAGATE(py_message);
+#if PY_MAJOR_VERSION < 3
+    self->base.message = py_message;
+    Py_INCREF(self->base.message);
+#endif
+    self->base.args = PyTuple_New(1);
+    PyErr_PROPAGATE(self->base.args);
+    PyTuple_SetItem(self->base.args, 0, py_message);
     return (PyObject *) self;
 }
 
 void js_exception_dealloc(js_exception *self) {
     self->exception.Reset();
     self->message.Reset();
-    self->ob_type->tp_free((PyObject *) self);
+    Py_TYPE(self)->tp_free((PyObject *) self);
 }
 
 PyTypeObject js_terminated_type = {
-    PyObject_HEAD_INIT(NULL)
+    PyVarObject_HEAD_INIT(NULL, 0)
 };
 int js_terminated_type_init() {
     js_terminated_type.tp_name = "v8py.JavaScriptTerminated";
@@ -73,6 +78,7 @@ void js_throw_py() {
     PyObject *exc_type, *exc_value, *exc_traceback;
     PyErr_Fetch(&exc_type, &exc_value, &exc_traceback);
     PyErr_NormalizeException(&exc_type, &exc_value, &exc_traceback);
+    PyErr_Print();
     Local<Object> exception;
     if (PyObject_TypeCheck(exc_value, &js_exception_type)) {
         exception = ((js_exception *) exc_value)->exception.Get(isolate).As<Object>();

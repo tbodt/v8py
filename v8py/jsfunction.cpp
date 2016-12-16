@@ -6,7 +6,7 @@
 #include "convert.h"
 
 PyTypeObject js_function_type = {
-    PyObject_HEAD_INIT(NULL)
+    PyVarObject_HEAD_INIT(NULL, 0)
 };
 int js_function_type_init() {
     js_function_type.tp_name = "v8py.BoundFunction";

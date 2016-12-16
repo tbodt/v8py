@@ -1,5 +1,10 @@
+import sys
 import pytest
 
+if sys.version_info.major < 3:
+    params = ['new', 'old']
+else:
+    params = ['new']
 @pytest.fixture(params=['new', 'old'])
 def Class(request):
     if request.param == 'new':

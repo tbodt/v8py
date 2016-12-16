@@ -7,12 +7,7 @@
 using namespace v8;
 
 typedef struct {
-    PyObject_HEAD
-    // copied from PyBaseExceptionObject {
-    PyObject *dict;
-    PyObject *py_args;
-    PyObject *py_message;
-    // }
+    PyBaseExceptionObject base;
     Persistent<Value> exception;
     Persistent<Message> message;
 } js_exception;

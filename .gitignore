@@ -1,4 +1,6 @@
-engine
+# I have separate virtualenvs for python 2 and 3
+env2
+env3
 v8
 depot_tools
 .gclient

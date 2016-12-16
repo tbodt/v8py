@@ -10,7 +10,7 @@
 int add_to_template(PyObject *cls, PyObject *member_name, PyObject *member_value, Local<FunctionTemplate> templ);
 
 PyTypeObject py_class_type = {
-    PyObject_HEAD_INIT(NULL)
+    PyVarObject_HEAD_INIT(NULL, 0)
 };
 
 int py_class_type_init() {
@@ -57,6 +57,7 @@ PyObject *py_class_to_template(PyObject *cls) {
             return NULL;
         }
         mro = PySequence_Tuple(mro_list);
+        // I have a funny feeling this will be useful someday.
         /* printf("old class computed mro: "); */
         /* PyObject_Print(mro, stdout, 0); */
         /* printf("\n"); */
@@ -72,6 +73,9 @@ PyObject *py_class_to_template(PyObject *cls) {
 }
 
 int compute_old_class_mro(PyObject *cls, PyObject *mro_list) {
+#if PY_MAJOR_VERSION >= 3
+    assert(0);
+#else
     if (PyList_Append(mro_list, cls) < 0) {
         return -1;
     }
@@ -86,6 +90,7 @@ int compute_old_class_mro(PyObject *cls, PyObject *mro_list) {
         Py_DECREF(base);
     }
     return 0;
+#endif
 }
 
 PyObject *py_class_new(PyObject *mro) {
@@ -106,37 +111,43 @@ PyObject *py_class_new(PyObject *mro) {
     ConstructorBehavior construct_allowed = ConstructorBehavior::kAllow;
     // Sadly, this can't work because V8 allocates objects constructed from a
     // template with kThrow with 0 internal fields, regardless of how many are
-    // specified on the InstanceTemplate. Instead, I throw an exception in the
-    // construct callback.
+    // specified on the InstanceTemplate. This is a bug apparently. Instead, I
+    // throw an exception in the construct callback.
     // if (PyObject_HasAttrString(cls, "__v8py_unconstructable__")) {
         // construct_allowed = ConstructorBehavior::kThrow;
     // }
     Local<FunctionTemplate> templ = FunctionTemplate::New(isolate, py_class_construct_callback, js_self,
             Local<Signature>(), 0, construct_allowed);
 
-    PyObject *attributes = PyObject_Dir(cls);
-    PyErr_PROPAGATE(attributes);
-    for (int i = 0; i < PySequence_Length(attributes); i++) {
-        PyObject *member_name = PySequence_GetItem(attributes, i);
-        if (member_name == NULL) {
-            Py_DECREF(attributes);
-            return NULL;
-        }
-        PyObject *member_value = PyObject_GetAttr(cls, member_name);
-        if (member_value == NULL) {
-            Py_DECREF(member_name);
-            Py_DECREF(attributes);
-            return NULL;
-        }
-        int result = add_to_template(cls, member_name, member_value, templ);
-        Py_DECREF(member_name);
-        Py_DECREF(member_value);
-        if (result < 0) {
-            Py_DECREF(attributes);
+    PyObject *dict;
+    if (PyClass_Check(cls)) {
+        // old style
+        dict = PyObject_GetAttr(cls, __dict__);
+    } else {
+        // new style
+        // Sorry, but I have to do this to use PyDict_Next. At least the layout
+        // is the same on 2 and 3.
+        struct dictproxy {
+            PyObject_HEAD
+            PyObject *dict;
+        };
+        struct dictproxy *proxy = (struct dictproxy *) PyObject_GenericGetAttr(cls, __dict__);
+        dict = proxy->dict;
+        Py_INCREF(dict);
+        Py_DECREF(proxy);
+    }
+    PyErr_PROPAGATE(dict);
+    PyObject *member_name, *member_value;
+    Py_ssize_t pos = 0;
+    while (PyDict_Next(dict, &pos, &member_name, &member_value)) {
+        Py_INCREF(member_name);
+        Py_INCREF(member_value);
+        if (add_to_template(cls, member_name, member_value, templ) < 0) {
+            Py_DECREF(dict);
             return NULL;
         }
     }
-    Py_DECREF(attributes);
+    Py_DECREF(dict);
 
     templ->InstanceTemplate()->SetInternalFieldCount(OBJECT_INTERNAL_FIELDS);
     // if the class defines __getitem__ and keys(), it's a mapping.
@@ -205,26 +216,24 @@ int add_to_template(PyObject *cls, PyObject *member_name, PyObject *member_value
     Local<Name> js_name = js_from_py(member_name, no_ctx).As<Name>();
     Local<Data> js_value;
 
-    if (PyMethod_Check(member_value) && PyMethod_GET_SELF(member_value) == NULL) {
+    if (PyFunction_Check(member_value)) {
         // if it's an unbound method, create a method
-        method_callback_info *callback_info = (method_callback_info *) malloc(sizeof(method_callback_info));
-        // When are we going to free the callback info, you ask?
-        // Answer: Never. This entire class can never be freed because FunctionTemplates never go away.
-        Py_INCREF(cls);
-        callback_info->cls = cls;
-        Py_INCREF(member_name);
-        callback_info->method_name = member_name;
-        Local<External> js_method = External::New(isolate, callback_info);
+        // the member value is supposed to be not increfed because the class should hold a reference to it
+        Local<External> js_method = External::New(isolate, member_value);
         js_value = FunctionTemplate::New(isolate, py_class_method_callback, js_method, sig);
     } else {
-        if (PyCallable_Check(member_value)) {
-            // if it's some kind of callable, create a function
-            py_function *function = (py_function *) py_function_to_template(member_value);
+        if (PyObject_TypeCheck(member_value, &PyStaticMethod_Type) ||
+                PyObject_TypeCheck(member_value, &PyClassMethod_Type)) {
+            // if it's a staticmethod or classmethod, make a function from the callable within
+            PyObject *callable = Py_TYPE(member_value)->tp_descr_get(member_value, NULL, (PyObject *) Py_TYPE(member_value));
+            py_function *function = (py_function *) py_function_to_template(callable);
+            Py_DECREF(callable);
             if (function == NULL) {
                 return -1;
             }
             js_value = function->js_template->Get(isolate);
         } else if (PyObject_HasAttrString(member_value, "__get__") && PyObject_HasAttrString(member_value, "__set__")) {
+            // if it's a descriptor, make an accessor
             templ->InstanceTemplate()->SetAccessor(js_name, py_class_property_getter, py_class_property_setter, 
                     js_name, DEFAULT, DontDelete);
         } else {

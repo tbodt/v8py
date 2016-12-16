@@ -6,7 +6,7 @@ class TestPythonProxy(object):
         return context.eval('o = {foo: "bar"}')
 
     def test_keys(self, o):
-        assert o.keys() == ['foo']
+        assert list(o.keys()) == ['foo']
 
     def test_length(self, o):
         assert len(o) == 1

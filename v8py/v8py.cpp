@@ -3,6 +3,7 @@
 #include <libplatform/libplatform.h>
 
 #include "v8py.h"
+#include "greenstack.h"
 #include "context.h"
 #include "pyclass.h"
 #include "jsobject.h"
@@ -44,15 +45,20 @@ PyObject *mark_unconstructable(PyObject *shit, PyObject *thing) {
     return thing;
 }
 
+PyObject *foot(PyObject *shit, PyObject *thing) {
+    return PyObject_GenericGetAttr(thing, __dict__);
+}
+
 static PyMethodDef v8_methods[] = {
     {"hidden", mark_hidden, METH_O, ""},
     {"unconstructable", mark_unconstructable, METH_O, ""},
+    {"foot", foot, METH_O, ""},
     {NULL},
 };
 
 PyObject *null_object = NULL;
 typedef struct {PyObject_HEAD} null_t;
-PyTypeObject null_type = {PyObject_HEAD_INIT(NULL)};
+PyTypeObject null_type = {PyVarObject_HEAD_INIT(NULL, 0)};
 int null_type_init() {
     null_type.tp_name = "v8py.NullType";
     null_type.tp_basicsize = sizeof(null_t);
@@ -64,44 +70,69 @@ int null_type_init() {
     return 0;
 }
 
+#if PY_MAJOR_VERSION < 3
+#define FAIL
+#else
+#define FAIL NULL
+#endif
+
+#if PY_MAJOR_VERSION < 3
 PyMODINIT_FUNC initv8py() {
+#else
+PyMODINIT_FUNC PyInit_v8py() {
+#endif
     initialize_v8();
     create_memes_plz_thx();
 
+#if PY_MAJOR_VERSION < 3
     PyObject *module = Py_InitModule("v8py", v8_methods);
+#else
+    static struct PyModuleDef v8_module_def = {PyModuleDef_HEAD_INIT};
+    v8_module_def.m_name = "v8py";
+    v8_module_def.m_size = -1;
+    v8_module_def.m_methods = v8_methods;
+    PyObject *module = PyModule_Create(&v8_module_def);
+#endif
     if (module == NULL)
-        return;
+        return FAIL;
+
+    if (greenstack_init() < 0)
+        return FAIL;
 
     if (context_type_init() < 0)
-        return;
+        return FAIL;
     Py_INCREF(&context_type);
     PyModule_AddObject(module, "Context", (PyObject *) &context_type);
 
     if (py_function_type_init() < 0)
-        return;
+        return FAIL;
     if (py_class_type_init() < 0)
-        return;
+        return FAIL;
     py_dictionary_init();
 
     if (js_object_type_init() < 0)
-        return;
+        return FAIL;
     if (js_function_type_init() < 0)
-        return;
+        return FAIL;
     if (js_dictionary_type_init() < 0)
-        return;
+        return FAIL;
     if (js_exception_type_init() < 0)
-        return;
+        return FAIL;
     Py_INCREF(&js_exception_type);
     PyModule_AddObject(module, "JSException", (PyObject *) &js_exception_type);
     if (js_terminated_type_init() < 0)
-        return;
+        return FAIL;
     Py_INCREF(&js_terminated_type);
     PyModule_AddObject(module, "JavaScriptTerminated", (PyObject *) &js_terminated_type);
 
     if (null_type_init() < 0)
-        return;
+        return FAIL;
     Py_INCREF(null_object);
     PyModule_AddObject(module, "Null", null_object);
+
+#if PY_MAJOR_VERSION >= 3
+    return module;
+#endif
 }
 
 NORETURN void assert_failed(const char *condition, const char *file, int line) {

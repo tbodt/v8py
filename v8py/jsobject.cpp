@@ -9,7 +9,7 @@
 using namespace v8;
 
 PyTypeObject js_object_type = {
-    PyObject_HEAD_INIT(NULL)
+    PyVarObject_HEAD_INIT(NULL, 0)
 };
 PyMethodDef js_object_methods[] = {
     {"__dir__", (PyCFunction) js_object_dir, METH_NOARGS, NULL},
@@ -70,8 +70,13 @@ PyObject *js_object_getattro(js_object *self, PyObject *name) {
         PyObject *class_name_string = PyObject_Str(class_name);
         Py_DECREF(class_name);
         PyErr_PROPAGATE(class_name_string);
+#if PY_MAJOR_VERSION < 3
         PyErr_Format(PyExc_AttributeError, "'%.50s' JavaScript object has no attribute '%.400s'", 
                 PyString_AS_STRING(class_name_string), PyString_AS_STRING(name));
+#else
+        PyErr_Format(PyExc_AttributeError, "'%.50S' JavaScript object has no attribute '%.400S'", 
+                class_name_string, name);
+#endif
         Py_DECREF(class_name_string);
         return NULL;
     }
@@ -103,9 +108,9 @@ int js_object_setattro(js_object *self, PyObject *name, PyObject *value) {
     return 0;
 }
 
+static PyObject *length_name = PyString_InternFromString("length");
+
 Py_ssize_t js_object_length(js_object *self) {
-    PyObject *length_name = PyString_FromString("length");
-    PyErr_PROPAGATE_(length_name);
     PyObject *length_obj = js_object_getattro(self, length_name);
     Py_DECREF(length_name);
     PyErr_PROPAGATE_(length_obj);
@@ -126,7 +131,7 @@ PyObject *js_object_dir(js_object *self) {
     Local<Array> properties = maybe_properties.ToLocalChecked();
     PyObject *py_properties = PyList_New(properties->Length());
     PyErr_PROPAGATE(py_properties);
-    for (int i = 0; i < properties->Length(); i++) {
+    for (unsigned i = 0; i < properties->Length(); i++) {
         MaybeLocal<Value> js_property = properties->Get(context, i);
         PY_PROPAGATE_JS;
         PyObject *py_property = py_from_js(js_property.ToLocalChecked(), context);
@@ -147,6 +152,6 @@ PyObject *js_object_repr(js_object *self) {
 void js_object_dealloc(js_object *self) {
     self->object.Reset();
     self->context.Reset();
-    self->ob_type->tp_free((PyObject *) self);
+    Py_TYPE(self)->tp_free((PyObject *) self);
 }
 

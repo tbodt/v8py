@@ -38,7 +38,7 @@ PyObject *py_from_js(Local<Value> value, Local<Context> context) {
     if (value->IsArray()) {
         Local<Array> array = value.As<Array>();
         PyObject *list = PyList_New(array->Length());
-        for (int i = 0; i < array->Length(); i++) {
+        for (unsigned i = 0; i < array->Length(); i++) {
             PyObject *obj = py_from_js(array->Get(context, i).ToLocalChecked(), context);
             if (obj == NULL) {
                 Py_DECREF(list);
@@ -102,6 +102,22 @@ Local<Value> js_from_py(PyObject *value, Local<Context> context) {
         return hs.Escape(Null(isolate));
     }
 
+#if PY_MAJOR_VERSION >= 3
+    if (PyUnicode_Check(value)) {
+        Py_ssize_t len;
+        char *str = PyUnicode_AsUTF8AndSize(value, &len);
+        Local<String> js_value = String::NewFromUtf8(isolate, str, NewStringType::kNormal, len).ToLocalChecked();
+        return hs.Escape(js_value);
+    }
+    if (PyString_Check(value)) {
+        char *str;
+        Py_ssize_t len;
+        PyBytes_AsStringAndSize(value, &str, &len);
+        Local<ArrayBuffer> js_value = ArrayBuffer::New(isolate, len);
+        memcpy(str, js_value->GetContents().Data(), len);
+        return hs.Escape(js_value);
+    }
+#else
     if (PyUnicode_Check(value)) {
         PyObject *value_encoded = PyUnicode_EncodeUTF8(PyUnicode_AS_UNICODE(value), PyUnicode_GET_SIZE(value), NULL);
         Local<String> js_value = String::NewFromUtf8(isolate, PyString_AS_STRING(value_encoded), NewStringType::kNormal, PyString_GET_SIZE(value_encoded)).ToLocalChecked();
@@ -112,6 +128,7 @@ Local<Value> js_from_py(PyObject *value, Local<Context> context) {
         Local<String> js_value = String::NewFromUtf8(isolate, PyString_AS_STRING(value), NewStringType::kNormal, PyString_GET_SIZE(value)).ToLocalChecked();
         return hs.Escape(js_value);
     }
+#endif
 
     if (PyNumber_Check(value) && !PyInstance_Check(value)) {
         Local<Number> js_value;
@@ -119,8 +136,10 @@ Local<Value> js_from_py(PyObject *value, Local<Context> context) {
             js_value = Number::New(isolate, PyFloat_AS_DOUBLE(value));
         } else if (PyLong_Check(value)) {
             js_value = Integer::New(isolate, PyLong_AsLong(value));
+#if PY_MAJOR_VERSION < 3
         } else if (PyInt_Check(value)) {
             js_value = Integer::New(isolate, PyInt_AS_LONG(value));
+#endif
         } else {
             // TODO make this work right
             printf("what the hell kind of number is this?!");

@@ -1,7 +1,12 @@
+import sys
 import pytest
 import v8py
 
-@pytest.fixture(params=['new', 'old'])
+if sys.version_info.major < 3:
+    params = ['new', 'old']
+else:
+    params = ['new']
+@pytest.fixture(params=params)
 def Test(request):
     # Sadly, I have to have two blocks of almost identical code to test both
     # old and new style classes.

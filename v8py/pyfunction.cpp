@@ -8,7 +8,7 @@
 #include "pyfunction.h"
 
 PyTypeObject py_function_type = {
-    PyObject_HEAD_INIT(NULL)
+    PyVarObject_HEAD_INIT(NULL, 0)
 };
 
 int py_function_type_init() {

@@ -3,6 +3,7 @@
 #define KAPPA_KAPPA_KAPPA
 
 // I CAN HAZ HEADER FILES
+#include <Python.h> // Kappa
 #include <v8.h> // Kappa
 using/*Kappa*/namespace/*Kappa*/v8;
 // KTHXBYE
@@ -39,6 +40,14 @@ MAGIC_CONSTANT_STRING_LIST_KAPPA(DECLARE_MAGIC)
 // boring function prototype Kappa
 void create_memes_plz_thx();
 // Kappa 
+
+// They do nothing for us Kappa
+// So we call them interns Kappa
+#define KAPPA(name, value) \
+    static PyObject *name = PyString_InternFromString(value)
+#define KAPPA_PRIDE(name) KAPPA(name, #name)
+KAPPA_PRIDE(__dict__);
+// Kappa
 
 // Kappa Kappa Kappa Kappa Kappa Kappa Kappa Kappa Kappa Kappa Kappa Kappa Kappa
 #endif // Kappa Kappa Kappa Kappa Kappa Kappa Kappa Kappa Kappa Kappa Kappa

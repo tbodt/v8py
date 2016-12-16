@@ -29,6 +29,6 @@ try {
     this.exc = exc;
 }
     """)
-    print ErrorClass
+    print(ErrorClass)
     assert isinstance(context.exc, ErrorClass)
     assert context.eval('exc instanceof TestError')

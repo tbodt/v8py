@@ -56,14 +56,13 @@ void py_class_method_callback(const FunctionCallbackInfo<Value> &info) {
     }
     Py_DECREF(args);
 
-    method_callback_info *callback_info = (method_callback_info *) info.Data().As<External>()->Value();
-    PyObject *method = PyObject_GetAttr(callback_info->cls, callback_info->method_name);
+    PyObject *method = (PyObject *) info.Data().As<External>()->Value();
     if (method == NULL) {
         Py_DECREF(all_args);
         js_throw_py();
         return;
     }
-    assert(PyMethod_Check(method));
+    assert(PyFunction_Check(method));
     PyObject *retval = PyObject_Call(method, all_args, NULL);
     Py_DECREF(all_args);
     Py_DECREF(method);

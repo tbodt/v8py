@@ -1,7 +1,12 @@
+import sys
 import pytest
 from v8py import Context
 
-@pytest.fixture(params=['old', 'new'])
+if sys.version_info.major < 3:
+    params = ['new', 'old']
+else:
+    params = ['new']
+@pytest.fixture(params=['new', 'old'])
 def Global(request):
     if request.param == 'new':
         class Global(object):

@@ -32,3 +32,13 @@ inline extern int PyString_StartsWithString(PyObject *str, const char *prefix) {
 }
 
 #endif
+
+#if PY_MAJOR_VERSION >= 3
+
+#define PyInstance_Check(x) false
+#define PyClass_Check(x) false
+
+#define PyString_Check PyUnicode_Check
+#define PyString_InternFromString PyUnicode_InternFromString
+
+#endif

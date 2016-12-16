@@ -1,7 +1,12 @@
+import sys
 import pytest
 import types
 
-@pytest.fixture(params=['new', 'old'])
+if sys.version_info.major < 3:
+    params = ['new', 'old']
+else:
+    params = ['new']
+@pytest.fixture(params=params)
 def Test(request):
     # Sadly, I have to have two blocks of almost identical code to test both
     # old and new style classes.
@@ -72,19 +77,17 @@ def test_query(context):
 def test_enumerate(context, Test):
     name_list = context.eval('Object.getOwnPropertyNames(test)')
     assert 'getitem' in name_list
-    if isinstance(Test, types.ClassType):
-        assert len(name_list) == 1
-    else:
+    if isinstance(Test, type):
         assert len(name_list) == 2
         assert 'prop' in name_list
+    else:
+        assert len(name_list) == 1
 
 # data descriptors aren't available on old-style classes
 def test_get_property(context, Test):
-    if isinstance(Test, types.ClassType):
-        return
-    assert context.eval('test.prop') == 'value property'
+    if isinstance(Test, type):
+        assert context.eval('test.prop') == 'value property'
 def test_set_property(context, Test):
-    if isinstance(Test, types.ClassType):
-        return
-    context.eval('test.prop = "kappa"')
-    assert context.eval('test.prop') == 'kappa property'
+    if isinstance(Test, type):
+        context.eval('test.prop = "kappa"')
+        assert context.eval('test.prop') == 'kappa property'

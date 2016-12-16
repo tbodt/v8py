@@ -6,7 +6,7 @@
 #include "convert.h"
 
 PyTypeObject js_dictionary_type = {
-    PyObject_HEAD_INIT(NULL)
+    PyVarObject_HEAD_INIT(NULL, 0)
 };
 PyMethodDef js_dictionary_methods[] = {
     {"keys", (PyCFunction) js_dictionary_keys, METH_NOARGS, NULL},
@@ -58,7 +58,7 @@ PyObject *js_dictionary_getitem(js_dictionary *self, PyObject *key) {
 
     Local<String> js_key = js_from_py(key, context).As<String>();
     if (!object->Has(context, js_key).FromJust()) {
-        PyErr_Format(PyExc_KeyError, "%s", PyString_AS_STRING(key));
+        PyErr_SetObject(PyExc_KeyError, key);
         return NULL;
     }
     MaybeLocal<Value> value = object->Get(context, js_key);

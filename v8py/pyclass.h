@@ -1,6 +1,8 @@
 #ifndef CLASS_TEMPLATE_H
 #define CLASS_TEMPLATE_H
 
+#include <Python.h>
+
 using namespace v8;
 
 typedef struct {
@@ -26,10 +28,6 @@ void py_class_init_js_object(Local<Object> js_object, PyObject *py_object, Local
 #define OBJECT_INTERNAL_FIELDS 4
 
 void py_class_construct_callback(const FunctionCallbackInfo<Value> &info);
-struct method_callback_info {
-    PyObject *cls;
-    PyObject *method_name;
-};
 void py_class_method_callback(const FunctionCallbackInfo<Value> &info);
 
 // Handlers
