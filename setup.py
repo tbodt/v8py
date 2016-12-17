@@ -3,6 +3,7 @@ from __future__ import print_function
 
 import sys
 import os
+import stat
 from contextlib import contextmanager
 from subprocess import check_call
 import multiprocessing
@@ -84,7 +85,8 @@ def get_v8():
             with open('python', 'w') as python:
                 print('#!/bin/sh', file=python)
                 print('python2 $@', file=python)
-            os.chmod('python', '+x')
+            # Octal literals don't have the same syntax on python 2 and 3, so I use a decimal literal
+            os.chmod('python', os.stat('python').st_mode | 73)
     else:
         print('updating depot tools')
         with cd('depot_tools'):
