@@ -81,7 +81,7 @@ def get_v8():
         print('installing depot tools')
         run('git clone https://chromium.googlesource.com/chromium/tools/depot_tools.git')
         with cd('depot_tools'):
-            with open('python') as python:
+            with open('python', 'w') as python:
                 print('#!/bin/sh', file=python)
                 print('python2 $@', file=python)
             os.chmod('python', '+x')
