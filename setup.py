@@ -127,7 +127,7 @@ with open('README.rst', 'r') as f:
 
 setup(
     name='v8py',
-    version='0.9.4',
+    version='0.9.5',
 
     author='Theodore Dubois',
     author_email='tblodt@icloud.com',
