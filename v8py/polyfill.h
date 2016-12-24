@@ -41,4 +41,6 @@ inline extern int PyString_StartsWithString(PyObject *str, const char *prefix) {
 #define PyString_Check PyUnicode_Check
 #define PyString_InternFromString PyUnicode_InternFromString
 
+#define nb_nonzero nb_bool
+
 #endif

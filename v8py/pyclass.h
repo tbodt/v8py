@@ -31,11 +31,18 @@ void py_class_construct_callback(const FunctionCallbackInfo<Value> &info);
 void py_class_method_callback(const FunctionCallbackInfo<Value> &info);
 
 // Handlers
-void py_class_getter_callback(Local<Name> name, const PropertyCallbackInfo<Value> &info);
-void py_class_setter_callback(Local<Name> name, Local<Value> value, const PropertyCallbackInfo<Value> &info);
-void py_class_query_callback(Local<Name> name, const PropertyCallbackInfo<Integer> &info);
-void py_class_deleter_callback(Local<Name> name, const PropertyCallbackInfo<Boolean> &info);
-void py_class_enumerator_callback(const PropertyCallbackInfo<Array> &info);
+void named_getter(Local<Name> name, const PropertyCallbackInfo<Value> &info);
+void named_setter(Local<Name> name, Local<Value> value, const PropertyCallbackInfo<Value> &info);
+void named_query(Local<Name> name, const PropertyCallbackInfo<Integer> &info);
+void named_deleter(Local<Name> name, const PropertyCallbackInfo<Boolean> &info);
+void named_enumerator(const PropertyCallbackInfo<Array> &info);
+
+void indexed_getter(uint32_t index, const PropertyCallbackInfo<Value> &info);
+void indexed_setter(uint32_t index, Local<Value> value, const PropertyCallbackInfo<Value> &info);
+void indexed_query(uint32_t index, const PropertyCallbackInfo<Integer> &info);
+void indexed_deleter(uint32_t index, const PropertyCallbackInfo<Boolean> &info);
+void indexed_enumerator(const PropertyCallbackInfo<Array> &info);
+
 void py_class_property_getter(Local<Name> js_name, const PropertyCallbackInfo<Value> &info);
 void py_class_property_setter(Local<Name> js_name, Local<Value> js_value, const PropertyCallbackInfo<void> &info);
 

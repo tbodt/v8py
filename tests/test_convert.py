@@ -7,6 +7,9 @@ def test_convert_to_py(context):
     assert context.eval('true') == True
     assert context.eval('false') == False
     assert context.eval('null') == Null
+    assert repr(Null) == 'Null'
+    assert bool(Null) is False
+    assert not Null
     assert context.eval('undefined') == None
     assert context.eval('[1, 2, 3]') == [1, 2, 3]
 

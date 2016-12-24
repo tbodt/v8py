@@ -45,24 +45,34 @@ PyObject *mark_unconstructable(PyObject *shit, PyObject *thing) {
     return thing;
 }
 
-PyObject *foot(PyObject *shit, PyObject *thing) {
-    return PyObject_GenericGetAttr(thing, __dict__);
-}
-
 static PyMethodDef v8_methods[] = {
     {"hidden", mark_hidden, METH_O, ""},
     {"unconstructable", mark_unconstructable, METH_O, ""},
-    {"foot", foot, METH_O, ""},
     {NULL},
 };
 
 PyObject *null_object = NULL;
 typedef struct {PyObject_HEAD} null_t;
+PyObject *null_repr(PyObject *self) {
+    static PyObject *repr = NULL;
+    if (repr == NULL) {
+        repr = PyString_InternFromString("Null");
+    }
+    Py_INCREF(repr);
+    return repr;
+}
+int null_bool(PyObject *self) {
+    return false;
+}
 PyTypeObject null_type = {PyVarObject_HEAD_INIT(NULL, 0)};
+PyNumberMethods null_as_number;
 int null_type_init() {
     null_type.tp_name = "v8py.NullType";
     null_type.tp_basicsize = sizeof(null_t);
     null_type.tp_flags = Py_TPFLAGS_DEFAULT;
+    null_as_number.nb_nonzero = null_bool;
+    null_type.tp_as_number = &null_as_number;
+    null_type.tp_repr = null_repr;
     null_type.tp_doc = "";
     if (PyType_Ready(&null_type) < 0)
         return -1;

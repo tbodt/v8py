@@ -62,7 +62,6 @@ def test_setitem(context):
     assert context.eval('test.getitem') == 'harambe'
 
 def test_delitem(context):
-    test = context.eval('test = new Test()')
     assert context.eval('test.getitem') == 'value'
     context.eval('delete test.getitem')
     assert context.eval('test.getitem') == None

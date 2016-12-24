@@ -156,14 +156,29 @@ PyObject *py_class_new(PyObject *mro) {
     if (PyObject_HasAttrString(cls, "__getitem__") &&
             PyObject_HasAttrString(cls, "keys")) {
         NamedPropertyHandlerConfiguration callbacks;
-        callbacks.getter = py_class_getter_callback;
-        callbacks.enumerator = py_class_enumerator_callback;
-        callbacks.query = py_class_query_callback;
+        callbacks.getter = named_getter;
+        callbacks.enumerator = named_enumerator;
+        callbacks.query = named_query;
         if (PyObject_HasAttrString(cls, "__setitem__")) {
-            callbacks.setter = py_class_setter_callback;
+            callbacks.setter = named_setter;
         }
         if (PyObject_HasAttrString(cls, "__delitem__")) {
-            callbacks.deleter = py_class_deleter_callback;
+            callbacks.deleter = named_deleter;
+        }
+        templ->InstanceTemplate()->SetHandler(callbacks);
+    }
+    // if __getitem__ and __len__ are defined, it's a sequence.
+    if (PyObject_HasAttrString(cls, "__getitem__") &&
+            PyObject_HasAttrString(cls, "__len__")) {
+        IndexedPropertyHandlerConfiguration callbacks;
+        callbacks.getter = indexed_getter;
+        callbacks.enumerator = indexed_enumerator;
+        callbacks.query = indexed_query;
+        if (PyObject_HasAttrString(cls, "__setitem__")) {
+            callbacks.setter = indexed_setter;
+        }
+        if (PyObject_HasAttrString(cls, "__delitem__")) {
+            callbacks.deleter = indexed_deleter;
         }
         templ->InstanceTemplate()->SetHandler(callbacks);
     }
