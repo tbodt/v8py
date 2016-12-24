@@ -10,14 +10,14 @@ Write Python APIs, then call them from JavaScript using the V8 engine.
 
     >>> def print_hello():
     ...     print 'Hello, world!'
-    >>> context.print_hello = print_hello
+    >>> context.expose(print_hello)
     >>> context.eval('print_hello()')
     Hello, world!
 
     >>> class Greeter(object):
     ...     def greet(self, thing):
     ...         print 'Welcome, {}!'.format(thing)
-    >>> context.Greeter = Greeter
+    >>> context.expose(Greeter)
     >>> context.eval('g = new Greeter()')
     >>> context.eval('g.greet("V8Py")')
     Welcome, V8Py!

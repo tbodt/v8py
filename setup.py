@@ -127,7 +127,7 @@ with open('README.rst', 'r') as f:
 
 setup(
     name='v8py',
-    version='0.9.6.1',
+    version='0.9.7',
 
     author='Theodore Dubois',
     author_email='tblodt@icloud.com',
@@ -142,6 +142,7 @@ setup(
         'License :: OSI Approved :: GNU Lesser General Public License v3 or later (LGPLv3+)',
         'Topic :: Software Development :: Interpreters',
         'Programming Language :: Python :: 2.7',
+        'Programming Language :: Python :: 3.5',
     ],
 
     keywords=['v8', 'javascript'],
