@@ -65,7 +65,6 @@ void py_class_method_callback(const FunctionCallbackInfo<Value> &info) {
     assert(PyFunction_Check(method));
     PyObject *retval = PyObject_Call(method, all_args, NULL);
     Py_DECREF(all_args);
-    Py_DECREF(method);
 
     JS_PROPAGATE_PY(retval);
     info.GetReturnValue().Set(js_from_py(retval, context));
