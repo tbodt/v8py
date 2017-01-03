@@ -5,6 +5,7 @@
 #include "v8py.h"
 #include "context.h"
 #include "convert.h"
+#include "jsobject.h"
 #include "pyclass.h"
 
 using namespace v8;
@@ -44,6 +45,7 @@ int context_type_init() {
 
 void context_dealloc(context *self) {
     self->js_context.Reset();
+    Py_DECREF(self->js_object_cache);
     Py_TYPE(self)->tp_free((PyObject *) self);
 }
 
@@ -87,8 +89,16 @@ PyObject *context_new(PyTypeObject *type, PyObject *args, PyObject *kwargs) {
     IN_CONTEXT(Context::New(isolate, NULL, global_template));
     self->js_context.Reset(isolate, context);
 
+    context->SetEmbedderData(CONTEXT_OBJECT_SLOT, External::New(isolate, self));
     context->SetEmbedderData(OBJECT_PROTOTYPE_SLOT, Object::New(isolate)->GetPrototype());
     context->SetEmbedderData(ERROR_PROTOTYPE_SLOT, Exception::Error(String::Empty(isolate)).As<Object>()->GetPrototype());
+
+    PyObject *weakref_module = PyImport_ImportModule("weakref");
+    PyErr_PROPAGATE(weakref_module);
+    PyObject *weak_key_dict = PyObject_GetAttrString(weakref_module, "WeakKeyDictionary");
+    PyErr_PROPAGATE(weak_key_dict);
+    self->js_object_cache = PyObject_CallObject(weak_key_dict, NULL);
+    PyErr_PROPAGATE(self->js_object_cache);
 
     if (global != NULL) {
         py_class_init_js_object(context->Global()->GetPrototype().As<Object>(), global, context);
@@ -217,6 +227,30 @@ PyObject *context_eval(context *self, PyObject *args, PyObject *kwargs) {
 
     PY_PROPAGATE_JS;
     return py_from_js(result.ToLocalChecked(), context);
+}
+
+Local<Object> context_get_cached_jsobject(Local<Context> js_context, PyObject *py_object) {
+    EscapableHandleScope hs(isolate);
+    context *self = (context *) js_context->GetEmbedderData(CONTEXT_OBJECT_SLOT).As<External>()->Value();
+    if (PyMapping_HasKey(self->js_object_cache, py_object)) {
+        js_object *jsobj = (js_object *) PyObject_GetItem(self->js_object_cache, py_object);
+        if (jsobj == NULL) {
+            // fuck
+            PyErr_WriteUnraisable(PyString_InternFromString("v8py py_class_create_js_object getitem"));
+        }
+        return hs.Escape(jsobj->object.Get(isolate));
+    }
+    return Local<Object>();
+}
+
+void context_set_cached_jsobject(Local<Context> js_context, PyObject *py_object, Local<Object> object) {
+    EscapableHandleScope hs(isolate);
+    context *self = (context *) js_context->GetEmbedderData(CONTEXT_OBJECT_SLOT).As<External>()->Value();
+    js_object *jsobj = js_object_new(object, js_context);
+    if (PyObject_SetItem(self->js_object_cache, py_object, (PyObject *) jsobj) < 0) {
+        // fuck
+        PyErr_WriteUnraisable(PyString_InternFromString("v8py py_class_create_js_object setitem"));
+    }
 }
 
 PyObject *context_get_global(context *self, void *shit) {

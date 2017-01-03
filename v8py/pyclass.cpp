@@ -3,6 +3,7 @@
 
 #include "v8py.h"
 #include "convert.h"
+#include "jsobject.h"
 #include "pyfunction.h"
 #include "pyclass.h"
 #include "context.h"
@@ -309,13 +310,22 @@ void py_class_init_js_object(Local<Object> js_object, PyObject *py_object, Local
 
     Persistent<Object> *obj_handle = new Persistent<Object>(isolate, js_object);
     obj_handle->SetWeak(obj_handle, py_class_object_weak_callback, WeakCallbackType::kFinalizer);
+
+    context_set_cached_jsobject(context, py_object, js_object);
 }
 
 Local<Object> py_class_create_js_object(py_class *self, PyObject *py_object, Local<Context> context) {
     EscapableHandleScope hs(isolate);
-    Local<Object> js_object = self->templ->Get(isolate)->InstanceTemplate()->NewInstance(context).ToLocalChecked();
+
+    Local<Object> object = context_get_cached_jsobject(context, py_object);
+    if (!object.IsEmpty()) {
+        return hs.Escape(object);
+    }
+
+    object = self->templ->Get(isolate)->InstanceTemplate()->NewInstance(context).ToLocalChecked();
     Py_INCREF(py_object);
-    py_class_init_js_object(js_object, py_object, context);
-    return hs.Escape(js_object);
+    py_class_init_js_object(object, py_object, context);
+
+    return hs.Escape(object);
 }
 

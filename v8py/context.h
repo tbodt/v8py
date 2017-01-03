@@ -11,6 +11,7 @@ using namespace v8;
 typedef struct {
     PyObject_HEAD
     Persistent<Context> js_context;
+    PyObject *js_object_cache;
 } context;
 int context_type_init();
 
@@ -22,9 +23,12 @@ PyObject *context_expose_module(context *self, PyObject *module);
 PyObject *context_gc(context *self);
 
 // Embedder data slots
-// 0 is unused (for absolutely no reason)
+#define CONTEXT_OBJECT_SLOT 0
 #define OBJECT_PROTOTYPE_SLOT 1
 #define ERROR_PROTOTYPE_SLOT 2
+
+Local<Object> context_get_cached_jsobject(Local<Context> context, PyObject *py_object);
+void context_set_cached_jsobject(Local<Context> context, PyObject *py_object, Local<Object> object);
 
 PyObject *context_get_global(context *self, void *shit);
 
