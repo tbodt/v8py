@@ -24,22 +24,6 @@ Py_ssize_t js_object_length(js_object *self);
 PyObject *js_object_dir(js_object *self);
 PyObject *js_object_repr(js_object *self);
 
-
-typedef struct {
-    PyObject_HEAD
-    Persistent<Object> object;
-    Persistent<Context> context;
-} js_dictionary;
-extern PyTypeObject js_dictionary_type;
-int js_dictionary_type_init();
-
-PyObject *js_dictionary_keys(js_dictionary *self);
-Py_ssize_t js_dictionary_length(js_dictionary *self);
-PyObject *js_dictionary_getitem(js_dictionary *self, PyObject *key);
-int js_dictionary_setitem(js_dictionary *self, PyObject *key, PyObject *value);
-PyObject *js_dictionary_iter(js_dictionary *self);
-PyObject *js_dictionary_repr(js_dictionary *self);
-
 typedef struct {
     PyObject_HEAD
     Persistent<Object> object;

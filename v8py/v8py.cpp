@@ -7,7 +7,6 @@
 #include "context.h"
 #include "pyclass.h"
 #include "jsobject.h"
-#include "pydictionary.h"
 
 using namespace v8;
 
@@ -118,13 +117,10 @@ PyMODINIT_FUNC PyInit_v8py() {
         return FAIL;
     if (py_class_type_init() < 0)
         return FAIL;
-    py_dictionary_init();
 
     if (js_object_type_init() < 0)
         return FAIL;
     if (js_function_type_init() < 0)
-        return FAIL;
-    if (js_dictionary_type_init() < 0)
         return FAIL;
     if (js_exception_type_init() < 0)
         return FAIL;

@@ -37,9 +37,7 @@ js_object *js_object_new(Local<Object> object, Local<Context> context) {
     IN_V8;
     Context::Scope cs(context);
     js_object *self;
-    if (object->GetPrototype()->StrictEquals(context->GetEmbedderData(OBJECT_PROTOTYPE_SLOT))) {
-        self = (js_object *) js_dictionary_type.tp_alloc(&js_dictionary_type, 0);
-    } else if (object->IsCallable()) {
+    if (object->IsCallable()) {
         self = (js_object *) js_function_type.tp_alloc(&js_function_type, 0);
     } else {
         self = (js_object *) js_object_type.tp_alloc(&js_object_type, 0);

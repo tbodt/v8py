@@ -62,10 +62,10 @@ def test_delitem(context):
 
 def test_query(context):
     descriptor = context.eval('Object.getOwnPropertyDescriptor(test, 0)')
-    assert descriptor.writable
-    assert not descriptor.enumerable
-    assert descriptor.configurable
-    assert descriptor.value == 3
+    assert descriptor['writable']
+    assert not descriptor['enumerable']
+    assert descriptor['configurable']
+    assert descriptor['value'] == 3
 
 def test_enumerate(context, Test):
     name_list = context.eval('Object.getOwnPropertyNames(test)')

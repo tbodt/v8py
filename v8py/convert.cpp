@@ -6,7 +6,7 @@
 #include "pyfunction.h"
 #include "pyclass.h"
 #include "jsobject.h"
-#include "pydictionary.h"
+#include "context.h"
 
 PyObject *py_from_js(Local<Value> value, Local<Context> context) {
     IN_V8;
@@ -51,10 +51,35 @@ PyObject *py_from_js(Local<Value> value, Local<Context> context) {
     
     if (value->IsObject()) {
         Local<Object> obj_value = value.As<Object>();
-        if (obj_value->InternalFieldCount() == OBJECT_INTERNAL_FIELDS ||
-                obj_value->InternalFieldCount() == DICT_INTERNAL_FIELDS) {
+        if (obj_value->GetPrototype()->StrictEquals(context->GetEmbedderData(OBJECT_PROTOTYPE_SLOT))) {
+            PyObject *dict = PyDict_New();
+            PyErr_PROPAGATE(dict);
+            Local<Array> js_keys = obj_value->GetPropertyNames(context).ToLocalChecked();
+            for (uint32_t i = 0; i < js_keys->Length(); i++) {
+                Local<Value> js_key = js_keys->Get(context, i).ToLocalChecked();
+                PyObject *key = py_from_js(js_key, context);
+                if (key == NULL) {
+                    Py_DECREF(dict);
+                    return NULL;
+                }
+                PyObject *value = py_from_js(obj_value->Get(context, js_key).ToLocalChecked(), context);
+                if (value == NULL) {
+                    Py_DECREF(dict);
+                    Py_DECREF(key);
+                    return NULL;
+                }
+                if (PyDict_SetItem(dict, key, value) < 0) {
+                    Py_DECREF(dict);
+                    Py_DECREF(key);
+                    Py_DECREF(value);
+                    return NULL;
+                }
+            }
+            return dict;
+        }
+        if (obj_value->InternalFieldCount() == OBJECT_INTERNAL_FIELDS) {
             Local<Value> magic = obj_value->GetInternalField(0);
-            if (magic == IZ_DAT_OBJECT || magic == IZ_DAT_DICTINARY) {
+            if (magic == IZ_DAT_OBJECT) {
                 PyObject *object = (PyObject *) obj_value->GetInternalField(1).As<External>()->Value();
                 Py_INCREF(object);
                 return object;
@@ -149,7 +174,17 @@ Local<Value> js_from_py(PyObject *value, Local<Context> context) {
     }
 
     if (PyDict_Check(value)) {
-        return hs.Escape(py_dictionary_get_proxy(value, context));
+        // a context scope is (I think) needed for Object::New to work
+        Context::Scope cs(context);
+        Local<Object> js_dict = Object::New(isolate);
+
+        PyObject *dict = value;
+        PyObject *key, *value;
+        Py_ssize_t pos = 0;
+        while (PyDict_Next(dict, &pos, &key, &value)) {
+            js_dict->Set(context, js_from_py(key, context), js_from_py(value, context)).FromJust();
+        }
+        return hs.Escape(js_dict);
     }
 
     if (PyList_Check(value) || PyTuple_Check(value)) {

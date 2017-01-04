@@ -12,6 +12,7 @@ def test_convert_to_py(context):
     assert not Null
     assert context.eval('undefined') == None
     assert context.eval('[1, 2, 3]') == [1, 2, 3]
+    assert context.eval('({foo: "bar"})') == {'foo': 'bar'}
 
 def test_convert_to_js(context):
     context.glob.foo = 'Hello, world!'
@@ -34,4 +35,5 @@ def test_convert_to_js(context):
     assert context.eval('foo[0] == 1')
     assert context.eval('foo[1] == 2')
     assert context.eval('foo[2] == 3')
-    # assert context.eval('foo == [1, 2, 3]')
+    context.glob.foo = {'foo': 'bar'}
+    assert context.eval('foo.foo == "bar"')
