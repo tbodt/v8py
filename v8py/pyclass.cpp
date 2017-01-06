@@ -223,6 +223,8 @@ int add_to_template(PyObject *cls, PyObject *member_name, PyObject *member_value
     HandleScope hs(isolate);
     Local<Context> no_ctx;
     Local<Signature> sig = Signature::New(isolate, templ);
+    // I can't use an AccessorSignature here because then property access on
+    // the global object from this gets fucked up.
 
     // skip names that start with _ or are marked __v8py_hidden__
     if (PyString_StartsWithString(member_name, "_") ||

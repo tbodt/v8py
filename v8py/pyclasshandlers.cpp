@@ -28,7 +28,7 @@ void py_class_construct_callback(const FunctionCallbackInfo<Value> &info) {
         isolate->ThrowException(Exception::TypeError(js_from_py(message, context).As<String>()));
     }
 
-    Local<Object> js_new_object = info.This();
+    Local<Object> js_new_object = info.Holder();
     PyObject *new_object = PyObject_Call(self->cls, pys_from_jss(info, context), NULL);
     JS_PROPAGATE_PY(new_object);
     py_class_init_js_object(js_new_object, new_object, context);
@@ -38,7 +38,7 @@ void py_class_method_callback(const FunctionCallbackInfo<Value> &info) {
     HandleScope hs(isolate);
     Local<Context> context = isolate->GetCurrentContext();
 
-    Local<Object> js_self = info.This();
+    Local<Object> js_self = info.Holder();
     if (js_self == context->Global()) {
         js_self = js_self->GetPrototype().As<Object>();
     }
@@ -74,7 +74,12 @@ void py_class_method_callback(const FunctionCallbackInfo<Value> &info) {
 // --- Interceptors ---
 
 template <class T> inline extern PyObject *get_self(const PropertyCallbackInfo<T> &info) {
-    return (PyObject *) info.This()->GetInternalField(1).template As<External>()->Value();
+    Local<Context> context = isolate->GetCurrentContext();
+    Local<Object> js_self = info.Holder();
+    if (js_self == context->Global()) {
+        js_self = js_self->GetPrototype().As<Object>();
+    }
+    return (PyObject *) js_self->GetInternalField(1).template As<External>()->Value();
 }
 
 #define Info(T) const PropertyCallbackInfo<T> &info
