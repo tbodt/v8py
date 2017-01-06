@@ -248,8 +248,12 @@ void context_set_cached_jsobject(Local<Context> js_context, PyObject *py_object,
     context *self = (context *) js_context->GetEmbedderData(CONTEXT_OBJECT_SLOT).As<External>()->Value();
     js_object *jsobj = js_object_new(object, js_context);
     if (PyObject_SetItem(self->js_object_cache, py_object, (PyObject *) jsobj) < 0) {
-        // fuck
-        PyErr_WriteUnraisable(PyString_InternFromString("v8py py_class_create_js_object setitem"));
+        if (PyErr_ExceptionMatches(PyExc_TypeError)) {
+            // if it's a type error, it's probably "cannot create weak reference" and should be ignored.
+            PyErr_Clear();
+        } else {
+            PyErr_WriteUnraisable(PyString_InternFromString("v8py py_class_create_js_object setitem"));
+        }
     }
 }
 
