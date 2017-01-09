@@ -40,6 +40,7 @@ inline extern int PyString_StartsWithString(PyObject *str, const char *prefix) {
 
 #define PyString_Check PyUnicode_Check
 #define PyString_InternFromString PyUnicode_InternFromString
+#define PyString_AS_STRING PyBytes_AS_STRING
 
 #define nb_nonzero nb_bool
 

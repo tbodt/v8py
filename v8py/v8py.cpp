@@ -5,6 +5,7 @@
 #include "v8py.h"
 #include "greenstack.h"
 #include "context.h"
+#include "script.h"
 #include "pyclass.h"
 #include "jsobject.h"
 
@@ -24,7 +25,9 @@ void initialize_v8() {
         Isolate::CreateParams create_params;
         create_params.array_buffer_allocator = ArrayBuffer::Allocator::NewDefaultAllocator();
         isolate = Isolate::New(create_params);
-        isolate->SetCaptureStackTraceForUncaughtExceptions(true);
+        isolate->SetCaptureStackTraceForUncaughtExceptions(true, 100, 
+                // sadly the v8 people screwed up and require me to cast this into to an enum
+                static_cast<StackTrace::StackTraceOptions>(StackTrace::kOverview | StackTrace::kScriptId));
     }
 }
 
@@ -102,37 +105,30 @@ PyMODINIT_FUNC PyInit_v8py() {
     v8_module_def.m_methods = v8_methods;
     PyObject *module = PyModule_Create(&v8_module_def);
 #endif
-    if (module == NULL)
-        return FAIL;
+    if (module == NULL) return FAIL;
 
-    if (greenstack_init() < 0)
-        return FAIL;
+    if (greenstack_init() < 0) return FAIL;
 
-    if (context_type_init() < 0)
-        return FAIL;
+    if (context_type_init() < 0) return FAIL;
     Py_INCREF(&context_type);
     PyModule_AddObject(module, "Context", (PyObject *) &context_type);
+    if (script_type_init() < 0) return FAIL;
+    Py_INCREF(&script_type);
+    PyModule_AddObject(module, "Script", (PyObject *) &script_type);
 
-    if (py_function_type_init() < 0)
-        return FAIL;
-    if (py_class_type_init() < 0)
-        return FAIL;
+    if (py_function_type_init() < 0) return FAIL;
+    if (py_class_type_init() < 0) return FAIL;
 
-    if (js_object_type_init() < 0)
-        return FAIL;
-    if (js_function_type_init() < 0)
-        return FAIL;
-    if (js_exception_type_init() < 0)
-        return FAIL;
+    if (js_object_type_init() < 0) return FAIL;
+    if (js_function_type_init() < 0) return FAIL;
+    if (js_exception_type_init() < 0) return FAIL;
     Py_INCREF(&js_exception_type);
     PyModule_AddObject(module, "JSException", (PyObject *) &js_exception_type);
-    if (js_terminated_type_init() < 0)
-        return FAIL;
+    if (js_terminated_type_init() < 0) return FAIL;
     Py_INCREF(&js_terminated_type);
     PyModule_AddObject(module, "JavaScriptTerminated", (PyObject *) &js_terminated_type);
 
-    if (null_type_init() < 0)
-        return FAIL;
+    if (null_type_init() < 0) return FAIL;
     Py_INCREF(null_object);
     PyModule_AddObject(module, "Null", null_object);
 

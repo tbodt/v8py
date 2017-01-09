@@ -4,6 +4,7 @@
 
 #include "v8py.h"
 #include "context.h"
+#include "script.h"
 #include "convert.h"
 #include "jsobject.h"
 #include "pyclass.h"
@@ -189,21 +190,30 @@ void *breaker_thread(void *param) {
 PyObject *context_eval(context *self, PyObject *args, PyObject *kwargs) {
     PyObject *program;
     double timeout = 0;
-    static char *keywords[] = {"program", "timeout", NULL};
-    if (PyArg_ParseTupleAndKeywords(args, kwargs, "O|d", keywords, &program, &timeout) < 0) {
+    static const char *keywords[] = {"program", "timeout", NULL};
+    // python needs to fix their shit and make it const
+    if (PyArg_ParseTupleAndKeywords(args, kwargs, "O|d", (char **) keywords, &program, &timeout) < 0) {
         return NULL;
     }
-    if (!PyString_Check(program)) {
-        PyErr_SetString(PyExc_TypeError, "program must be a string");
+    if (!PyString_Check(program) && !PyObject_TypeCheck(program, &script_type)) {
+        PyErr_SetString(PyExc_TypeError, "program must be a string or Script");
         return NULL;
     }
+
+    if (PyString_Check(program)) {
+        program = PyObject_CallFunctionObjArgs((PyObject *) &script_type, program, NULL);
+        PyErr_PROPAGATE(program);
+    } else {
+        Py_INCREF(program);
+    }
+    assert(PyObject_TypeCheck(program, &script_type));
 
     IN_V8;
     IN_CONTEXT(self->js_context.Get(isolate));
     JS_TRY
 
-    MaybeLocal<Script> script = Script::Compile(context, js_from_py(program, context).As<String>());
-    PY_PROPAGATE_JS;
+    Local<UnboundScript> unbound_script = ((script_c *) program)->script.Get(isolate);
+    Local<Script> script = unbound_script->BindToCurrentContext();
 
     pthread_t breaker_id;
     if (timeout > 0) {
@@ -214,7 +224,7 @@ PyObject *context_eval(context *self, PyObject *args, PyObject *kwargs) {
         }
     }
 
-    MaybeLocal<Value> result = script.ToLocalChecked()->Run(context);
+    MaybeLocal<Value> result = script->Run(context);
 
     if (timeout > 0) {
         pthread_cancel(breaker_id);

@@ -2,6 +2,7 @@
 #include <v8.h>
 
 #include "v8py.h"
+#include "script.h"
 #include "pyclass.h"
 #include "convert.h"
 
@@ -57,6 +58,13 @@ int js_terminated_type_init() {
     return PyType_Ready(&js_terminated_type);
 }
 
+// This is the only Python C API function I need that is explicitly not in the
+// public API. All I can say is that this function is very important to Python
+// and is therefore very unlikely to go away or change any time soon.
+extern "C" {
+    PyAPI_FUNC(struct _frame *) PyFrame_New(PyThreadState *, PyCodeObject *, PyObject *, PyObject *);
+}
+
 void py_throw_js(Local<Value> js_exc, Local<Message> js_message) {
     if (js_exc->IsObject() && js_exc.As<Object>()->InternalFieldCount() == OBJECT_INTERNAL_FIELDS) {
         Local<Object> exc_object = js_exc.As<Object>();
@@ -70,6 +78,56 @@ void py_throw_js(Local<Value> js_exc, Local<Message> js_message) {
             return;
         }
         PyErr_SetObject((PyObject *) &js_exception_type, exception);
+    }
+
+    Local<StackTrace> stack_trace = js_message->GetStackTrace();
+    for (int i = 0; i < stack_trace->GetFrameCount(); i++) {
+        Local<StackFrame> stack_frame = stack_trace->GetFrame(i);
+
+        // Not documented, but arguments to PyCode_NewEmpty go through
+        // PyUnicode_FromString, so they're UTF-8 encoded
+        Local<String> js_func_name = stack_frame->GetFunctionName();
+        // whenever I remember the terrible bug introduced by not having
+        // space for the null terminator, I get chills
+        char *func_name = (char *) malloc(js_func_name->Utf8Length() + 1);
+        if (func_name == NULL) {
+            // fuck it, plenty of shit is probably already breaking anyway
+            func_name = (char *) "help i'm trapped in a computer that's out of memory";
+        } else {
+            js_func_name->WriteUtf8(func_name);
+        }
+
+        PyObject *script_name_unicode = construct_script_name(stack_frame->GetScriptName(), stack_frame->GetScriptId());
+        if (script_name_unicode == NULL) return;
+        PyObject *script_name_string = PyUnicode_AsUTF8String(script_name_unicode);
+        if (script_name_string == NULL) return;
+#if PY_MAJOR_VERSION >= 3
+        // I can't use the macro form because it uses assert and I
+        // redefined assert to not be an expression
+        char *script_name = PyBytes_AsString(script_name_string);
+#else
+        char *script_name = PyString_AS_STRING(script_name_string);
+#endif
+
+        PyCodeObject *code = PyCode_NewEmpty(script_name, func_name, stack_frame->GetLineNumber());
+        Py_DECREF(script_name_string);
+        free(func_name);
+        if (code == NULL) return;
+
+        PyObject *globals = PyDict_New();
+        if (globals == NULL) return;
+        // set the loader and name
+        PyDict_SetItemString(globals, "__loader__", script_loader);
+        PyDict_SetItemString(globals, "__name__", script_name_unicode);
+        Py_DECREF(script_name_unicode);
+
+        struct _frame *frame = PyFrame_New(PyThreadState_GET(), code, globals, NULL);
+        if (frame == NULL) return;
+
+        Py_DECREF(globals);
+        Py_DECREF(code);
+        PyTraceBack_Here(frame);
+        Py_DECREF(frame);
     }
 }
 
