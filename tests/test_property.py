@@ -19,6 +19,9 @@ def Test(request):
             @prop.setter
             def prop(self, value):
                 self.value = value
+            @property
+            def unsettable(self):
+                return 'unsettable'
             def __getitem__(self, key):
                 if key == 'getitem':
                     return self.value
@@ -77,7 +80,7 @@ def test_enumerate(context, Test):
     name_list = context.eval('Object.getOwnPropertyNames(test)')
     assert 'getitem' in name_list
     if isinstance(Test, type):
-        assert len(name_list) == 2
+        assert len(name_list) == 3
         assert 'prop' in name_list
     else:
         assert len(name_list) == 1
@@ -90,3 +93,9 @@ def test_set_property(context, Test):
     if isinstance(Test, type):
         context.eval('test.prop = "kappa"')
         assert context.eval('test.prop') == 'kappa property'
+
+def test_unsettable(context, Test):
+    if isinstance(Test, type):
+        assert not context.eval('Object.getOwnPropertyDescriptor(test, "unsettable").writable')
+        context.eval('test.unsettable = "kappa"')
+

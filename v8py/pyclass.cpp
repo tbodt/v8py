@@ -218,6 +218,14 @@ PyObject *py_class_new(PyObject *mro) {
     return (PyObject *) self;
 }
 
+bool if_property_has(PyObject *property, const char *what) {
+    if (!PyObject_TypeCheck(property, &PyProperty_Type))
+        return true;
+    PyObject *value = PyObject_GetAttrString(property, what);
+    Py_DECREF(value);
+    return value == Py_None;
+}
+
 // 0 on success, -1 on failure
 int add_to_template(PyObject *cls, PyObject *member_name, PyObject *member_value, Local<FunctionTemplate> templ) {
     HandleScope hs(isolate);
@@ -250,10 +258,17 @@ int add_to_template(PyObject *cls, PyObject *member_name, PyObject *member_value
                 return -1;
             }
             js_value = function->js_template->Get(isolate);
-        } else if (PyObject_HasAttrString(member_value, "__get__") && PyObject_HasAttrString(member_value, "__set__")) {
+        } else if (PyObject_HasAttrString(member_value, "__get__") && !PyFunction_Check(member_value)) {
             // if it's a descriptor, make an accessor
+            int attributes = 0;
+            if (!PyObject_HasAttrString(member_value, "__set__") || if_property_has(member_value, "fset")) {
+                attributes |= ReadOnly;
+            }
+            if (!PyObject_HasAttrString(member_value, "__del__") || if_property_has(member_value, "fdel")) {
+                attributes |= DontDelete;
+            }
             templ->InstanceTemplate()->SetAccessor(js_name, py_class_property_getter, py_class_property_setter, 
-                    js_name, DEFAULT, DontDelete);
+                    js_name, DEFAULT, static_cast<PropertyAttribute>(attributes));
         } else {
             // otherwise just convert
             js_value = js_from_py(member_value, no_ctx);
