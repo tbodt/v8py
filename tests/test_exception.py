@@ -31,3 +31,24 @@ try {
     """)
     assert isinstance(context.exc, ErrorClass)
     assert context.eval('exc instanceof TestError')
+    
+def assert_is_js_frame(frame, script):
+    print(frame.f_globals)
+    assert type(frame.f_globals['__loader__']).__name__ == 'ScriptLoader'
+    assert frame.f_globals['__name__'].startswith('javascript')
+    assert frame.f_globals['__loader__'].get_source(frame.f_globals['__name__']) == script
+    
+def test_tracebacks(context, ErrorClass):
+    with pytest.raises(ErrorClass) as exc_info:
+        context.eval('throw_exception()')
+
+    js_frame = exc_info.traceback[1].frame
+    assert_is_js_frame(js_frame, 'throw_exception()')
+
+def test_conservation(context, ErrorClass):
+    context.eval('function f() { throw_exception(); }')
+    with pytest.raises(ErrorClass) as exc_info:
+        context.eval('f()')
+
+    assert_is_js_frame(exc_info.traceback[1].frame, 'f()')
+    assert_is_js_frame(exc_info.traceback[2].frame, 'function f() { throw_exception(); }')

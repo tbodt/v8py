@@ -12,6 +12,7 @@ typedef struct {
     PyObject_HEAD
     Persistent<Context> js_context;
     PyObject *js_object_cache;
+    PyObject *scripts;
 } context;
 int context_type_init();
 

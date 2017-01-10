@@ -7,6 +7,8 @@ typedef struct {
     PyObject_HEAD
     Persistent<UnboundScript> script;
     PyObject *source;
+    PyObject *filename;
+    PyObject *weakrefs;
 } script_c;
 extern PyTypeObject script_type;
 

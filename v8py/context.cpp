@@ -44,12 +44,6 @@ int context_type_init() {
     return PyType_Ready(&context_type);
 }
 
-void context_dealloc(context *self) {
-    self->js_context.Reset();
-    Py_DECREF(self->js_object_cache);
-    Py_TYPE(self)->tp_free((PyObject *) self);
-}
-
 PyObject *context_new(PyTypeObject *type, PyObject *args, PyObject *kwargs) {
     IN_V8;
 
@@ -101,11 +95,21 @@ PyObject *context_new(PyTypeObject *type, PyObject *args, PyObject *kwargs) {
     self->js_object_cache = PyObject_CallObject(weak_key_dict, NULL);
     PyErr_PROPAGATE(self->js_object_cache);
 
+    self->scripts = PySet_New(NULL);
+    PyErr_PROPAGATE(self->scripts);
+
     if (global != NULL) {
         py_class_init_js_object(context->Global()->GetPrototype().As<Object>(), global, context);
     }
 
     return (PyObject *) self;
+}
+
+void context_dealloc(context *self) {
+    self->js_context.Reset();
+    Py_DECREF(self->js_object_cache);
+    Py_DECREF(self->scripts);
+    Py_TYPE(self)->tp_free((PyObject *) self);
 }
 
 PyObject *context_expose(context *self, PyObject *args, PyObject *kwargs) {
@@ -212,7 +216,9 @@ PyObject *context_eval(context *self, PyObject *args, PyObject *kwargs) {
     IN_CONTEXT(self->js_context.Get(isolate));
     JS_TRY
 
+    PySet_Add(self->scripts, program);
     Local<UnboundScript> unbound_script = ((script_c *) program)->script.Get(isolate);
+    Py_DECREF(program);
     Local<Script> script = unbound_script->BindToCurrentContext();
 
     pthread_t breaker_id;

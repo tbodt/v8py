@@ -44,4 +44,6 @@ inline extern int PyString_StartsWithString(PyObject *str, const char *prefix) {
 
 #define nb_nonzero nb_bool
 
+#define Py_TPFLAGS_HAVE_WEAKREFS 0
+
 #endif

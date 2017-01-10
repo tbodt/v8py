@@ -127,7 +127,6 @@ void py_throw_js(Local<Value> js_exc, Local<Message> js_message) {
         Py_DECREF(globals);
         Py_DECREF(code);
         PyTraceBack_Here(frame);
-        Py_DECREF(frame);
     }
 }
 
