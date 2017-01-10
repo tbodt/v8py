@@ -33,7 +33,6 @@ try {
     assert context.eval('exc instanceof TestError')
     
 def assert_is_js_frame(frame, script):
-    print(frame.f_globals)
     assert type(frame.f_globals['__loader__']).__name__ == 'ScriptLoader'
     assert frame.f_globals['__name__'].startswith('javascript')
     assert frame.f_globals['__loader__'].get_source(frame.f_globals['__name__']) == script

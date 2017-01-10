@@ -121,6 +121,11 @@ template <class T> inline extern PyObject *get_self(const PropertyCallbackInfo<T
 
 void getter_callback(PyObject *key, Info(Value)) {
     SETUP; CHECK_ATTR;
+    if (PyIndex_Check(key) && PyNumber_AsSsize_t(key, NULL) >= PyObject_Size(get_self(info))) {
+        // index out of bounds
+        return;
+    }
+
     PyObject *value = PyObject_GetItem(get_self(info), key);
     JS_PROPAGATE_PY(value);
     info.GetReturnValue().Set(js_from_py(value, context));

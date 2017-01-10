@@ -47,6 +47,7 @@ def context(Test, context):
     
 def test_getitem(context):
     assert context.eval('test[1]') == 2
+    assert context.eval('test[1234]') is None
 
 def test_setitem(context, Test):
     test = context.eval('test')
