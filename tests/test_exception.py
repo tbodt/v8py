@@ -53,7 +53,7 @@ def test_conservation(context, ErrorClass):
     assert_is_js_frame(exc_info.traceback[2].frame, 'function f() { throw_exception(); }')
 
 def test_property_error(context, ErrorClass):
-    class Test:
+    class Test(object):
         @property
         def foo(self):
             raise ErrorClass
