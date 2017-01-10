@@ -243,6 +243,6 @@ void py_class_property_setter(Local<Name> js_name, Local<Value> js_value, Info(v
     PyObject *value = py_from_js(js_value, context);
     JS_PROPAGATE_PY(value);
     int result = PyObject_SetAttr(get_self(info), name, value);
-    JS_PROPAGATE_PY_(value);
+    JS_PROPAGATE_PY_(result);
 }
 

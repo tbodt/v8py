@@ -52,3 +52,17 @@ def test_conservation(context, ErrorClass):
 
     assert_is_js_frame(exc_info.traceback[1].frame, 'f()')
     assert_is_js_frame(exc_info.traceback[2].frame, 'function f() { throw_exception(); }')
+
+def test_property_error(context, ErrorClass):
+    class Test:
+        @property
+        def foo(self):
+            raise ErrorClass
+        @foo.setter
+        def foo(self, thing):
+            raise ErrorClass
+    context.test = Test()
+    with pytest.raises(ErrorClass):
+        context.eval('test.foo')
+    with pytest.raises(ErrorClass):
+        context.eval('test.foo = "bar"')

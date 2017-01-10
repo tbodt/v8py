@@ -135,7 +135,6 @@ void js_throw_py() {
     PyObject *exc_type, *exc_value, *exc_traceback;
     PyErr_Fetch(&exc_type, &exc_value, &exc_traceback);
     PyErr_NormalizeException(&exc_type, &exc_value, &exc_traceback);
-    PyErr_Print();
     Local<Object> exception;
     if (PyObject_TypeCheck(exc_value, &js_exception_type)) {
         exception = ((js_exception *) exc_value)->exception.Get(isolate).As<Object>();
