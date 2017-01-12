@@ -28,6 +28,7 @@ Almost everything you'd expect to work just works, including:
 
 * Functions
 * Classes (including old style classes, because I can)
+* Inheritance (from the last base class, other base classes are treated as mixins)
 * Data descriptors
 * Static methods and class methods
 * Exceptions (they even subclass from Error!)
