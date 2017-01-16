@@ -31,6 +31,7 @@ PyObject *context_gc(context *self);
 Local<Object> context_get_cached_jsobject(Local<Context> context, PyObject *py_object);
 void context_set_cached_jsobject(Local<Context> context, PyObject *py_object, Local<Object> object);
 
+PyObject *context_get_current(PyObject *shit, PyObject *fuck);
 PyObject *context_get_global(context *self, void *shit);
 
 PyObject *context_getattro(context *self, PyObject *name);

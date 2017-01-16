@@ -1,5 +1,5 @@
 import pytest
-from v8py import JavaScriptTerminated
+from v8py import JavaScriptTerminated, current_context
 
 def test_glob(context):
     context.eval('foo = "bar"')
@@ -36,3 +36,9 @@ def test_expose_module(context):
     context.expose_module(test_context)
     assert context.eval('f()') is None
 
+def test_current_context(context):
+    assert current_context() is None
+    def f():
+        assert current_context() is context
+    context.expose(f)
+    context.eval('f()')

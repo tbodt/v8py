@@ -50,6 +50,7 @@ PyObject *mark_unconstructable(PyObject *shit, PyObject *thing) {
 static PyMethodDef v8_methods[] = {
     {"hidden", mark_hidden, METH_O, ""},
     {"unconstructable", mark_unconstructable, METH_O, ""},
+    {"current_context", context_get_current, METH_NOARGS, ""},
     {NULL},
 };
 

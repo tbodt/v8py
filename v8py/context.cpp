@@ -273,6 +273,16 @@ void context_set_cached_jsobject(Local<Context> js_context, PyObject *py_object,
     }
 }
 
+PyObject *context_get_current(PyObject *shit, PyObject *fuck) {
+    Local<Context> current_context = isolate->GetCurrentContext();
+    if (current_context.IsEmpty()) {
+        Py_RETURN_NONE;
+    }
+    PyObject *context = (PyObject *) current_context->GetEmbedderData(CONTEXT_OBJECT_SLOT).As<External>()->Value();
+    Py_INCREF(context);
+    return context;
+}
+
 PyObject *context_get_global(context *self, void *shit) {
     IN_V8;
     Local<Context> context = self->js_context.Get(isolate);
