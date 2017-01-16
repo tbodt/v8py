@@ -193,10 +193,11 @@ void *breaker_thread(void *param) {
 
 PyObject *context_eval(context *self, PyObject *args, PyObject *kwargs) {
     PyObject *program;
+    PyObject *filename = Py_None;
     double timeout = 0;
-    static const char *keywords[] = {"program", "timeout", NULL};
+    static const char *keywords[] = {"program", "timeout", "filename", NULL};
     // python needs to fix their shit and make it const
-    if (PyArg_ParseTupleAndKeywords(args, kwargs, "O|d", (char **) keywords, &program, &timeout) < 0) {
+    if (PyArg_ParseTupleAndKeywords(args, kwargs, "O|dO", (char **) keywords, &program, &timeout, &filename) < 0) {
         return NULL;
     }
     if (!PyString_Check(program) && !PyObject_TypeCheck(program, &script_type)) {
@@ -205,7 +206,7 @@ PyObject *context_eval(context *self, PyObject *args, PyObject *kwargs) {
     }
 
     if (PyString_Check(program)) {
-        program = PyObject_CallFunctionObjArgs((PyObject *) &script_type, program, NULL);
+        program = PyObject_CallFunctionObjArgs((PyObject *) &script_type, program, filename, NULL);
         PyErr_PROPAGATE(program);
     } else {
         Py_INCREF(program);

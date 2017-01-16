@@ -12,3 +12,7 @@ def test_script():
 
 def test_identical_scripts():
     assert Script('kappa') is Script('kappa')
+
+def test_filename():
+    s = Script('kappa', filename='file')
+    # why bother testing more...

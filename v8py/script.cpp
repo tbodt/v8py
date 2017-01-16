@@ -65,9 +65,9 @@ PyObject *construct_script_name(Local<Value> js_name, int id) {
     if (id == 0) {
         return name;
     }
-    PyObject *filename = PyUnicode_FromFormat("%S-%d", name, id);
+    PyObject *script_name = PyUnicode_FromFormat("%S-%d", name, id);
     Py_DECREF(name);
-    return filename;
+    return script_name;
 }
 
 PyObject *script_new(PyTypeObject *type, PyObject *args, PyObject *kwargs) {
@@ -75,32 +75,46 @@ PyObject *script_new(PyTypeObject *type, PyObject *args, PyObject *kwargs) {
     IN_CONTEXT(compile_context.Get(isolate));
     JS_TRY
 
+    static const char *keywords[] = {"source", "filename", NULL};
     PyObject *source;
-    if (PyArg_ParseTuple(args, "O", &source) < 0) {
+    PyObject *filename = Py_None;
+    if (PyArg_ParseTupleAndKeywords(args, kwargs, "O|O", (char **) keywords, &source, &filename) < 0) {
         return NULL;
     }
     if (!PyString_Check(source)) {
         PyErr_SetString(PyExc_TypeError, "source must be a string");
         return NULL;
     }
+    if (filename != Py_None && !PyString_Check(filename)) {
+        PyErr_SetString(PyExc_TypeError, "filename must be a string or None");
+        return NULL;
+    }
 
-    ScriptCompiler::Source js_source(js_from_py(source, context).As<String>());
-    MaybeLocal<UnboundScript> maybe_script = ScriptCompiler::CompileUnbound(isolate, &js_source);
+    MaybeLocal<UnboundScript> maybe_script;
+    // fucking god / c++
+    if (filename != Py_None) {
+        ScriptOrigin origin(js_from_py(filename, context));
+        ScriptCompiler::Source js_source(js_from_py(source, context).As<String>(), origin);
+        maybe_script = ScriptCompiler::CompileUnbound(isolate, &js_source);
+    } else {
+        ScriptCompiler::Source js_source(js_from_py(source, context).As<String>());
+        maybe_script = ScriptCompiler::CompileUnbound(isolate, &js_source);
+    }
     PY_PROPAGATE_JS;
     Local<UnboundScript> script = maybe_script.ToLocalChecked();
-    PyObject *filename = construct_script_name(script->GetScriptName(), script->GetId());
-    PyErr_PROPAGATE(filename);
-    if (PySequence_Contains(scripts_by_name, filename)) {
-        return PyObject_GetItem(scripts_by_name, filename);
+    PyObject *script_name = construct_script_name(script->GetScriptName(), script->GetId());
+    PyErr_PROPAGATE(script_name);
+    if (PySequence_Contains(scripts_by_name, script_name)) {
+        return PyObject_GetItem(scripts_by_name, script_name);
     }
 
     script_c *self = (script_c *) type->tp_alloc(type, 0);
     self->script.Reset(isolate, script);
-    self->filename = filename;
+    self->script_name = script_name;
     Py_INCREF(source);
     self->source = source;
 
-    if (PyObject_SetItem(scripts_by_name, self->filename, (PyObject *) self) < 0) return NULL;
+    if (PyObject_SetItem(scripts_by_name, self->script_name, (PyObject *) self) < 0) return NULL;
 
     return (PyObject *) self;
 }
@@ -108,9 +122,9 @@ PyObject *script_new(PyTypeObject *type, PyObject *args, PyObject *kwargs) {
 void script_dealloc(script_c *self) {
     self->script.Reset();
 
-    PyObject_DelItem(scripts_by_name, self->filename); // can't do anything if this fails
+    PyObject_DelItem(scripts_by_name, self->script_name); // can't do anything if this fails
 
-    Py_DECREF(self->filename);
+    Py_DECREF(self->script_name);
     Py_DECREF(self->source);
     Py_TYPE(self)->tp_free((PyObject *) self);
 }
