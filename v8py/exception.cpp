@@ -6,6 +6,9 @@
 #include "pyclass.h"
 #include "convert.h"
 
+PyGetSetDef js_exception_getsets = {
+    {"value", js_exception_get_value, NULL, NULL},
+};
 PyTypeObject js_exception_type = {
     PyVarObject_HEAD_INIT(NULL, 0)
 };
@@ -15,6 +18,7 @@ int js_exception_type_init() {
     js_exception_type.tp_basicsize = sizeof(js_exception);
     js_exception_type.tp_flags = Py_TPFLAGS_DEFAULT;
     js_exception_type.tp_doc = "";
+    js_exception_type.tp_getset = &js_exception_getsets;
 
     js_exception_type.tp_dealloc = (destructor) js_exception_dealloc;
     return PyType_Ready(&js_exception_type);
