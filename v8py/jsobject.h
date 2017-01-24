@@ -20,6 +20,7 @@ void js_object_dealloc(js_object *self);
 
 PyObject *js_object_getattro(js_object *self, PyObject *name);
 int js_object_setattro(js_object *self, PyObject *name, PyObject *value);
+PyObject *js_object_getiter(js_object *self);
 Py_ssize_t js_object_length(js_object *self);
 PyObject *js_object_dir(js_object *self);
 PyObject *js_object_repr(js_object *self);

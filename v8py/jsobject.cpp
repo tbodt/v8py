@@ -16,7 +16,7 @@ PyMethodDef js_object_methods[] = {
     {NULL}
 };
 PyMappingMethods js_object_mapping_methods = {
-    (lenfunc) js_object_length, (binaryfunc) js_object_getattro, (objobjargproc) js_object_setattro
+    NULL, (binaryfunc) js_object_getattro, (objobjargproc) js_object_setattro
 };
 int js_object_type_init() {
     js_object_type.tp_name = "v8py.Object";
@@ -27,6 +27,7 @@ int js_object_type_init() {
     js_object_type.tp_dealloc = (destructor) js_object_dealloc;
     js_object_type.tp_getattro = (getattrofunc) js_object_getattro;
     js_object_type.tp_setattro = (setattrofunc) js_object_setattro;
+    js_object_type.tp_iter = (getiterfunc) js_object_getiter;
     js_object_type.tp_repr = (reprfunc) js_object_repr;
     js_object_type.tp_methods = js_object_methods;
     js_object_type.tp_as_mapping = &js_object_mapping_methods;
@@ -106,15 +107,12 @@ int js_object_setattro(js_object *self, PyObject *name, PyObject *value) {
     return 0;
 }
 
-static PyObject *length_name = PyString_InternFromString("length");
-
-Py_ssize_t js_object_length(js_object *self) {
-    PyObject *length_obj = js_object_getattro(self, length_name);
-    Py_DECREF(length_name);
-    PyErr_PROPAGATE_(length_obj);
-    Py_ssize_t length = PyNumber_AsSsize_t(length_obj, NULL);
-    Py_DECREF(length_obj);
-    return length;
+PyObject *js_object_getiter(js_object *self) {
+    PyObject *props = js_object_dir(self);
+    PyErr_PROPAGATE(props);
+    PyObject *iter = PySeqIter_New(props);
+    Py_DECREF(props);
+    return iter;
 }
 
 PyObject *js_object_dir(js_object *self) {

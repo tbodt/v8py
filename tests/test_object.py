@@ -17,7 +17,10 @@ def test_dir(context, obj):
     obj.foo = 'bar'
     assert dir(obj) == ['foo']
 
+def test_iter(context, obj):
+    obj.foo = 'bar'
+    assert list(obj) == ['foo']
+
 def test_str(obj):
     assert str(obj) == '[object Object]'
     assert repr(obj) == '[object Object]'
-
