@@ -8,6 +8,7 @@
 #include "script.h"
 #include "pyclass.h"
 #include "jsobject.h"
+#include "debugger.h"
 
 using namespace v8;
 
@@ -90,9 +91,9 @@ int null_type_init() {
 #endif
 
 #if PY_MAJOR_VERSION < 3
-PyMODINIT_FUNC initv8py() {
+PyMODINIT_FUNC init_v8py() {
 #else
-PyMODINIT_FUNC PyInit_v8py() {
+PyMODINIT_FUNC PyInit__v8py() {
 #endif
     initialize_v8();
     create_memes_plz_thx();
@@ -116,6 +117,9 @@ PyMODINIT_FUNC PyInit_v8py() {
     if (script_type_init() < 0) return FAIL;
     Py_INCREF(&script_type);
     PyModule_AddObject(module, "Script", (PyObject *) &script_type);
+    if (debugger_type_init() < 0) return FAIL;
+    Py_INCREF(&debugger_type);
+    PyModule_AddObject(module, "Debugger", (PyObject *) &debugger_type);
 
     if (py_function_type_init() < 0) return FAIL;
     if (py_class_type_init() < 0) return FAIL;

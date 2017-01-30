@@ -13,15 +13,15 @@ typedef struct {
     Persistent<Context> js_context;
     PyObject *js_object_cache;
     PyObject *scripts;
-} context;
+} context_c;
 int context_type_init();
 
-void context_dealloc(context *self);
+void context_dealloc(context_c *self);
 PyObject *context_new(PyTypeObject *type, PyObject *args, PyObject *kwargs);
-PyObject *context_eval(context *self, PyObject *args, PyObject *kwargs);
-PyObject *context_expose(context *self, PyObject *args, PyObject *kwargs);
-PyObject *context_expose_module(context *self, PyObject *module);
-PyObject *context_gc(context *self);
+PyObject *context_eval(context_c *self, PyObject *args, PyObject *kwargs);
+PyObject *context_expose(context_c *self, PyObject *args, PyObject *kwargs);
+PyObject *context_expose_module(context_c *self, PyObject *module);
+PyObject *context_gc(context_c *self);
 
 // Embedder data slots
 #define CONTEXT_OBJECT_SLOT 0
@@ -32,12 +32,12 @@ Local<Object> context_get_cached_jsobject(Local<Context> context, PyObject *py_o
 void context_set_cached_jsobject(Local<Context> context, PyObject *py_object, Local<Object> object);
 
 PyObject *context_get_current(PyObject *shit, PyObject *fuck);
-PyObject *context_get_global(context *self, void *shit);
+PyObject *context_get_global(context_c *self, void *shit);
 
-PyObject *context_getattro(context *self, PyObject *name);
-PyObject *context_getitem(context *self, PyObject *name);
-int context_setattro(context *self, PyObject *name, PyObject *value);
-int context_setitem(context *self, PyObject *name, PyObject *value);
+PyObject *context_getattro(context_c *self, PyObject *name);
+PyObject *context_getitem(context_c *self, PyObject *name);
+int context_setattro(context_c *self, PyObject *name, PyObject *value);
+int context_setitem(context_c *self, PyObject *name, PyObject *value);
 
 extern PyTypeObject context_type;
 

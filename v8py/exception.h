@@ -19,6 +19,7 @@ int js_terminated_type_init();
 PyObject *js_exception_new(Local<Value> exception, Local<Message> message);
 void js_exception_dealloc(js_exception *self);
 PyObject *js_exception_str(js_exception *self);
+PyObject *js_exception_get_value(js_exception *self, void *shit);
 
 void py_throw_js(Local<Value> js_exc, Local<Message> js_message);
 #define JS_TRY TryCatch tc(isolate);

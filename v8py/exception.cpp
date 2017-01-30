@@ -6,8 +6,9 @@
 #include "pyclass.h"
 #include "convert.h"
 
-PyGetSetDef js_exception_getsets = {
-    {"value", js_exception_get_value, NULL, NULL},
+PyGetSetDef js_exception_getsets[] = {
+    {"value", (getter) js_exception_get_value, NULL, NULL},
+    {NULL},
 };
 PyTypeObject js_exception_type = {
     PyVarObject_HEAD_INIT(NULL, 0)
@@ -18,7 +19,7 @@ int js_exception_type_init() {
     js_exception_type.tp_basicsize = sizeof(js_exception);
     js_exception_type.tp_flags = Py_TPFLAGS_DEFAULT;
     js_exception_type.tp_doc = "";
-    js_exception_type.tp_getset = &js_exception_getsets;
+    js_exception_type.tp_getset = js_exception_getsets;
 
     js_exception_type.tp_dealloc = (destructor) js_exception_dealloc;
     return PyType_Ready(&js_exception_type);
@@ -42,6 +43,11 @@ PyObject *js_exception_new(Local<Value> exception, Local<Message> message) {
     PyErr_PROPAGATE(self->base.args);
     PyTuple_SetItem(self->base.args, 0, py_message);
     return (PyObject *) self;
+}
+
+PyObject *js_exception_get_value(js_exception *self, void *shit) {
+    Local<Context> no_ctx;
+    return py_from_js(self->exception.Get(isolate), no_ctx);
 }
 
 void js_exception_dealloc(js_exception *self) {

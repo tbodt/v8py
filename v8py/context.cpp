@@ -31,7 +31,7 @@ PyTypeObject context_type = {
 };
 int context_type_init() {
     context_type.tp_name = "v8py.Context";
-    context_type.tp_basicsize = sizeof(context);
+    context_type.tp_basicsize = sizeof(context_c);
     context_type.tp_flags = Py_TPFLAGS_DEFAULT;
     context_type.tp_doc = "";
     context_type.tp_dealloc = (destructor) context_dealloc;
@@ -63,7 +63,7 @@ PyObject *context_new(PyTypeObject *type, PyObject *args, PyObject *kwargs) {
         }
     }
 
-    context *self = (context *) type->tp_alloc(type, 0);
+    context_c *self = (context_c *) type->tp_alloc(type, 0);
     PyErr_PROPAGATE(self);
 
     MaybeLocal<ObjectTemplate> global_template;
@@ -105,14 +105,14 @@ PyObject *context_new(PyTypeObject *type, PyObject *args, PyObject *kwargs) {
     return (PyObject *) self;
 }
 
-void context_dealloc(context *self) {
+void context_dealloc(context_c *self) {
     self->js_context.Reset();
     Py_DECREF(self->js_object_cache);
     Py_DECREF(self->scripts);
     Py_TYPE(self)->tp_free((PyObject *) self);
 }
 
-PyObject *context_expose(context *self, PyObject *args, PyObject *kwargs) {
+PyObject *context_expose(context_c *self, PyObject *args, PyObject *kwargs) {
     IN_V8;
     Local<Context> context = self->js_context.Get(isolate);
     Local<Object> global = context->Global();
@@ -147,7 +147,7 @@ PyObject *context_expose(context *self, PyObject *args, PyObject *kwargs) {
     Py_RETURN_NONE;
 }
 
-PyObject *context_expose_module(context *self, PyObject *module) {
+PyObject *context_expose_module(context_c *self, PyObject *module) {
     if (!PyModule_Check(module)) {
         PyErr_SetString(PyExc_TypeError, "context_expose_module requires a module");
         return NULL;
@@ -191,7 +191,7 @@ void *breaker_thread(void *param) {
     return NULL;
 }
 
-PyObject *context_eval(context *self, PyObject *args, PyObject *kwargs) {
+PyObject *context_eval(context_c *self, PyObject *args, PyObject *kwargs) {
     PyObject *program;
     PyObject *filename = Py_None;
     double timeout = 0;
@@ -248,7 +248,7 @@ PyObject *context_eval(context *self, PyObject *args, PyObject *kwargs) {
 
 Local<Object> context_get_cached_jsobject(Local<Context> js_context, PyObject *py_object) {
     EscapableHandleScope hs(isolate);
-    context *self = (context *) js_context->GetEmbedderData(CONTEXT_OBJECT_SLOT).As<External>()->Value();
+    context_c *self = (context_c *) js_context->GetEmbedderData(CONTEXT_OBJECT_SLOT).As<External>()->Value();
     if (PyMapping_HasKey(self->js_object_cache, py_object)) {
         js_object *jsobj = (js_object *) PyObject_GetItem(self->js_object_cache, py_object);
         if (jsobj == NULL) {
@@ -262,7 +262,7 @@ Local<Object> context_get_cached_jsobject(Local<Context> js_context, PyObject *p
 
 void context_set_cached_jsobject(Local<Context> js_context, PyObject *py_object, Local<Object> object) {
     EscapableHandleScope hs(isolate);
-    context *self = (context *) js_context->GetEmbedderData(CONTEXT_OBJECT_SLOT).As<External>()->Value();
+    context_c *self = (context_c *) js_context->GetEmbedderData(CONTEXT_OBJECT_SLOT).As<External>()->Value();
     js_object *jsobj = js_object_new(object, js_context);
     if (PyObject_SetItem(self->js_object_cache, py_object, (PyObject *) jsobj) < 0) {
         if (PyErr_ExceptionMatches(PyExc_TypeError)) {
@@ -284,13 +284,13 @@ PyObject *context_get_current(PyObject *shit, PyObject *fuck) {
     return context;
 }
 
-PyObject *context_get_global(context *self, void *shit) {
+PyObject *context_get_global(context_c *self, void *shit) {
     IN_V8;
     Local<Context> context = self->js_context.Get(isolate);
     return py_from_js(context->Global()->GetPrototype(), context);
 }
 
-PyObject *context_getattro(context *self, PyObject *name) {
+PyObject *context_getattro(context_c *self, PyObject *name) {
     PyObject *value = PyObject_GenericGetAttr((PyObject *) self, name);
     if (value == NULL) {
         PyErr_Clear();
@@ -298,13 +298,13 @@ PyObject *context_getattro(context *self, PyObject *name) {
     }
     return value;
 }
-PyObject *context_getitem(context *self, PyObject *name) {
+PyObject *context_getitem(context_c *self, PyObject *name) {
     PyObject *global = context_get_global(self, NULL);
     PyErr_PROPAGATE(global);
     return PyObject_GetAttr(context_get_global(self, NULL), name);
 }
 
-int context_setattro(context *self, PyObject *name, PyObject *value) {
+int context_setattro(context_c *self, PyObject *name, PyObject *value) {
     // use GenericGetAttr to find out if Context defines the property
     PyObject *ctx_value = PyObject_GenericGetAttr((PyObject *) self, name);
     if (ctx_value == NULL) {
@@ -317,13 +317,13 @@ int context_setattro(context *self, PyObject *name, PyObject *value) {
     // if the property is defined by Context, delegate
     return PyObject_GenericSetAttr((PyObject *) self, name, value);
 }
-int context_setitem(context *self, PyObject *name, PyObject *value) {
+int context_setitem(context_c *self, PyObject *name, PyObject *value) {
     PyObject *global = context_get_global(self, NULL);
     PyErr_PROPAGATE_(global);
     return PyObject_SetAttr(global, name, value);
 }
 
-PyObject *context_gc(context *self) {
+PyObject *context_gc(context_c *self) {
     IN_V8;
     isolate->RequestGarbageCollectionForTesting(Isolate::GarbageCollectionType::kFullGarbageCollection);
     Py_RETURN_NONE;
