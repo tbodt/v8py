@@ -44,26 +44,14 @@ class DevtoolsDebugger(_v8py.Debugger):
 
     def talk_to_v8(self):
         for message in self.queue:
-            print('>', end=' ')
-            pprint(message)
             self.send(message)
 
     def handle(self, message):
-        print('<', end=' ')
-        pprint(message)
         self.ws.send(json.dumps(message))
 
-    # Since gevent is handling our event loops, we just have run_loop block
-    # until quit_loop is called. This also conveniently deals with nested
-    # loops.
     def run_loop(self):
-        print('run loop')
         self.talk_to_v8()
-        # self.lock.acquire()
-        # print('finishing loop')
     def quit_loop(self):
-        print('killing loop')
-        # self.lock.release()
         self.queue.put(StopIteration)
 
     def wait_for_connect(self):
@@ -74,4 +62,3 @@ def start_devtools(context, port):
     server = pywsgi.WSGIServer(('localhost', port), debugger, handler_class=WebSocketHandler)
     server.start()
     debugger.wait_for_connect()
-    print('done waiting')
