@@ -37,7 +37,7 @@ if 'site' in os.listdir(site_include):
     site_include = os.path.join(site_include, 'site')
 site_include = os.path.join(site_include, os.listdir(site_include)[0])
 
-extension = Extension('v8py',
+extension = Extension('_v8py',
                       sources=sources,
                       include_dirs=['v8py', 'v8/include', site_include],
                       library_dirs=library_dirs,
@@ -56,7 +56,6 @@ def cd(path):
 DEPOT_TOOLS_PATH = os.path.join(os.getcwd(), 'depot_tools')
 COMMAND_ENV = os.environ.copy()
 COMMAND_ENV['PATH'] = DEPOT_TOOLS_PATH + os.path.pathsep + os.environ['PATH']
-COMMAND_ENV['GYPFLAGS'] = '-Dv8_use_external_startup_data=0'
 COMMAND_ENV.pop('CC', None)
 COMMAND_ENV.pop('CXX', None)
 
@@ -101,7 +100,7 @@ def get_v8():
             run('gclient fetch')
 
     with cd('v8'):
-        run('git checkout {}'.format('branch-heads/5.4'))
+        run('git checkout {}'.format('branch-heads/5.7'))
         run('gclient sync')
 
 class BuildV8Command(Command):
@@ -115,7 +114,8 @@ class BuildV8Command(Command):
         if not v8_exists():
             get_v8()
             with cd('v8'):
-                run('make {} snapshot=on i18nsupport=off -j{} CFLAGS=-fPIC CXXFLAGS=-fPIC'.format(MODE, multiprocessing.cpu_count()))
+                gypflags = '-Dv8_use_external_startup_data=0 -Dv8_enable_i18n_support=0 -Dv8_enable_inspector=1'
+                run('make GYPFLAGS="{}" CFLAGS=-fPIC CXXFLAGS=-fPIC {} -j{}'.format(gypflags, MODE, multiprocessing.cpu_count()))
 
 class build_ext(distutils_build_ext):
     def build_extension(self, ext):
@@ -150,6 +150,9 @@ setup(
     packages=find_packages(exclude=['tests']),
     ext_modules=[extension],
 
+    extras_require={
+        'devtools': ['gevent', 'greenstack-greenlet', 'karellen-geventws'],
+    },
     setup_requires=['pytest-runner', 'greenstack'],
     tests_require=['pytest'],
     cmdclass={
