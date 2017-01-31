@@ -17,4 +17,5 @@ PyObject *script_new(PyTypeObject *type, PyObject *args, PyObject *kwargs);
 void script_dealloc(script_c *self);
 
 PyObject *construct_script_name(Local<Value> js_name, int id);
+MaybeLocal<UnboundScript> script_compile(Local<Context> context, PyObject *source, PyObject *filename);
 extern PyObject *script_loader;

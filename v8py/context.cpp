@@ -64,6 +64,7 @@ PyObject *context_new(PyTypeObject *type, PyObject *args, PyObject *kwargs) {
     }
 
     context_c *self = (context_c *) type->tp_alloc(type, 0);
+    self->has_debugger = false;
     PyErr_PROPAGATE(self);
 
     MaybeLocal<ObjectTemplate> global_template;
@@ -212,13 +213,21 @@ PyObject *context_eval(context_c *self, PyObject *args, PyObject *kwargs) {
         Py_INCREF(program);
     }
     assert(PyObject_TypeCheck(program, &script_type));
+    script_c *py_script = (script_c *) program;
 
     IN_V8;
     IN_CONTEXT(self->js_context.Get(isolate));
     JS_TRY
 
     PySet_Add(self->scripts, program);
-    Local<UnboundScript> unbound_script = ((script_c *) program)->script.Get(isolate);
+    Local<UnboundScript> unbound_script;
+    if (self->has_debugger) {
+        MaybeLocal<UnboundScript> maybe_script = script_compile(context, py_script->source, py_script->script_name);
+        PY_PROPAGATE_JS;
+        unbound_script = maybe_script.ToLocalChecked();
+    } else {
+        unbound_script = py_script->script.Get(isolate);
+    }
     Py_DECREF(program);
     Local<Script> script = unbound_script->BindToCurrentContext();
 

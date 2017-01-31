@@ -1,4 +1,6 @@
 import json
+from pprint import pprint
+
 import _v8py
 import gevent
 from gevent import pywsgi
@@ -10,7 +12,7 @@ from geventwebsocket.exceptions import WebSocketError
 class DevtoolsDebugger(_v8py.Debugger):
     def __init__(self, context):
         super().__init__(context)
-        self.lock = gevent.lock.Semaphore(0)
+        self.connect_lock = gevent.lock.Semaphore(0)
         self.queue = gevent.queue.Queue()
         self.ws = None
 
@@ -27,7 +29,11 @@ class DevtoolsDebugger(_v8py.Debugger):
                     message = self.ws.receive()
                 except WebSocketError:
                     break
-                self.queue.put(json.loads(message))
+                message = json.loads(message)
+                if message.get('method') == 'Runtime.runIfWaitingForDebugger':
+                    print('releasing lock')
+                    self.connect_lock.release()
+                self.queue.put(message)
             self.ws = None
             v8_greenlet.kill()
 
@@ -38,9 +44,13 @@ class DevtoolsDebugger(_v8py.Debugger):
 
     def talk_to_v8(self):
         for message in self.queue:
+            print('>', end=' ')
+            pprint(message)
             self.send(message)
 
     def handle(self, message):
+        print('<', end=' ')
+        pprint(message)
         self.ws.send(json.dumps(message))
 
     # Since gevent is handling our event loops, we just have run_loop block
@@ -56,8 +66,12 @@ class DevtoolsDebugger(_v8py.Debugger):
         # self.lock.release()
         self.queue.put(StopIteration)
 
+    def wait_for_connect(self):
+        self.connect_lock.wait()
+
 def start_devtools(context, port):
-    print('will start')
-    server = pywsgi.WSGIServer(('localhost', port), DevtoolsDebugger(context), handler_class=WebSocketHandler)
+    debugger = DevtoolsDebugger(context)
+    server = pywsgi.WSGIServer(('localhost', port), debugger, handler_class=WebSocketHandler)
     server.start()
-    print('start')
+    debugger.wait_for_connect()
+    print('done waiting')

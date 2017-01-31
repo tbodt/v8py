@@ -13,6 +13,7 @@ typedef struct {
     Persistent<Context> js_context;
     PyObject *js_object_cache;
     PyObject *scripts;
+    bool has_debugger;
 } context_c;
 int context_type_init();
 
@@ -24,9 +25,9 @@ PyObject *context_expose_module(context_c *self, PyObject *module);
 PyObject *context_gc(context_c *self);
 
 // Embedder data slots
-#define CONTEXT_OBJECT_SLOT 0
-#define OBJECT_PROTOTYPE_SLOT 1
-#define ERROR_PROTOTYPE_SLOT 2
+#define CONTEXT_OBJECT_SLOT 1
+#define OBJECT_PROTOTYPE_SLOT 2
+#define ERROR_PROTOTYPE_SLOT 3
 
 Local<Object> context_get_cached_jsobject(Local<Context> context, PyObject *py_object);
 void context_set_cached_jsobject(Local<Context> context, PyObject *py_object, Local<Object> object);

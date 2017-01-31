@@ -41,8 +41,15 @@ int debugger_init(debugger_c *self, PyObject *args, PyObject *kwargs) {
         return -1;
     }
 
+    Py_INCREF(context);
+    self->context = context;
     Local<Context> js_context = context->js_context.Get(isolate);
-    self->context.Reset(isolate, js_context);
+
+    if (context->has_debugger) {
+        PyErr_SetString(PyExc_ValueError, "specified context already has a debugger attached");
+        return NULL;
+    }
+    context->has_debugger = true;
 
     self->client = new V8PyInspectorClient(self);
     self->inspector = V8Inspector::create(isolate, self->client);
@@ -103,6 +110,8 @@ void debugger_dealloc(debugger_c *self) {
     self->inspector.reset();
     delete self->client;
     delete self->channel;
+    self->context->has_debugger = false;
+    Py_DECREF(self->context);
     Py_TYPE(self)->tp_free((PyObject *) self);
 }
 

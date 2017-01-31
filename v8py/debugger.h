@@ -16,7 +16,7 @@ class V8PyChannel;
 
 typedef struct _debugger {
     PyObject_HEAD
-    Persistent<Context> context;
+    context_c *context;
     V8PyInspectorClient *client;
     V8PyChannel *channel;
     std::unique_ptr<V8Inspector> inspector;
@@ -36,7 +36,7 @@ class V8PyInspectorClient : public V8InspectorClient {
         V8PyInspectorClient(debugger_c *debugger) : debugger_(debugger) {}
         Local<Context> ensureDefaultContextInGroup(int context_group_id) override {
             printf("returning context\n");
-            return debugger_->context.Get(isolate);
+            return debugger_->context->js_context.Get(isolate);
         }
 
         void runMessageLoopOnPause(int context_group_id) override;

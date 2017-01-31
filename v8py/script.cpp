@@ -90,16 +90,7 @@ PyObject *script_new(PyTypeObject *type, PyObject *args, PyObject *kwargs) {
         return NULL;
     }
 
-    MaybeLocal<UnboundScript> maybe_script;
-    // fucking god / c++
-    if (filename != Py_None) {
-        ScriptOrigin origin(js_from_py(filename, context));
-        ScriptCompiler::Source js_source(js_from_py(source, context).As<String>(), origin);
-        maybe_script = ScriptCompiler::CompileUnbound(isolate, &js_source);
-    } else {
-        ScriptCompiler::Source js_source(js_from_py(source, context).As<String>());
-        maybe_script = ScriptCompiler::CompileUnbound(isolate, &js_source);
-    }
+    MaybeLocal<UnboundScript> maybe_script = script_compile(context, source, filename);
     PY_PROPAGATE_JS;
     Local<UnboundScript> script = maybe_script.ToLocalChecked();
     PyObject *script_name = construct_script_name(script->GetScriptName(), script->GetId());
@@ -117,6 +108,23 @@ PyObject *script_new(PyTypeObject *type, PyObject *args, PyObject *kwargs) {
     if (PyObject_SetItem(scripts_by_name, self->script_name, (PyObject *) self) < 0) return NULL;
 
     return (PyObject *) self;
+}
+
+MaybeLocal<UnboundScript> script_compile(Local<Context> context, PyObject *source, PyObject *filename) {
+    EscapableHandleScope hs(isolate);
+    MaybeLocal<UnboundScript> maybe_script;
+    // fucking god / c++
+    if (filename != Py_None) {
+        ScriptOrigin origin(js_from_py(filename, context));
+        ScriptCompiler::Source js_source(js_from_py(source, context).As<String>(), origin);
+        maybe_script = ScriptCompiler::CompileUnbound(isolate, &js_source);
+    } else {
+        ScriptCompiler::Source js_source(js_from_py(source, context).As<String>());
+        maybe_script = ScriptCompiler::CompileUnbound(isolate, &js_source);
+    }
+    if (maybe_script.IsEmpty())
+        return maybe_script;
+    return hs.Escape(maybe_script.ToLocalChecked());
 }
 
 void script_dealloc(script_c *self) {
