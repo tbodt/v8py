@@ -99,10 +99,10 @@ PyMODINIT_FUNC PyInit__v8py() {
     create_memes_plz_thx();
 
 #if PY_MAJOR_VERSION < 3
-    PyObject *module = Py_InitModule("v8py", v8_methods);
+    PyObject *module = Py_InitModule("_v8py", v8_methods);
 #else
     static struct PyModuleDef v8_module_def = {PyModuleDef_HEAD_INIT};
-    v8_module_def.m_name = "v8py";
+    v8_module_def.m_name = "_v8py";
     v8_module_def.m_size = -1;
     v8_module_def.m_methods = v8_methods;
     PyObject *module = PyModule_Create(&v8_module_def);
