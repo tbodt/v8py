@@ -65,7 +65,7 @@ int debugger_init(debugger_c *self, PyObject *args, PyObject *kwargs) {
 void call_self(debugger_c *self, const char *method) {
     PyObject *debugger = (PyObject *) self;
     if (PyObject_HasAttrString(debugger, method)) {
-        if (PyObject_CallMethod(debugger, method, NULL) == NULL) {
+        if (PyObject_CallMethod(debugger, (char *) method, NULL) == NULL) {
             PyErr_WriteUnraisable(debugger);
         }
     }
@@ -79,7 +79,7 @@ void V8PyChannel::handle_message(const std::unique_ptr<StringBuffer> &message) {
     }
     PyObject *self = (PyObject *) debugger_;
     if (PyObject_HasAttrString(self, "handle")) {
-        if (PyObject_CallMethod(self, "handle", "O", json) == NULL) {
+        if (PyObject_CallMethod(self, (char *) "handle", (char *) "O", json) == NULL) {
             PyErr_WriteUnraisable(self);
         }
     }
@@ -149,7 +149,8 @@ std::unique_ptr<StringBuffer> stringview_from_json(PyObject *json) {
     PyObject *string = PyObject_CallFunctionObjArgs(dumps, json, NULL);
     PyErr_PROPAGATE(string);
 #if PY_MAJOR_VERSION < 3
-    PyObject *message_unicode = PyUnicode_FromString(message_str);
+    PyObject *message_unicode = PyUnicode_DecodeASCII(
+            PyString_AS_STRING(string), PyString_GET_SIZE(string), NULL);
     PyErr_PROPAGATE(message_unicode);
     Py_DECREF(string);
     string = message_unicode;
