@@ -114,7 +114,7 @@ class BuildV8Command(Command):
         if not v8_exists():
             get_v8()
             with cd('v8'):
-                gypflags = '-Dv8_use_external_startup_data=0 -Dv8_enable_i18n_support=0 -Dv8_enable_inspector=1'
+                gypflags = '-Dv8_use_external_startup_data=0 -Dv8_enable_i18n_support=0 -Dv8_enable_inspector=1 -Dwerror=\'\' '
                 run('make GYPFLAGS="{}" CFLAGS=-fPIC CXXFLAGS=-fPIC {} -j{}'.format(gypflags, MODE, multiprocessing.cpu_count()))
 
 class build_ext(distutils_build_ext):

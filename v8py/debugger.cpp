@@ -1,6 +1,8 @@
 #include <Python.h>
 #include <v8.h>
-
+#if defined(V8_OS_LINUX)
+# include <arpa/inet.h>
+#endif
 #include "context.h"
 #include "debugger.h"
 
