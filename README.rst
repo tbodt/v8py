@@ -50,8 +50,6 @@ really big program.) I hope to get more wheels built soon.
 Misc
 ----
 
-I (sometimes) stream development of this and related projects at https://twitch.tv/tblodt.
-
 There is no documentation of any of this yet. No docstrings. The best place to
 look to find out how to use it is the tests.
 
@@ -65,3 +63,7 @@ find something that doesn't quite "just work", or works kind of strangely, or
 just stuff I forgot to test. If you find anything, please submit an issue. Or,
 even better, send a pull request.
 
+Last but not least, don't forget to
+
+.. image:: https://img.shields.io/badge/Say%20Thanks-!-1EAEDB.svg 
+   :target: https://saythanks.io/to/tbodt
