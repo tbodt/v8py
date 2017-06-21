@@ -27,5 +27,6 @@ deploy:
         secure: TeSSoX1sjprFbi3BbK7vDNVXzM/nSxxbcVyxF0Itvu0jqSWQhcRvtEr74wdW4nTyNTBxlfY1+HbDqwvNeADb+kyaQdlzlR/zQ2V3GCQ5muN0R8Lslfi+EI5rMf/h1pNuPxSm6yYA4qogN3QMEY9CiUgOmSG7RGsAXtgMLR48h9qQ0UNCTW/DqozKFD5HIi8os0HoURFtJRPafXLsRbJS8StRZmEjQDvsrfcMYxwlLsNikbfSR8TvBbztEum4mi5OqLl9Jbz0QH4sqfxhouvikXDxZlWYMdPZOuEzXBfDrMWCJXGIekSbQQ14N/j2PDDjNTVF4/88Z25dleqHj2F8+e0Fm7YVlyCNYNylwCjcB9zBkVc1QcAtn2dEpyPXjjsDTIoSNgmRNqaabCSLLUePzHxWnIm/P9leMpu8fCEofHptPV+GEOK1csVspKzi7xZT1fbXQlF0TsExPpv3RN390J7SrVJ2lZOVYn8jiJ1AMc9pWIRuC4blHTkYiZFyVsdqCcwMyMLpoTsSrH4WI/tts3o6Rp+FZmENf2cxtW267XThMjHZxvH9BOd+6EKcBruKV1ux7+ObQZmpCrV4KBPShUukMyruA/R6fvXsAlD70AUPj/cyCHB6HszyYrFarCckgUPaUtWa3IUWgMzyEI5inyllj+cxcm9c65WsObY+Ico=
     on:
         tags: true
-        distributions: sdist bdist_wheel
         repo: tbodt/v8py
+    distributions: sdist bdist_wheel
+    skip_upload_docs: true
