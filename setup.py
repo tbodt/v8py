@@ -25,21 +25,9 @@ library_dirs = ['v8/out/{}'.format(MODE),
 if sys.platform.startswith('linux'):
     libraries.append('rt')
 
-import greenstack
-site_include = os.path.join(
-    os.path.dirname(
-        os.path.dirname(
-            os.path.dirname(
-                os.path.dirname(
-                    greenstack.__file__)))),
-    'include')
-if 'site' in os.listdir(site_include):
-    site_include = os.path.join(site_include, 'site')
-site_include = os.path.join(site_include, os.listdir(site_include)[0])
-
 extension = Extension('_v8py',
                       sources=sources,
-                      include_dirs=['v8py', 'v8/include', site_include],
+                      include_dirs=['v8py', 'v8/include'],
                       library_dirs=library_dirs,
                       libraries=libraries,
                       extra_compile_args=['-std=c++11'],
@@ -120,6 +108,21 @@ class BuildV8Command(Command):
 class build_ext(distutils_build_ext):
     def build_extension(self, ext):
         self.run_command('build_v8')
+
+        # find the greenstack include directory
+        import greenstack
+        greenstack_include = os.path.join(
+            os.path.dirname(
+                os.path.dirname(
+                    os.path.dirname(
+                        os.path.dirname(
+                            greenstack.__file__)))),
+            'include')
+        if 'site' in os.listdir(site_include):
+            site_include = os.path.join(site_include, 'site')
+        greenstack_include = os.path.join(site_include, os.listdir(greenstack_include)[0])
+        ext.include_dirs.append(greenstack_include)
+
         distutils_build_ext.build_extension(self, ext)
 
 with open('README.rst', 'r') as f:
@@ -127,7 +130,7 @@ with open('README.rst', 'r') as f:
 
 setup(
     name='v8py',
-    version='0.9.9',
+    version='0.9.11',
 
     author='Theodore Dubois',
     author_email='tblodt@icloud.com',
@@ -158,5 +161,5 @@ setup(
     cmdclass={
         'build_ext': build_ext,
         'build_v8': BuildV8Command,
-    }
+    },
 )
