@@ -118,9 +118,9 @@ class build_ext(distutils_build_ext):
                         os.path.dirname(
                             greenstack.__file__)))),
             'include')
-        if 'site' in os.listdir(site_include):
-            site_include = os.path.join(site_include, 'site')
-        greenstack_include = os.path.join(site_include, os.listdir(greenstack_include)[0])
+        if 'site' in os.listdir(greenstack_include):
+            greenstack_include = os.path.join(greenstack_include, 'site')
+        greenstack_include = os.path.join(greenstack_include, os.listdir(greenstack_include)[0])
         ext.include_dirs.append(greenstack_include)
 
         distutils_build_ext.build_extension(self, ext)
