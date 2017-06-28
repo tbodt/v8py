@@ -114,9 +114,11 @@ PyMODINIT_FUNC PyInit__v8py() {
     if (context_type_init() < 0) return FAIL;
     Py_INCREF(&context_type);
     PyModule_AddObject(module, "Context", (PyObject *) &context_type);
+
     if (script_type_init() < 0) return FAIL;
     Py_INCREF(&script_type);
     PyModule_AddObject(module, "Script", (PyObject *) &script_type);
+
     if (debugger_type_init() < 0) return FAIL;
     Py_INCREF(&debugger_type);
     PyModule_AddObject(module, "Debugger", (PyObject *) &debugger_type);
@@ -125,10 +127,17 @@ PyMODINIT_FUNC PyInit__v8py() {
     if (py_class_type_init() < 0) return FAIL;
 
     if (js_object_type_init() < 0) return FAIL;
+	Py_INCREF(&js_object_type);
+	PyModule_AddObject(module, "JSObject", (PyObject *) &js_object_type);
+
     if (js_function_type_init() < 0) return FAIL;
+	Py_INCREF(&js_function_type);
+	PyModule_AddObject(module, "JSFunction", (PyObject *) &js_function_type);
+
     if (js_exception_type_init() < 0) return FAIL;
     Py_INCREF(&js_exception_type);
     PyModule_AddObject(module, "JSException", (PyObject *) &js_exception_type);
+
     if (js_terminated_type_init() < 0) return FAIL;
     Py_INCREF(&js_terminated_type);
     PyModule_AddObject(module, "JavaScriptTerminated", (PyObject *) &js_terminated_type);
