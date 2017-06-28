@@ -37,15 +37,14 @@ Almost everything you'd expect to work just works, including:
 Installation
 ------------
 
-If you have a Mac running OS X 10.12, you can do
-
 .. code-block:: bash
 
     $ pip install v8py
 
-If not, you can still try that, but it'll be stuck at "Running setup.py install
-for v8py" for literally hours. (It's downloading and building V8, which is a
-really big program.) I hope to get more wheels built soon.
+Heads up: it'll be stuck at "Running setup.py install for v8py" for literally
+hours. It's downloading and building V8, which is a really big program. If you
+want to contribute scripts for Travis CI to build and upload wheels for
+Mac/Linux, please do so.
 
 Misc
 ----
