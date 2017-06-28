@@ -127,12 +127,12 @@ PyMODINIT_FUNC PyInit__v8py() {
     if (py_class_type_init() < 0) return FAIL;
 
     if (js_object_type_init() < 0) return FAIL;
-	Py_INCREF(&js_object_type);
-	PyModule_AddObject(module, "JSObject", (PyObject *) &js_object_type);
+    Py_INCREF(&js_object_type);
+    PyModule_AddObject(module, "JSObject", (PyObject *) &js_object_type);
 
     if (js_function_type_init() < 0) return FAIL;
-	Py_INCREF(&js_function_type);
-	PyModule_AddObject(module, "JSFunction", (PyObject *) &js_function_type);
+    Py_INCREF(&js_function_type);
+    PyModule_AddObject(module, "JSFunction", (PyObject *) &js_function_type);
 
     if (js_exception_type_init() < 0) return FAIL;
     Py_INCREF(&js_exception_type);
