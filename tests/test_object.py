@@ -1,3 +1,4 @@
+from v8py import JSObject
 import pytest
 
 @pytest.fixture
@@ -24,3 +25,7 @@ def test_iter(context, obj):
 def test_str(obj):
     assert str(obj) == '[object Object]'
     assert repr(obj) == '[object Object]'
+
+def test_jsobject(context):
+    f = context.eval('Math.sqrt')
+    assert isinstance(f, JSObject)
