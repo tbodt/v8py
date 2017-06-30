@@ -109,20 +109,6 @@ class build_ext(distutils_build_ext):
     def build_extension(self, ext):
         self.run_command('build_v8')
 
-        # find the greenstack include directory
-        import greenstack
-        greenstack_include = os.path.join(
-            os.path.dirname(
-                os.path.dirname(
-                    os.path.dirname(
-                        os.path.dirname(
-                            greenstack.__file__)))),
-            'include')
-        if 'site' in os.listdir(greenstack_include):
-            greenstack_include = os.path.join(greenstack_include, 'site')
-        greenstack_include = os.path.join(greenstack_include, os.listdir(greenstack_include)[0])
-        ext.include_dirs.append(greenstack_include)
-
         distutils_build_ext.build_extension(self, ext)
 
 with open('README.rst', 'r') as f:
@@ -156,7 +142,7 @@ setup(
     extras_require={
         'devtools': ['gevent', 'greenstack-greenlet', 'karellen-geventws'],
     },
-    setup_requires=['pytest-runner', 'greenstack'],
+    setup_requires=['pytest-runner'],
     tests_require=['pytest'],
     cmdclass={
         'build_ext': build_ext,
