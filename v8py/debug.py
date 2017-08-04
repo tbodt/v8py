@@ -14,7 +14,7 @@ class Debugger(_v8py.Debugger):
             'params': kwargs,
         }
         self.sequence += 1
-        super().send(message)
+        super(self.__class__, self).send(message)
         assert self.last_message is not None
         assert self.last_message['id'] == self.sequence - 1
         if 'error' in self.last_message:
