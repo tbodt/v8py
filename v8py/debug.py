@@ -2,7 +2,7 @@ import _v8py
 
 class Debugger(_v8py.Debugger):
     def __init__(self, context):
-        super().__init__(context)
+        super(self.__class__, self).__init__(context)
         self.sequence = 0
         self.last_message = None
         self.loop_nesting = 0
