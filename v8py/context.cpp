@@ -32,7 +32,7 @@ PyTypeObject context_type = {
 int context_type_init() {
     context_type.tp_name = "v8py.Context";
     context_type.tp_basicsize = sizeof(context_c);
-    context_type.tp_flags = Py_TPFLAGS_DEFAULT;
+    context_type.tp_flags = Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE;
     context_type.tp_doc = "";
     context_type.tp_dealloc = (destructor) context_dealloc;
     context_type.tp_new = (newfunc) context_new;
