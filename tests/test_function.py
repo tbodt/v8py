@@ -1,4 +1,4 @@
-from v8py import JSFunction
+from v8py import JSFunction, JSObject
 
 def test_function(context):
     def len_args(*args):
@@ -10,3 +10,26 @@ def test_function(context):
 def test_jsfunction(context):
     f = context.eval('Math.sqrt')
     assert isinstance(f, JSFunction)
+
+
+def test_new_keyword(context):
+    context.eval("""
+        function NewKeywordTest(who)
+        {
+            this.who = who;
+        }
+        
+        NewKeywordTest.prototype.test = function()
+        {
+            return "Hello, " + this.who + "!";
+        }
+    """)
+
+    f = context.glob.NewKeywordTest
+    assert isinstance(f, JSFunction)
+
+    instance = f.new("world")
+    assert isinstance(f, JSObject)
+
+    res = instance.test()
+    assert res == "Hello, world!"
