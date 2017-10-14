@@ -1,3 +1,4 @@
+import pytest
 from v8py import JSFunction, JSObject
 
 def test_function(context):
@@ -11,9 +12,13 @@ def test_jsfunction(context):
     f = context.eval('Math.sqrt')
     assert isinstance(f, JSFunction)
 
-
 def test_new_keyword(context):
     context.eval("""
+    
+        test_int = 5;
+        test_string = 5;
+        test_plain_object = {};
+    
         function NewKeywordTest(who)
         {
             this.who = who;
@@ -28,8 +33,23 @@ def test_new_keyword(context):
     f = context.glob.NewKeywordTest
     assert isinstance(f, JSFunction)
 
-    instance = f.new("world")
+    instance = context.new(f, "world")
     assert isinstance(f, JSObject)
+
+    with pytest.raises(TypeError):
+        context.new(context.glob.test_int, "world")
+
+    with pytest.raises(TypeError):
+        context.new(context.glob.test_string, "world")
+
+    with pytest.raises(TypeError):
+        context.new(context.glob.test_plain_object, "world")
+
+    with pytest.raises(TypeError):
+        context.new()
+
+    with pytest.raises(TypeError):
+        context.new(None)
 
     res = instance.test()
     assert res == "Hello, world!"

@@ -13,6 +13,7 @@ using namespace v8;
 
 PyMethodDef context_methods[] = {
     {"eval", (PyCFunction) context_eval, METH_VARARGS | METH_KEYWORDS, NULL},
+    {"new", (PyCFunction) context_construct_new_object, METH_VARARGS | METH_KEYWORDS, "Creates a new JavaScript object from a given constructor function"},
     {"expose", (PyCFunction) context_expose, METH_VARARGS | METH_KEYWORDS, NULL},
     {"expose_module", (PyCFunction) context_expose_module, METH_O, NULL},
     {"gc", (PyCFunction) context_gc, METH_NOARGS, NULL},
@@ -111,6 +112,51 @@ void context_dealloc(context_c *self) {
     Py_DECREF(self->js_object_cache);
     Py_DECREF(self->scripts);
     Py_TYPE(self)->tp_free((PyObject *) self);
+}
+
+PyObject *context_construct_new_object(context_c *self, PyObject *args, PyObject *kwargs) {
+    IN_V8;
+    Local<Context> context = self->js_context.Get(isolate);
+    JS_TRY
+
+    args = PySequence_Fast(args, "sequence required");
+    PyErr_PROPAGATE(args);
+
+    long argc = PyTuple_GET_SIZE(args);
+    if (argc == 0) {
+        PyErr_SetString(PyExc_TypeError, "First argument must be a constructor function.");
+        return NULL;
+    }
+
+    PyObject *constructor = PyTuple_GET_ITEM(args, 0);
+    if (!constructor) {
+        PyErr_SetString(PyExc_TypeError, "First argument must be a constructor function.");
+        return NULL;
+    }
+
+    Local<Value> value = js_from_py(constructor, context);
+    if (!value->IsObject()) {
+        PyErr_SetString(PyExc_TypeError, "First argument must be a constructor function.");
+        return NULL;
+    }
+
+    Local<Object> object = value->ToObject();
+    if (!object->IsConstructor()) {
+        PyErr_SetString(PyExc_TypeError, "First argument must be a constructor function.");
+        return NULL;
+    }
+
+    // exclude first argument 
+    argc--;
+    Local<Value> *argv = new Local<Value>[argc];
+    for (long i = 0; i < argc; i++) {
+        argv[i] = js_from_py(PyTuple_GET_ITEM(args, i + 1), context);
+    }
+    MaybeLocal<Value> result = object->CallAsConstructor(argc, argv);
+    delete[] argv;
+    PY_PROPAGATE_JS;
+
+    return py_from_js(result.ToLocalChecked(), context);
 }
 
 PyObject *context_expose(context_c *self, PyObject *args, PyObject *kwargs) {
