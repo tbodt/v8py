@@ -1,4 +1,5 @@
-from v8py import JSFunction
+import pytest
+from v8py import JSFunction, JSObject, new
 
 def test_function(context):
     def len_args(*args):
@@ -10,3 +11,45 @@ def test_function(context):
 def test_jsfunction(context):
     f = context.eval('Math.sqrt')
     assert isinstance(f, JSFunction)
+
+def test_new_keyword(context):
+    context.eval("""
+    
+        test_int = 5;
+        test_string = 5;
+        test_plain_object = {};
+    
+        function NewKeywordTest(who)
+        {
+            this.who = who;
+        }
+        
+        NewKeywordTest.prototype.test = function()
+        {
+            return "Hello, " + this.who + "!";
+        }
+    """)
+
+    f = context.glob.NewKeywordTest
+    assert isinstance(f, JSFunction)
+
+    instance = new(f, "world")
+    assert isinstance(f, JSObject)
+
+    with pytest.raises(TypeError):
+        new(context.glob.test_int, "world")
+
+    with pytest.raises(TypeError):
+        new(context.glob.test_string, "world")
+
+    with pytest.raises(TypeError):
+        new(context.glob.test_plain_object, "world")
+
+    with pytest.raises(TypeError):
+        new()
+
+    with pytest.raises(TypeError):
+        new(None)
+
+    res = instance.test()
+    assert res == "Hello, world!"
