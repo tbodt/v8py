@@ -1,5 +1,5 @@
 import pytest
-from v8py import JSFunction, JSObject
+from v8py import JSFunction, JSObject, new
 
 def test_function(context):
     def len_args(*args):
@@ -33,23 +33,23 @@ def test_new_keyword(context):
     f = context.glob.NewKeywordTest
     assert isinstance(f, JSFunction)
 
-    instance = context.new(f, "world")
+    instance = new(f, "world")
     assert isinstance(f, JSObject)
 
     with pytest.raises(TypeError):
-        context.new(context.glob.test_int, "world")
+        new(context.glob.test_int, "world")
 
     with pytest.raises(TypeError):
-        context.new(context.glob.test_string, "world")
+        new(context.glob.test_string, "world")
 
     with pytest.raises(TypeError):
-        context.new(context.glob.test_plain_object, "world")
+        new(context.glob.test_plain_object, "world")
 
     with pytest.raises(TypeError):
-        context.new()
+        new()
 
     with pytest.raises(TypeError):
-        context.new(None)
+        new(None)
 
     res = instance.test()
     assert res == "Hello, world!"

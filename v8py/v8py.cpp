@@ -9,6 +9,7 @@
 #include "pyclass.h"
 #include "jsobject.h"
 #include "debugger.h"
+#include "utils.h"
 
 using namespace v8;
 
@@ -52,6 +53,7 @@ static PyMethodDef v8_methods[] = {
     {"hidden", mark_hidden, METH_O, ""},
     {"unconstructable", mark_unconstructable, METH_O, ""},
     {"current_context", context_get_current, METH_NOARGS, ""},
+    {"new", construct_new_object, METH_VARARGS, "Creates a new JavaScript object from a given constructor function"},
     {NULL},
 };
 
