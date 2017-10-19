@@ -13,7 +13,8 @@ class DevtoolsDebugger(_v8py.Debugger):
     def __init__(self, context):
         super().__init__(context)
         self.connect_lock = gevent.lock.Semaphore(0)
-        self.queue = gevent.queue.Queue()
+        self.queues = []
+        self.startup_lock = gevent.lock.Semaphore(0)
         self.ws = None
 
     def __call__(self, environ, start_response):
@@ -23,7 +24,10 @@ class DevtoolsDebugger(_v8py.Debugger):
                 return []
 
             self.ws = environ['wsgi.websocket']
-            v8_greenlet = gevent.spawn(self.talk_to_v8)
+            gevent.spawn(self.run_loop)
+            # wait for the queue to get added
+            self.startup_lock.acquire()
+            assert len(self.queues) == 1
             while True:
                 try:
                     message = self.ws.receive()
@@ -31,9 +35,8 @@ class DevtoolsDebugger(_v8py.Debugger):
                     break
                 message = json.loads(message)
                 if message.get('method') == 'Runtime.runIfWaitingForDebugger':
-                    print('releasing lock')
                     self.connect_lock.release()
-                self.queue.put(message)
+                self.top_queue.put(message)
             self.ws = None
             v8_greenlet.kill()
 
@@ -42,17 +45,27 @@ class DevtoolsDebugger(_v8py.Debugger):
         print(environ['PATH_INFO'])
         return []
 
-    def talk_to_v8(self):
-        for message in self.queue:
-            self.send(message)
-
     def handle(self, message):
         self.ws.send(json.dumps(message))
 
     def run_loop(self):
-        self.talk_to_v8()
+        queue = gevent.queue.Queue()
+        self.queues.append(queue)
+        # this has no effect if startup has finished, except to pointlessly
+        # increment the counter. wow I'm so lazy I don't want to write a simple if statement
+        self.startup_lock.release()
+        for message in queue:
+            if self.top_queue is not queue:
+                self.top_queue.put(message)
+            else:
+                self.send(message)
+
     def quit_loop(self):
-        self.queue.put(StopIteration)
+        self.queues.pop().put(StopIteration)
+
+    @property
+    def top_queue(self):
+        return self.queues[-1]
 
     def wait_for_connect(self):
         self.connect_lock.wait()
@@ -61,4 +74,7 @@ def start_devtools(context, port):
     debugger = DevtoolsDebugger(context)
     server = pywsgi.WSGIServer(('localhost', port), debugger, handler_class=WebSocketHandler)
     server.start()
+    print('started devtools server on port', port)
+    print('open this url in chrome to continue')
+    print('chrome-devtools://devtools/bundled/inspector.html?experiments=true&v8only=true&ws=localhost:{}'.format(port))
     debugger.wait_for_connect()
