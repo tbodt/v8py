@@ -81,7 +81,11 @@ void py_throw_js(Local<Value> js_exc, Local<Message> js_message) {
         PyObject *exc_type = (PyObject *) exc_object->GetInternalField(2).As<External>()->Value();
         PyObject *exc_value = (PyObject *) exc_object->GetInternalField(1).As<External>()->Value();
         PyObject *exc_traceback = (PyObject *) exc_object->GetInternalField(3).As<External>()->Value();
-        PyErr_Restore(exc_type, exc_value, exc_traceback);
+        if (exc_type == NULL && exc_traceback == NULL) {
+            PyErr_SetObject((PyObject *) Py_TYPE(exc_value), exc_value);
+        } else {
+            PyErr_Restore(exc_type, exc_value, exc_traceback);
+        }
     } else {
         PyObject *exception = js_exception_new(js_exc, js_message);
         if (exception == NULL) {

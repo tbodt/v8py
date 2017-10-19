@@ -31,12 +31,12 @@ try {
     """)
     assert isinstance(context.exc, ErrorClass)
     assert context.eval('exc instanceof TestError')
-    
+
 def assert_is_js_frame(frame, script):
     assert type(frame.f_globals['__loader__']).__name__ == 'ScriptLoader'
     assert frame.f_globals['__name__'].startswith('javascript')
     assert frame.f_globals['__loader__'].get_source(frame.f_globals['__name__']) == script
-    
+
 def test_tracebacks(context, ErrorClass):
     with pytest.raises(ErrorClass) as exc_info:
         context.eval('throw_exception()')
@@ -65,3 +65,8 @@ def test_property_error(context, ErrorClass):
         context.eval('test.foo')
     with pytest.raises(ErrorClass):
         context.eval('test.foo = "bar"')
+
+def test_throw_from_js(context, ErrorClass):
+    context.expose(ErrorClass)
+    with pytest.raises(ErrorClass):
+        context.eval('throw new {}()'.format(ErrorClass.__name__))
