@@ -46,6 +46,7 @@ PyObject *js_exception_new(Local<Value> exception, Local<Message> message) {
 }
 
 PyObject *js_exception_get_value(js_exception *self, void *shit) {
+    IN_V8;
     Local<Context> no_ctx;
     return py_from_js(self->exception.Get(isolate), no_ctx);
 }

@@ -1,5 +1,5 @@
 import pytest
-from v8py import JSException
+from v8py import Context, JSException
 
 class CustomError(Exception):
     def method(self):
@@ -67,6 +67,21 @@ def test_property_error(context, ErrorClass):
         context.eval('test.foo = "bar"')
 
 def test_throw_from_js(context, ErrorClass):
-    context.expose(ErrorClass)
     with pytest.raises(ErrorClass):
-        context.eval('throw new {}()'.format(ErrorClass.__name__))
+        context.eval('throw new TestError()')
+
+def test_js_exception_value(context):
+    try:
+        context.eval('throw {foo: "bar"}')
+    except JSException as e:
+        assert e.value['foo'] == 'bar'
+
+def test_cross_context_exception_value(context):
+    def call_context():
+        context.eval('throw {foo: "bar"}')
+    context2 = Context()
+    context2.expose(call_context)
+    try:
+        context2.eval('call_context()')
+    except JSException as e:
+        assert e.value['foo'] == 'bar'

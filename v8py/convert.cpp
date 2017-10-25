@@ -51,6 +51,9 @@ PyObject *py_from_js(Local<Value> value, Local<Context> context) {
     
     if (value->IsObject()) {
         Local<Object> obj_value = value.As<Object>();
+        if (context.IsEmpty()) {
+            context = obj_value->CreationContext();
+        }
         if (obj_value->GetPrototype()->StrictEquals(context->GetEmbedderData(OBJECT_PROTOTYPE_SLOT))) {
             PyObject *dict = PyDict_New();
             PyErr_PROPAGATE(dict);
