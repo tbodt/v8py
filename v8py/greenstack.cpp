@@ -67,6 +67,7 @@ int greenstack_init() {
     PyGreenstack_Import();
     if (_PyGreenstack_API == NULL) {
         // No greenlets? No problems!
+        PyErr_Clear();
         return 0;
     }
     if (PyGreenstack_AddStateHandler(greenstack_switch_v8, greenstack_init_v8) < 0) {
