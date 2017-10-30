@@ -34,11 +34,26 @@ int js_object_type_init() {
     return PyType_Ready(&js_object_type);
 }
 
+PyTypeObject js_promise_type = {
+    PyVarObject_HEAD_INIT(NULL, 0)
+};
+int js_promise_type_init() {
+    js_promise_type.tp_name = "v8py.Promise";
+    js_promise_type.tp_basicsize = sizeof(js_promise);
+    js_promise_type.tp_dealloc = (destructor) js_promise_dealloc;
+    js_promise_type.tp_flags = Py_TPFLAGS_DEFAULT;
+    js_promise_type.tp_doc = "";
+    js_promise_type.tp_base = &js_object_type;
+    return PyType_Ready(&js_promise_type);
+}
+
 js_object *js_object_new(Local<Object> object, Local<Context> context) {
     IN_V8;
     Context::Scope cs(context);
     js_object *self;
-    if (object->IsCallable()) {
+    if (object->IsPromise()) {
+        self = (js_object *) js_promise_type.tp_alloc(&js_promise_type, 0);
+    } else if (object->IsCallable()) {
         self = (js_object *) js_function_type.tp_alloc(&js_function_type, 0);
     } else {
         self = (js_object *) js_object_type.tp_alloc(&js_object_type, 0);
@@ -149,5 +164,9 @@ void js_object_dealloc(js_object *self) {
     self->object.Reset();
     self->context.Reset();
     Py_TYPE(self)->tp_free((PyObject *) self);
+}
+
+void js_promise_dealloc(js_promise *self) {
+    js_object_dealloc((js_object *) self);
 }
 

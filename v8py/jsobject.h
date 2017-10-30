@@ -38,4 +38,16 @@ PyObject *js_function_call(js_function *self, PyObject *args, PyObject *kwargs);
 PyObject *js_function_new(js_function *self, PyObject *args);
 void js_function_dealloc(js_function *self);
 
+typedef struct {
+    PyObject_HEAD
+    Persistent<Object> object;
+    Persistent<Context> context;
+} js_promise;
+extern PyTypeObject js_promise_type;
+int js_promise_type_init();
+
+PyObject *js_promise_new(js_promise *self, PyObject *args);
+void js_promise_dealloc(js_promise *self);
+
+
 #endif
