@@ -172,6 +172,10 @@ PyMODINIT_FUNC PyInit__v8py() {
     Py_INCREF(&js_object_type);
     PyModule_AddObject(module, "JSObject", (PyObject *) &js_object_type);
 
+    if (js_promise_type_init() < 0) return FAIL;
+    Py_INCREF(&js_promise_type);
+    PyModule_AddObject(module, "JSPromise", (PyObject *) &js_promise_type);
+
     if (js_function_type_init() < 0) return FAIL;
     Py_INCREF(&js_function_type);
     PyModule_AddObject(module, "JSFunction", (PyObject *) &js_function_type);
