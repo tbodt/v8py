@@ -17,6 +17,8 @@ typedef struct {
 } context_c;
 int context_type_init();
 
+void *breaker_thread(void *param);
+
 void context_dealloc(context_c *self);
 PyObject *context_new(PyTypeObject *type, PyObject *args, PyObject *kwargs);
 PyObject *context_eval(context_c *self, PyObject *args, PyObject *kwargs);
