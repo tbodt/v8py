@@ -77,6 +77,13 @@ PyObject *js_object_getattro(js_object *self, PyObject *name) {
     Local<Value> js_name = js_from_py(name, context);
     JS_TRY
 
+    double timeout = 0;
+    {
+        context_c *ctx_c = (context_c *) context->GetEmbedderData(CONTEXT_OBJECT_SLOT).As<External>()->Value();
+        timeout = ctx_c->timeout;
+    }
+
+    if (!setup_timeout(timeout)) return NULL;
     if (!object->Has(context, js_name).FromJust()) {
         // TODO fix this so that it works
         PyObject *class_name = py_from_js(object->GetConstructorName(), context);
@@ -94,7 +101,11 @@ PyObject *js_object_getattro(js_object *self, PyObject *name) {
         Py_DECREF(class_name_string);
         return NULL;
     }
+    PY_PROPAGATE_JS;
+
     MaybeLocal<Value> js_value = object->Get(context, js_name);
+    if (!cleanup_timeout(timeout)) return NULL;
+
     PY_PROPAGATE_JS;
     PyObject *value = py_from_js(js_value.ToLocalChecked(), context);
     PyErr_PROPAGATE(value);
@@ -113,12 +124,32 @@ int js_object_setattro(js_object *self, PyObject *name, PyObject *value) {
 
     IN_V8;
     IN_CONTEXT(self->context.Get(isolate));
+    JS_TRY
 
     Local<Object> object = self->object.Get(isolate);
-    if (!object->Set(context, js_from_py(name, context), js_from_py(value, context)).FromJust()) {
-        PyErr_SetString(PyExc_AttributeError, "Object->Set completely failed for some reason");
+
+    double timeout = 0;
+    {
+        context_c *ctx_c = (context_c *) context->GetEmbedderData(CONTEXT_OBJECT_SLOT).As<External>()->Value();
+        timeout = ctx_c->timeout;
+    }
+
+    if (!setup_timeout(timeout)) return -1;
+
+    Maybe<bool> result = value ?
+        object->Set(context, js_from_py(name, context), js_from_py(value, context)) :
+        object->Delete(context, js_from_py(name, context));
+
+    if (!cleanup_timeout(timeout)) return -1;
+
+    PY_PROPAGATE_JS_RET(-1);
+
+    if (result.IsNothing() || !result.FromJust()) {
+        PyErr_SetString(PyExc_AttributeError,
+            value ? "Object->Set no such attribute" : "Object->Del no such attribute");
         return -1;
     }
+
     return 0;
 }
 
@@ -142,12 +173,23 @@ PyObject *js_object_dir(js_object *self) {
     Local<Array> properties = maybe_properties.ToLocalChecked();
     PyObject *py_properties = PyList_New(properties->Length());
     PyErr_PROPAGATE(py_properties);
+
+    double timeout = 0;
+    {
+        context_c *ctx_c = (context_c *) context->GetEmbedderData(CONTEXT_OBJECT_SLOT).As<External>()->Value();
+        timeout = ctx_c->timeout;
+    }
+
+    if (!setup_timeout(timeout)) return NULL;
     for (unsigned i = 0; i < properties->Length(); i++) {
         MaybeLocal<Value> js_property = properties->Get(context, i);
         PY_PROPAGATE_JS;
         PyObject *py_property = py_from_js(js_property.ToLocalChecked(), context);
         PyList_SET_ITEM(py_properties, i, py_property);
     }
+
+    if (!cleanup_timeout(timeout)) return NULL;
+
     return py_properties;
 }
 

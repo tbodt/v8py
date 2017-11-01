@@ -69,6 +69,12 @@ PyObject *construct_new_object(PyObject *self, PyObject *args) {
     IN_CONTEXT(function->context.Get(isolate))
     JS_TRY
 
+    double timeout = 0;
+    {
+        context_c *ctx_c = (context_c *) context->GetEmbedderData(CONTEXT_OBJECT_SLOT).As<External>()->Value();
+        timeout = ctx_c->timeout;
+    }
+
     Local<Object> object = function->object.Get(isolate);
     if (!object->IsConstructor()) {
         PyErr_SetString(PyExc_TypeError, "First argument must be a constructor function.");
@@ -82,7 +88,11 @@ PyObject *construct_new_object(PyObject *self, PyObject *args) {
     for (long i = 0; i < argc; i++) {
         argv[i] = js_from_py(PyTuple_GET_ITEM(args, i + 1), context);
     }
+
+    if (!setup_timeout(timeout)) return NULL;
     MaybeLocal<Value> result = object->CallAsConstructor(argc, argv);
+    if (!cleanup_timeout(timeout)) return NULL;
+
     delete[] argv;
     PY_PROPAGATE_JS;
 

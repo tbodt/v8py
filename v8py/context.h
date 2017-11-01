@@ -14,8 +14,12 @@ typedef struct {
     PyObject *js_object_cache;
     PyObject *scripts;
     bool has_debugger;
+    double timeout;
 } context_c;
 int context_type_init();
+
+bool setup_timeout(double timeout);
+bool cleanup_timeout(double timeout);
 
 void context_dealloc(context_c *self);
 PyObject *context_new(PyTypeObject *type, PyObject *args, PyObject *kwargs);
@@ -34,6 +38,9 @@ void context_set_cached_jsobject(Local<Context> context, PyObject *py_object, Lo
 
 PyObject *context_get_current(PyObject *shit, PyObject *fuck);
 PyObject *context_get_global(context_c *self, void *shit);
+
+PyObject *context_get_timeout(context_c *self, void *shit);
+int *context_set_timeout(context_c *self, PyObject *value, void *shit);
 
 PyObject *context_getattro(context_c *self, PyObject *name);
 PyObject *context_getitem(context_c *self, PyObject *name);

@@ -4,6 +4,9 @@
 #include "v8py.h"
 #include "jsobject.h"
 #include "convert.h"
+#include "context.h"
+
+using namespace v8;
 
 PyTypeObject js_function_type = {
     PyVarObject_HEAD_INIT(NULL, 0)
@@ -24,6 +27,12 @@ PyObject *js_function_call(js_function *self, PyObject *args, PyObject *kwargs) 
     IN_CONTEXT(self->context.Get(isolate));
     JS_TRY
 
+    double timeout = 0;
+    {
+        context_c *ctx_c = (context_c *) context->GetEmbedderData(CONTEXT_OBJECT_SLOT).As<External>()->Value();
+        timeout = ctx_c->timeout;
+    }
+
     Local<Object> object = self->object.Get(isolate);
     Local<Value> js_this;
     if (self->js_this.IsEmpty()) {
@@ -34,7 +43,11 @@ PyObject *js_function_call(js_function *self, PyObject *args, PyObject *kwargs) 
     int argc = PyTuple_GET_SIZE(args);
     Local<Value> *argv = new Local<Value>[argc];
     jss_from_pys(args, argv, context);
+
+    if (!setup_timeout(timeout)) return NULL;
     MaybeLocal<Value> result = object->CallAsFunction(context, js_this, argc, argv);
+    if (!cleanup_timeout(timeout)) return NULL;
+
     delete[] argv;
     PY_PROPAGATE_JS;
     return py_from_js(result.ToLocalChecked(), context);
