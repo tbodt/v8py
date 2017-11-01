@@ -1,7 +1,7 @@
 import pytest
 import time
 
-from v8py import JavaScriptTerminated, current_context
+from v8py import JavaScriptTerminated, current_context, new
 
 def test_glob(context):
     context.eval('foo = "bar"')
@@ -44,6 +44,11 @@ def test_timeout_property(context_with_timeout):
 def test_timeout_cotext_level(context_with_timeout):
     with pytest.raises(JavaScriptTerminated):
         context_with_timeout.eval('for(;;) {}')
+
+def test_timeout_new(context_with_timeout):
+    context_with_timeout.eval('function Freeze() { while(true); }')
+    with pytest.raises(JavaScriptTerminated):
+        new(context_with_timeout.glob.Freeze)
 
 def test_timeout_call(context_with_timeout):
     context_with_timeout.eval('function freeze() { while(true); }')
