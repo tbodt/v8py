@@ -46,9 +46,8 @@ PyObject *js_function_call(js_function *self, PyObject *args, PyObject *kwargs) 
 
     if (!setup_timeout(timeout)) return NULL;
     MaybeLocal<Value> result = object->CallAsFunction(context, js_this, argc, argv);
-    if (!cleanup_timeout(timeout)) return NULL;
-
     delete[] argv;
+    if (!cleanup_timeout(timeout)) return NULL;
     PY_PROPAGATE_JS;
     return py_from_js(result.ToLocalChecked(), context);
 }

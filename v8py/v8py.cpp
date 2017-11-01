@@ -91,9 +91,9 @@ PyObject *construct_new_object(PyObject *self, PyObject *args) {
 
     if (!setup_timeout(timeout)) return NULL;
     MaybeLocal<Value> result = object->CallAsConstructor(argc, argv);
+    delete[] argv;
     if (!cleanup_timeout(timeout)) return NULL;
 
-    delete[] argv;
     PY_PROPAGATE_JS;
 
     return py_from_js(result.ToLocalChecked(), context);
