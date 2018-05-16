@@ -1,5 +1,7 @@
 import pytest
-from v8py import JavaScriptTerminated, current_context
+import time
+
+from v8py import JavaScriptTerminated, current_context, new
 
 def test_glob(context):
     context.eval('foo = "bar"')
@@ -20,6 +22,70 @@ def test_getitem(context):
 def test_timeout(context):
     with pytest.raises(JavaScriptTerminated):
         context.eval('for(;;) {}', timeout=0.1)
+
+def test_timeout_property(context_with_timeout):
+    assert context_with_timeout.timeout == 0.1
+
+    start = time.time()
+    with pytest.raises(JavaScriptTerminated):
+        context_with_timeout.eval('for(;;) {}')
+    diff = time.time() - start
+    assert diff >= 0.1 and diff < 0.2
+
+    context_with_timeout.timeout = 0.25
+    assert context_with_timeout.timeout == 0.25
+
+    start = time.time()
+    with pytest.raises(JavaScriptTerminated):
+        context_with_timeout.eval('for(;;) {}')
+    diff = time.time() - start
+    assert diff >= 0.25 and diff < 0.3
+
+def test_timeout_context_level(context_with_timeout):
+    with pytest.raises(JavaScriptTerminated):
+        context_with_timeout.eval('for(;;) {}')
+
+def test_timeout_new(context_with_timeout):
+    context_with_timeout.eval('function Freeze() { while(true); }')
+    with pytest.raises(JavaScriptTerminated):
+        new(context_with_timeout.glob.Freeze)
+
+def test_timeout_call(context_with_timeout):
+    context_with_timeout.eval('function freeze() { while(true); }')
+    with pytest.raises(JavaScriptTerminated):
+        context_with_timeout.glob.freeze()
+
+def test_timeout_proxy(context_with_timeout):
+    context_with_timeout.eval("""
+        user = {};
+        user.testA = 0;
+        user.testC = 10;
+
+        proxy = new Proxy(user, {
+          get(target, prop) {
+            if (prop == "testA") while(true);
+          },
+          set(target, prop, value) {
+            if (prop == "testB") while(true);
+            return false;
+          },
+          deleteProperty(target, phrase) {
+            if (phrase == "testC") while(true);
+            return false;
+          }
+        });
+    """)
+
+    proxy = context_with_timeout.glob.proxy
+
+    with pytest.raises(JavaScriptTerminated):
+        testA = proxy.testA
+
+    with pytest.raises(JavaScriptTerminated):
+        proxy.testB = 5
+
+    with pytest.raises(JavaScriptTerminated):
+        del proxy.testC
 
 def test_expose(context):
     def f(): return 'f'

@@ -77,6 +77,7 @@ PyObject *js_object_getattro(js_object *self, PyObject *name) {
     Local<Value> js_name = js_from_py(name, context);
     JS_TRY
 
+    if (!context_setup_timeout(context)) return NULL;
     if (!object->Has(context, js_name).FromJust()) {
         // TODO fix this so that it works
         PyObject *class_name = py_from_js(object->GetConstructorName(), context);
@@ -94,7 +95,11 @@ PyObject *js_object_getattro(js_object *self, PyObject *name) {
         Py_DECREF(class_name_string);
         return NULL;
     }
+    PY_PROPAGATE_JS;
+
     MaybeLocal<Value> js_value = object->Get(context, js_name);
+    if (!context_cleanup_timeout(context)) return NULL;
+
     PY_PROPAGATE_JS;
     PyObject *value = py_from_js(js_value.ToLocalChecked(), context);
     PyErr_PROPAGATE(value);
@@ -113,12 +118,21 @@ int js_object_setattro(js_object *self, PyObject *name, PyObject *value) {
 
     IN_V8;
     IN_CONTEXT(self->context.Get(isolate));
+    JS_TRY
 
     Local<Object> object = self->object.Get(isolate);
-    if (!object->Set(context, js_from_py(name, context), js_from_py(value, context)).FromJust()) {
-        PyErr_SetString(PyExc_AttributeError, "Object->Set completely failed for some reason");
-        return -1;
-    }
+
+    if (!context_setup_timeout(context)) return -1;
+
+    if (value != NULL)
+        object->Set(context, js_from_py(name, context), js_from_py(value, context));
+    else
+        object->Delete(context, js_from_py(name, context));
+
+    if (!context_cleanup_timeout(context)) return -1;
+
+    PY_PROPAGATE_JS_RET(-1);
+
     return 0;
 }
 
@@ -142,12 +156,17 @@ PyObject *js_object_dir(js_object *self) {
     Local<Array> properties = maybe_properties.ToLocalChecked();
     PyObject *py_properties = PyList_New(properties->Length());
     PyErr_PROPAGATE(py_properties);
+
+    if (!context_setup_timeout(context)) return NULL;
     for (unsigned i = 0; i < properties->Length(); i++) {
         MaybeLocal<Value> js_property = properties->Get(context, i);
         PY_PROPAGATE_JS;
         PyObject *py_property = py_from_js(js_property.ToLocalChecked(), context);
         PyList_SET_ITEM(py_properties, i, py_property);
     }
+
+    if (!context_cleanup_timeout(context)) return NULL;
+
     return py_properties;
 }
 
