@@ -41,7 +41,7 @@ def test_timeout_property(context_with_timeout):
     diff = time.time() - start
     assert diff >= 0.25 and diff < 0.3
 
-def test_timeout_cotext_level(context_with_timeout):
+def test_timeout_context_level(context_with_timeout):
     with pytest.raises(JavaScriptTerminated):
         context_with_timeout.eval('for(;;) {}')
 
@@ -60,7 +60,7 @@ def test_timeout_proxy(context_with_timeout):
         user = {};
         user.testA = 0;
         user.testC = 10;
-        
+
         proxy = new Proxy(user, {
           get(target, prop) {
             if (prop == "testA") while(true);
