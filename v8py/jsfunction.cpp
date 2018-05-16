@@ -44,10 +44,10 @@ PyObject *js_function_call(js_function *self, PyObject *args, PyObject *kwargs) 
     Local<Value> *argv = new Local<Value>[argc];
     jss_from_pys(args, argv, context);
 
-    if (!setup_timeout(timeout)) return NULL;
+    if (!context_setup_timeout(context)) return NULL;
     MaybeLocal<Value> result = object->CallAsFunction(context, js_this, argc, argv);
     delete[] argv;
-    if (!cleanup_timeout(timeout)) return NULL;
+    if (!context_cleanup_timeout(context)) return NULL;
     PY_PROPAGATE_JS;
     return py_from_js(result.ToLocalChecked(), context);
 }

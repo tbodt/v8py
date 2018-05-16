@@ -89,10 +89,10 @@ PyObject *construct_new_object(PyObject *self, PyObject *args) {
         argv[i] = js_from_py(PyTuple_GET_ITEM(args, i + 1), context);
     }
 
-    if (!setup_timeout(timeout)) return NULL;
+    if (!context_setup_timeout(context)) return NULL;
     MaybeLocal<Value> result = object->CallAsConstructor(argc, argv);
     delete[] argv;
-    if (!cleanup_timeout(timeout)) return NULL;
+    if (!context_cleanup_timeout(context)) return NULL;
 
     PY_PROPAGATE_JS;
 

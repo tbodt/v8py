@@ -200,7 +200,12 @@ void *breaker_thread(void *param) {
     return NULL;
 }
 
-bool setup_timeout(double timeout) {
+static double context_timeout(Local<Context> context) {
+    context_c *ctx_c = (context_c *) context->GetEmbedderData(CONTEXT_OBJECT_SLOT).As<External>()->Value();
+    return ctx_c->timeout;
+}
+
+static bool setup_timeout(double timeout) {
     if (timeout > 0) {
         s_timeout = (useconds_t) (timeout * 1000000);
         errno = pthread_create(&breaker_id, NULL, breaker_thread, &s_timeout);
@@ -212,7 +217,7 @@ bool setup_timeout(double timeout) {
     return true;
 }
 
-bool cleanup_timeout(double timeout) {
+static bool cleanup_timeout(double timeout) {
     if (timeout > 0) {
         pthread_cancel(breaker_id);
         errno = pthread_join(breaker_id, NULL);
@@ -222,6 +227,13 @@ bool cleanup_timeout(double timeout) {
         }
     }
     return true;
+}
+
+bool context_setup_timeout(Local<Context> context) {
+    return setup_timeout(context_timeout(context));
+}
+bool context_cleanup_timeout(Local<Context> context) {
+    return cleanup_timeout(context_timeout(context));
 }
 
 PyObject *context_eval(context_c *self, PyObject *args, PyObject *kwargs) {

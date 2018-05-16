@@ -18,8 +18,8 @@ typedef struct {
 } context_c;
 int context_type_init();
 
-bool setup_timeout(double timeout);
-bool cleanup_timeout(double timeout);
+bool context_setup_timeout(Local<Context> context);
+bool context_cleanup_timeout(Local<Context> context);
 
 void context_dealloc(context_c *self);
 PyObject *context_new(PyTypeObject *type, PyObject *args, PyObject *kwargs);

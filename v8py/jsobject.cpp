@@ -83,7 +83,7 @@ PyObject *js_object_getattro(js_object *self, PyObject *name) {
         timeout = ctx_c->timeout;
     }
 
-    if (!setup_timeout(timeout)) return NULL;
+    if (!context_setup_timeout(context)) return NULL;
     if (!object->Has(context, js_name).FromJust()) {
         // TODO fix this so that it works
         PyObject *class_name = py_from_js(object->GetConstructorName(), context);
@@ -104,7 +104,7 @@ PyObject *js_object_getattro(js_object *self, PyObject *name) {
     PY_PROPAGATE_JS;
 
     MaybeLocal<Value> js_value = object->Get(context, js_name);
-    if (!cleanup_timeout(timeout)) return NULL;
+    if (!context_cleanup_timeout(context)) return NULL;
 
     PY_PROPAGATE_JS;
     PyObject *value = py_from_js(js_value.ToLocalChecked(), context);
@@ -134,14 +134,14 @@ int js_object_setattro(js_object *self, PyObject *name, PyObject *value) {
         timeout = ctx_c->timeout;
     }
 
-    if (!setup_timeout(timeout)) return -1;
+    if (!context_setup_timeout(context)) return -1;
 
     if (value != NULL)
         object->Set(context, js_from_py(name, context), js_from_py(value, context));
     else
         object->Delete(context, js_from_py(name, context));
 
-    if (!cleanup_timeout(timeout)) return -1;
+    if (!context_cleanup_timeout(context)) return -1;
 
     PY_PROPAGATE_JS_RET(-1);
 
@@ -175,7 +175,7 @@ PyObject *js_object_dir(js_object *self) {
         timeout = ctx_c->timeout;
     }
 
-    if (!setup_timeout(timeout)) return NULL;
+    if (!context_setup_timeout(context)) return NULL;
     for (unsigned i = 0; i < properties->Length(); i++) {
         MaybeLocal<Value> js_property = properties->Get(context, i);
         PY_PROPAGATE_JS;
@@ -183,7 +183,7 @@ PyObject *js_object_dir(js_object *self) {
         PyList_SET_ITEM(py_properties, i, py_property);
     }
 
-    if (!cleanup_timeout(timeout)) return NULL;
+    if (!context_cleanup_timeout(context)) return NULL;
 
     return py_properties;
 }
