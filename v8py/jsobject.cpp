@@ -77,12 +77,6 @@ PyObject *js_object_getattro(js_object *self, PyObject *name) {
     Local<Value> js_name = js_from_py(name, context);
     JS_TRY
 
-    double timeout = 0;
-    {
-        context_c *ctx_c = (context_c *) context->GetEmbedderData(CONTEXT_OBJECT_SLOT).As<External>()->Value();
-        timeout = ctx_c->timeout;
-    }
-
     if (!context_setup_timeout(context)) return NULL;
     if (!object->Has(context, js_name).FromJust()) {
         // TODO fix this so that it works
@@ -128,12 +122,6 @@ int js_object_setattro(js_object *self, PyObject *name, PyObject *value) {
 
     Local<Object> object = self->object.Get(isolate);
 
-    double timeout = 0;
-    {
-        context_c *ctx_c = (context_c *) context->GetEmbedderData(CONTEXT_OBJECT_SLOT).As<External>()->Value();
-        timeout = ctx_c->timeout;
-    }
-
     if (!context_setup_timeout(context)) return -1;
 
     if (value != NULL)
@@ -168,12 +156,6 @@ PyObject *js_object_dir(js_object *self) {
     Local<Array> properties = maybe_properties.ToLocalChecked();
     PyObject *py_properties = PyList_New(properties->Length());
     PyErr_PROPAGATE(py_properties);
-
-    double timeout = 0;
-    {
-        context_c *ctx_c = (context_c *) context->GetEmbedderData(CONTEXT_OBJECT_SLOT).As<External>()->Value();
-        timeout = ctx_c->timeout;
-    }
 
     if (!context_setup_timeout(context)) return NULL;
     for (unsigned i = 0; i < properties->Length(); i++) {

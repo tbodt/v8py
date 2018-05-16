@@ -27,12 +27,6 @@ PyObject *js_function_call(js_function *self, PyObject *args, PyObject *kwargs) 
     IN_CONTEXT(self->context.Get(isolate));
     JS_TRY
 
-    double timeout = 0;
-    {
-        context_c *ctx_c = (context_c *) context->GetEmbedderData(CONTEXT_OBJECT_SLOT).As<External>()->Value();
-        timeout = ctx_c->timeout;
-    }
-
     Local<Object> object = self->object.Get(isolate);
     Local<Value> js_this;
     if (self->js_this.IsEmpty()) {
