@@ -136,19 +136,14 @@ int js_object_setattro(js_object *self, PyObject *name, PyObject *value) {
 
     if (!setup_timeout(timeout)) return -1;
 
-    Maybe<bool> result = value ?
-        object->Set(context, js_from_py(name, context), js_from_py(value, context)) :
+    if (value != NULL)
+        object->Set(context, js_from_py(name, context), js_from_py(value, context));
+    else
         object->Delete(context, js_from_py(name, context));
 
     if (!cleanup_timeout(timeout)) return -1;
 
     PY_PROPAGATE_JS_RET(-1);
-
-    if (result.IsNothing() || !result.FromJust()) {
-        PyErr_SetString(PyExc_AttributeError,
-            value ? "Object->Set no such attribute" : "Object->Del no such attribute");
-        return -1;
-    }
 
     return 0;
 }
