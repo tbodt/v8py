@@ -162,6 +162,12 @@ int script_loader_type_init() {
 
 PyObject *script_loader_get_source(PyObject *self, PyObject *name) {
     script_c *script = (script_c *) PyObject_GetItem(scripts_by_name, name);
+    if (script == NULL && PyErr_ExceptionMatches(PyExc_KeyError)) {
+        // if a script shows up on a stack trace that we never created, just
+        // return None instead of crashing things with a KeyError
+        PyErr_Clear();
+        Py_RETURN_NONE;
+    }
     PyErr_PROPAGATE(script);
     Py_INCREF(script->source);
     return script->source;
