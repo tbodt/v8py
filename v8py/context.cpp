@@ -300,7 +300,7 @@ Local<Object> context_get_cached_jsobject(Local<Context> js_context, PyObject *p
 void context_set_cached_jsobject(Local<Context> js_context, PyObject *py_object, Local<Object> object) {
     EscapableHandleScope hs(isolate);
     context_c *self = (context_c *) js_context->GetEmbedderData(CONTEXT_OBJECT_SLOT).As<External>()->Value();
-    js_object *jsobj = js_object_new(object, js_context);
+    js_object *jsobj = js_object_weak_new(object, js_context);
     if (PyObject_SetItem(self->js_object_cache, py_object, (PyObject *) jsobj) < 0) {
         if (PyErr_ExceptionMatches(PyExc_TypeError)) {
             // if it's a type error, it's probably "cannot create weak reference" and should be ignored.

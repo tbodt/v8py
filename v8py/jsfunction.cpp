@@ -24,10 +24,10 @@ int js_function_type_init() {
 
 PyObject *js_function_call(js_function *self, PyObject *args, PyObject *kwargs) {
     IN_V8;
-    IN_CONTEXT(self->context.Get(isolate));
+    Local<Object> object = self->object.Get(isolate);
+    IN_CONTEXT(object->CreationContext());
     JS_TRY
 
-    Local<Object> object = self->object.Get(isolate);
     Local<Value> js_this;
     if (self->js_this.IsEmpty()) {
         js_this = Undefined(isolate);
