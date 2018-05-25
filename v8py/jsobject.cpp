@@ -61,7 +61,33 @@ js_object *js_object_new(Local<Object> object, Local<Context> context) {
 
     if (self != NULL) {
         self->object.Reset(isolate, object);
-        self->context.Reset(isolate, context);
+    }
+    return self;
+}
+
+void js_object_weak_callback(const WeakCallbackInfo<js_object> &info) {
+    js_object *self = info.GetParameter();
+    self->object.Reset();
+
+    Py_DECREF(self);
+}
+
+js_object *js_object_weak_new(Local<Object> object, Local<Context> context) {
+    IN_V8;
+    Context::Scope cs(context);
+    js_object *self;
+    if (object->IsPromise()) {
+        self = (js_object *) js_promise_type.tp_alloc(&js_promise_type, 0);
+    } else if (object->IsCallable()) {
+        self = (js_object *) js_function_type.tp_alloc(&js_function_type, 0);
+    } else {
+        self = (js_object *) js_object_type.tp_alloc(&js_object_type, 0);
+    }
+
+
+    if (self != NULL) {
+        self->object.Reset(isolate, object);
+        self->object.SetWeak(self, js_object_weak_callback, WeakCallbackType::kFinalizer);
     }
     return self;
 }
@@ -70,13 +96,11 @@ PyObject *js_object_getattro(js_object *self, PyObject *name) {
     if (PyObject_GenericHasAttr((PyObject *) self, name)) {
         return PyObject_GenericGetAttr((PyObject *) self, name);
     }
-
     IN_V8;
     Local<Object> object = self->object.Get(isolate);
-    IN_CONTEXT(self->context.Get(isolate));
+    IN_CONTEXT(object->CreationContext());
     Local<Value> js_name = js_from_py(name, context);
     JS_TRY
-
     if (!context_setup_timeout(context)) return NULL;
     if (!object->Has(context, js_name).FromJust()) {
         // TODO fix this so that it works
@@ -106,6 +130,7 @@ PyObject *js_object_getattro(js_object *self, PyObject *name) {
     // if this was called like object.method() then bind the return value to make it callable
     if (Py_TYPE(value) == &js_function_type) {
         js_function *func = (js_function *) value;
+
         func->js_this.Reset(isolate, object);
     }
     return value;
@@ -117,10 +142,10 @@ int js_object_setattro(js_object *self, PyObject *name, PyObject *value) {
     }
 
     IN_V8;
-    IN_CONTEXT(self->context.Get(isolate));
+    Local<Object> object = self->object.Get(isolate);
+    IN_CONTEXT(object->CreationContext());
     JS_TRY
 
-    Local<Object> object = self->object.Get(isolate);
 
     if (!context_setup_timeout(context)) return -1;
 
@@ -132,7 +157,6 @@ int js_object_setattro(js_object *self, PyObject *name, PyObject *value) {
     if (!context_cleanup_timeout(context)) return -1;
 
     PY_PROPAGATE_JS_RET(-1);
-
     return 0;
 }
 
@@ -146,11 +170,11 @@ PyObject *js_object_getiter(js_object *self) {
 
 PyObject *js_object_dir(js_object *self) {
     IN_V8;
-    Local<Context> context = self->context.Get(isolate);
+    Local<Object> object = self->object.Get(isolate);
+    Local<Context> context = object->CreationContext();
     Context::Scope cs(context);
     JS_TRY
 
-    Local<Object> object = self->object.Get(isolate);
     MaybeLocal<Array> maybe_properties = object->GetOwnPropertyNames(context, ALL_PROPERTIES);
     PY_PROPAGATE_JS;
     Local<Array> properties = maybe_properties.ToLocalChecked();
@@ -172,16 +196,15 @@ PyObject *js_object_dir(js_object *self) {
 
 PyObject *js_object_repr(js_object *self) {
     IN_V8;
-    Local<Context> context = self->context.Get(isolate);
+    Local<Object> object = self->object.Get(isolate);
+    Local<Context> context = object->CreationContext();
     Context::Scope cs(context);
 
-    Local<Object> object = self->object.Get(isolate);
     return py_from_js(object->ToString(), context);
 }
 
 void js_object_dealloc(js_object *self) {
     self->object.Reset();
-    self->context.Reset();
     Py_TYPE(self)->tp_free((PyObject *) self);
 }
 
