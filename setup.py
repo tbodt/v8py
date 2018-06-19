@@ -88,7 +88,7 @@ def get_v8():
             run('gclient fetch')
 
     with cd('v8'):
-        run('git checkout {}'.format('branch-heads/5.9'))
+        run('git checkout -f {}'.format('branch-heads/5.9'))
         run('gclient sync')
 
 class BuildV8Command(Command):
