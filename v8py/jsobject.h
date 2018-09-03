@@ -44,7 +44,6 @@ typedef struct {
 extern PyTypeObject js_promise_type;
 int js_promise_type_init();
 
-PyObject *js_promise_new(js_promise *self, PyObject *args);
 void js_promise_dealloc(js_promise *self);
 
 

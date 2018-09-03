@@ -39,7 +39,8 @@ PyObject *py_from_js(Local<Value> value, Local<Context> context) {
     if (value->IsArray()) {
         Local<Array> array = value.As<Array>();
         PyObject *list = PyList_New(array->Length());
-        for (unsigned i = 0; i < array->Length(); i++) {
+        uint32_t length = array->Length();
+        for (uint32_t i = 0; i < length; i++) {
             PyObject *obj = py_from_js(array->Get(context, i).ToLocalChecked(), context);
             if (obj == NULL) {
                 Py_DECREF(list);
@@ -59,7 +60,8 @@ PyObject *py_from_js(Local<Value> value, Local<Context> context) {
             PyObject *dict = PyDict_New();
             PyErr_PROPAGATE(dict);
             Local<Array> js_keys = obj_value->GetPropertyNames(context).ToLocalChecked();
-            for (uint32_t i = 0; i < js_keys->Length(); i++) {
+            uint32_t length = js_keys->Length();
+            for (uint32_t i = 0; i < length; i++) {
                 Local<Value> js_key = js_keys->Get(context, i).ToLocalChecked();
                 PyObject *key = py_from_js(js_key, context);
                 if (key == NULL) {
@@ -95,11 +97,20 @@ PyObject *py_from_js(Local<Value> value, Local<Context> context) {
     if (value->IsString()) {
         Local<String> str_value = value.As<String>();
         size_t bufsize = str_value->Length() * sizeof(uint16_t);
-        uint16_t *buf = (uint16_t *) malloc(bufsize);
-        PyErr_PROPAGATE(buf);
-        str_value->Write(buf, 0, bufsize, String::WriteOptions::NO_NULL_TERMINATION);
-        PyObject *py_value = PyUnicode_DecodeUTF16((const char *) buf, bufsize, NULL, NULL);
-        free(buf);
+
+        PyObject *py_value;
+
+        if (bufsize <= STRING_BUFFER_SIZE) {
+            str_value->Write(string_buffer, 0, -1, String::WriteOptions::NO_NULL_TERMINATION);
+            py_value = PyUnicode_DecodeUTF16((const char *) string_buffer, bufsize, NULL, NULL);
+        } else {
+            uint16_t *buf = (uint16_t *) malloc(bufsize);
+            PyErr_PROPAGATE(buf);
+            str_value->Write(buf, 0, -1, String::WriteOptions::NO_NULL_TERMINATION);
+            py_value = PyUnicode_DecodeUTF16((const char *) buf, bufsize, NULL, NULL);
+            free(buf);
+        }
+
         return py_value;
     }
     if (value->IsUint32() || value->IsInt32()) {
@@ -247,7 +258,8 @@ PyObject *pys_from_jss(const FunctionCallbackInfo<Value> &js_args, Local<Context
 
 // js_args is an out parameter, expected to contain enough space
 void jss_from_pys(PyObject *py_args, Local<Value> *js_args, Local<Context> context) {
-    for (int i = 0; i < PyTuple_GET_SIZE(py_args); i++) {
+    int size = PyTuple_GET_SIZE(py_args);
+    for (int i = 0; i < size; i++) {
         js_args[i] = js_from_py(PyTuple_GET_ITEM(py_args, i), context);
     }
 }

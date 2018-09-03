@@ -117,6 +117,7 @@ static PyMethodDef v8_methods[] = {
 };
 
 PyObject *null_object = NULL;
+uint16_t *string_buffer = NULL;
 typedef struct {PyObject_HEAD} null_t;
 PyObject *null_repr(PyObject *self) {
     static PyObject *repr = NULL;
@@ -151,11 +152,16 @@ int null_type_init() {
 #define FAIL NULL
 #endif
 
+void initialize_buffers() {
+    string_buffer = (uint16_t*)malloc(STRING_BUFFER_SIZE);
+}
+
 #if PY_MAJOR_VERSION < 3
 PyMODINIT_FUNC init_v8py() {
 #else
 PyMODINIT_FUNC PyInit__v8py() {
 #endif
+    initialize_buffers();
     initialize_v8();
     create_memes_plz_thx();
 

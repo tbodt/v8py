@@ -11,6 +11,8 @@ using namespace v8;
 
 extern Isolate *isolate;
 extern PyObject *null_object;
+extern uint16_t *string_buffer;
+#define STRING_BUFFER_SIZE 512
 
 #define NORETURN __attribute__ ((noreturn))
 
