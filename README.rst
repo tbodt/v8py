@@ -34,6 +34,12 @@ Almost everything you'd expect to work just works, including:
 * Exceptions (they even subclass from Error!)
 * `Fully meme-compliant <https://github.com/tbodt/v8py/blob/master/v8py/kappa.h>`_
 
+Support
+-------
+
+Linux, Mac is supported for both python2 and python3.
+Windows is also supported, but for python3 only.
+
 Installation
 ------------
 
