@@ -1,4 +1,5 @@
 #include <Python.h>
+#include "util.h"
 #include <v8.h>
 
 #include "v8py.h"
@@ -133,7 +134,7 @@ Local<Value> js_from_py(PyObject *value, Local<Context> context) {
 #if PY_MAJOR_VERSION >= 3
     if (PyUnicode_Check(value)) {
         Py_ssize_t len;
-        char *str = PyUnicode_AsUTF8AndSize(value, &len);
+        const char *str = PyUnicode_AsUTF8AndSize(value, &len);
         Local<String> js_value = String::NewFromUtf8(isolate, str, NewStringType::kNormal, len).ToLocalChecked();
         return hs.Escape(js_value);
     }

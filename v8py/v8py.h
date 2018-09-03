@@ -1,6 +1,7 @@
 #ifndef V8PY_H
 #define V8PY_H
 
+#include "util.h"
 #include <v8.h>
 #include "polyfill.h"
 #include "exception.h"

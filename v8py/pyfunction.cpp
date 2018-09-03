@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <Python.h>
+#include "util.h"
 #include <v8.h>
 
 #include "v8py.h"

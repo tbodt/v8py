@@ -1,4 +1,5 @@
 #include <Python.h>
+#include "util.h"
 #include <v8.h>
 #include <libplatform/libplatform.h>
 
@@ -78,14 +79,28 @@ PyObject *construct_new_object(PyObject *self, PyObject *args) {
     // exclude first argument
     argc--;
 
-    Local<Value> *argv = new Local<Value>[argc];
-    for (long i = 0; i < argc; i++) {
-        argv[i] = js_from_py(PyTuple_GET_ITEM(args, i + 1), context);
-    }
-
     if (!context_setup_timeout(context)) return NULL;
-    MaybeLocal<Value> result = object->CallAsConstructor(argc, argv);
-    delete[] argv;
+    MaybeLocal<Value> result;
+#ifndef _WIN32
+    // error C2131: expression did not evaluate to a constant on Windows
+    if (argc <= 16) {
+        Local<Value> argv[argc];
+        for (long i = 0; i < argc; i++) {
+            argv[i] = js_from_py(PyTuple_GET_ITEM(args, i + 1), context);
+        }
+        result = object->CallAsConstructor(argc, argv);
+    } else {
+#endif
+        Local<Value> *argv = new Local<Value>[argc];
+        for (long i = 0; i < argc; i++) {
+            argv[i] = js_from_py(PyTuple_GET_ITEM(args, i + 1), context);
+        }
+        result = object->CallAsConstructor(argc, argv);
+        delete[] argv;
+#ifndef _WIN32
+    }
+#endif
+
     if (!context_cleanup_timeout(context)) return NULL;
 
     PY_PROPAGATE_JS;
@@ -201,7 +216,7 @@ PyMODINIT_FUNC PyInit__v8py() {
 #endif
 }
 
-NORETURN void assert_failed(const char *condition, const char *file, int line) {
+NO_RETURN void assert_failed(const char *condition, const char *file, int line) {
     fprintf(stderr, "assert(%s) %s:%d\n", condition, file, line);
     abort();
 }
