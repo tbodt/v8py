@@ -28,6 +28,16 @@ def test_new_keyword(context):
         {
             return "Hello, " + this.who + "!";
         }
+        
+        function MoreThan16Arguments(a1, a2, a3, a4, b1, b2, b3, b4, c1, c2, c3, c4, d1, d2, d3, d4, e1, e2, e3, e4)
+        {
+            this.data = [a1, a2, a3, a4, b1, b2, b3, b4, c1, c2, c3, c4, d1, d2, d3, d4, e1, e2, e3, e4];
+        }
+        
+        function MoreThan16Arguments2(a1, a2, a3, a4, b1, b2, b3, b4, c1, c2, c3, c4, d1, d2, d3, d4, e1, e2, e3, e4)
+        {
+            return [a1, a2, a3, a4, b1, b2, b3, b4, c1, c2, c3, c4, d1, d2, d3, d4, e1, e2, e3, e4];
+        }
     """)
 
     f = context.glob.NewKeywordTest
@@ -53,3 +63,8 @@ def test_new_keyword(context):
 
     res = instance.test()
     assert res == "Hello, world!"
+
+    args = [2, 4, 6, 23, 54, 2, 8, 43, -1, 100, 200, 300, 3, 4, 5, 23, 5, 38, 10, 29]
+    instance = new(context.glob.MoreThan16Arguments, *args)
+    assert instance.data == args
+    assert context.glob.MoreThan16Arguments2(*args) == args
