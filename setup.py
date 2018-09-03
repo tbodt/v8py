@@ -26,7 +26,7 @@ sources = list(map(lambda path: os.path.join('v8py', path),
                    filter(lambda path: path.endswith('.cpp'),
                           os.listdir('v8py'))))
 v8_libraries = ['v8_libplatform', 'v8_base', 'v8_snapshot', 'v8_libbase', 'v8_libsampler']
-libraries = v8_libraries.copy()
+libraries = list(v8_libraries)
 
 if os.name == 'nt':
     library_dirs = ['v8/out.gn/x64.release/obj', 'v8/out.gn/x64.release/obj/src/inspector']
