@@ -41,7 +41,7 @@ PyObject *js_function_call(js_function *self, PyObject *args, PyObject *kwargs) 
 #ifndef _WIN32
     // error C2131: expression did not evaluate to a constant on Windows
     if (argc <= 16) {
-        std::vector< Local<Value> > argv(argc);
+        Local<Value> argv[argc];
         jss_from_pys(args, &argv[0], context);
         result = object->CallAsFunction(context, js_this, argc, &argv[0]);
     } else {
