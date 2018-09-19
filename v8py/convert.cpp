@@ -38,8 +38,7 @@ PyObject *py_from_js(Local<Value> value, Local<Context> context) {
     if (value->IsArray()) {
         Local<Array> array = value.As<Array>();
         PyObject *list = PyList_New(array->Length());
-        uint32_t length = array->Length();
-        for (uint32_t i = 0; i < length; i++) {
+        for (uint32_t i = 0; i < array->Length(); i++) {
             PyObject *obj = py_from_js(array->Get(context, i).ToLocalChecked(), context);
             if (obj == NULL) {
                 Py_DECREF(list);
