@@ -100,8 +100,8 @@ PyObject *py_from_js(Local<Value> value, Local<Context> context) {
         PyObject *py_value;
 
         if (bufsize <= STRING_BUFFER_SIZE) {
-            str_value->Write(string_buffer, 0, -1, String::WriteOptions::NO_NULL_TERMINATION);
-            py_value = PyUnicode_DecodeUTF16((const char *) string_buffer, bufsize, NULL, NULL);
+            str_value->Write(&string_buffer[0], 0, -1, String::WriteOptions::NO_NULL_TERMINATION);
+            py_value = PyUnicode_DecodeUTF16((const char *) &string_buffer[0], bufsize, NULL, NULL);
         } else {
             uint16_t *buf = (uint16_t *) malloc(bufsize);
             PyErr_PROPAGATE(buf);
