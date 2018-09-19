@@ -2,10 +2,9 @@
 #ifndef _WIN32
 #include <pthread.h>
 #endif
-#include "util.h"
+#include "v8py.h"
 #include <v8.h>
 
-#include "v8py.h"
 // unfortunately, it's not possible to include a header from another c
 // extension and have it consistently work
 #include "greenstack-header.h"

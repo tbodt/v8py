@@ -1,7 +1,14 @@
 #ifndef V8PY_H
 #define V8PY_H
 
-#include "util.h"
+#ifdef _WIN32
+// v8.h(1680): error C2059: syntax error: '('
+#undef COMPILER
+#define NO_RETURN __declspec(noreturn)
+#else
+#define NO_RETURN __attribute__((noreturn))
+#endif
+
 #include <v8.h>
 #include "polyfill.h"
 #include "exception.h"

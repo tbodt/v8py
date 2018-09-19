@@ -1,5 +1,5 @@
 #include <Python.h>
-#include "util.h"
+#include "v8py.h"
 #include <v8.h>
 
 #ifdef _WIN32
@@ -8,7 +8,6 @@
 #include <pthread.h>
 #endif
 
-#include "v8py.h"
 #include "context.h"
 #include "script.h"
 #include "convert.h"

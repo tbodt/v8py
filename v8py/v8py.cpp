@@ -1,9 +1,8 @@
 #include <Python.h>
-#include "util.h"
+#include "v8py.h"
 #include <v8.h>
 #include <libplatform/libplatform.h>
 
-#include "v8py.h"
 #include "greenstack.h"
 #include "context.h"
 #include "convert.h"
