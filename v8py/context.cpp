@@ -1,8 +1,13 @@
 #include <Python.h>
-#include <v8.h>
-#include <pthread.h>
-
 #include "v8py.h"
+#include <v8.h>
+
+#ifdef _WIN32
+#include <Windows.h>
+#else
+#include <pthread.h>
+#endif
+
 #include "context.h"
 #include "script.h"
 #include "convert.h"
@@ -189,6 +194,16 @@ PyObject *context_expose_module(context_c *self, PyObject *module) {
     return result;
 }
 
+#ifdef _WIN32
+
+UINT s_timer_id;
+
+static void CALLBACK breaker_callback(UINT uTimerID, UINT uMsg, DWORD dwUser, DWORD dw1, DWORD dw2) {
+    isolate->TerminateExecution();
+}
+
+#else
+
 pthread_t breaker_id;
 useconds_t s_timeout;
 
@@ -199,6 +214,7 @@ void *breaker_thread(void *param) {
     isolate->TerminateExecution();
     return NULL;
 }
+#endif
 
 static double context_timeout(Local<Context> context) {
     context_c *ctx_c = (context_c *) context->GetEmbedderData(CONTEXT_OBJECT_SLOT).As<External>()->Value();
@@ -206,6 +222,17 @@ static double context_timeout(Local<Context> context) {
 }
 
 static bool setup_timeout(double timeout) {
+#ifdef _WIN32
+    if (timeout > 0) {
+        UINT timeout_ = (UINT) (timeout * 1000);
+        s_timer_id = timeSetEvent(timeout_, 0, (LPTIMECALLBACK) breaker_callback, 0,
+            TIME_ONESHOT | TIME_CALLBACK_FUNCTION | TIME_KILL_SYNCHRONOUS);
+        if (s_timer_id == NULL) {
+            PyErr_SetFromErrno(PyExc_OSError);
+            return false;
+        }
+    }
+#else
     if (timeout > 0) {
         s_timeout = (useconds_t) (timeout * 1000000);
         errno = pthread_create(&breaker_id, NULL, breaker_thread, &s_timeout);
@@ -214,10 +241,16 @@ static bool setup_timeout(double timeout) {
             return false;
         }
     }
+#endif
     return true;
 }
 
 static bool cleanup_timeout(double timeout) {
+#ifdef _WIN32
+    if (timeout > 0 && s_timer_id != NULL) {
+        timeKillEvent(s_timer_id);
+    }
+#else
     if (timeout > 0) {
         pthread_cancel(breaker_id);
         errno = pthread_join(breaker_id, NULL);
@@ -226,6 +259,7 @@ static bool cleanup_timeout(double timeout) {
             return false;
         }
     }
+#endif
     return true;
 }
 

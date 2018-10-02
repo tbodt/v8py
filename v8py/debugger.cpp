@@ -1,10 +1,27 @@
 #include <Python.h>
+#include "v8py.h"
 #include <v8.h>
 #if defined(V8_OS_LINUX)
 # include <arpa/inet.h>
 #endif
 #include "context.h"
 #include "debugger.h"
+
+#ifdef _WIN32
+
+// don't want to include Winsock2.h
+uint16_t htons (uint16_t x)
+{
+#if BYTE_ORDER == BIG_ENDIAN
+  return x;
+#elif BYTE_ORDER == LITTLE_ENDIAN
+  return __bswap_16 (x);
+#else
+# error "What kind of system is this?"
+#endif
+}
+
+#endif
 
 PyObject *json_from_stringview(const std::unique_ptr<StringBuffer> &message);
 std::unique_ptr<StringBuffer> stringview_from_json(PyObject *json);

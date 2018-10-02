@@ -1,6 +1,14 @@
 #ifndef V8PY_H
 #define V8PY_H
 
+#ifdef _WIN32
+// v8.h(1680): error C2059: syntax error: '('
+#undef COMPILER
+#define NO_RETURN __declspec(noreturn)
+#else
+#define NO_RETURN __attribute__((noreturn))
+#endif
+
 #include <v8.h>
 #include "polyfill.h"
 #include "exception.h"
@@ -10,6 +18,8 @@ using namespace v8;
 
 extern Isolate *isolate;
 extern PyObject *null_object;
+#define STRING_BUFFER_SIZE 512
+static uint16_t string_buffer[STRING_BUFFER_SIZE] = {};
 
 #define NORETURN __attribute__ ((noreturn))
 

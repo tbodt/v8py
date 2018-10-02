@@ -1,7 +1,7 @@
 #include <Python.h>
+#include "v8py.h"
 #include <v8.h>
 
-#include "v8py.h"
 #include "convert.h"
 #include "script.h"
 

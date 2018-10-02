@@ -1,8 +1,8 @@
 #include <stdio.h>
 #include <Python.h>
+#include "v8py.h"
 #include <v8.h>
 
-#include "v8py.h"
 #include "context.h"
 #include "convert.h"
 #include "pyfunction.h"

@@ -1,14 +1,17 @@
 #include <Python.h>
+#ifndef _WIN32
 #include <pthread.h>
+#endif
+#include "v8py.h"
 #include <v8.h>
 
-#include "v8py.h"
 // unfortunately, it's not possible to include a header from another c
 // extension and have it consistently work
 #include "greenstack-header.h"
 
 using namespace v8;
 
+#ifndef _WIN32
 // secret internal fields of the isolate that we need to access even though we aren't supposed to
 namespace v8 {
     namespace base {
@@ -76,3 +79,10 @@ int greenstack_init() {
     grab_tls_keys();
     return 0;
 }
+#else
+
+int greenstack_init() {
+    return 0;
+}
+
+#endif
