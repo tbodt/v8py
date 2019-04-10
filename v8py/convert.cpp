@@ -19,6 +19,7 @@ PyObject *py_from_js(Local<Value> value, Local<Context> context) {
         Py_INCREF(null_object);
         return null_object;
     }
+
     if (value->IsUndefined()) {
         Py_INCREF(Py_None);
         return Py_None;
@@ -48,7 +49,18 @@ PyObject *py_from_js(Local<Value> value, Local<Context> context) {
         }
         return list;
     }
-    
+
+    if (value->IsTypedArray()) {
+        Local<TypedArray> array = value.As<TypedArray>();
+        size_t length = array->Length();
+        PyObject *bytes = PyBytes_FromStringAndSize(nullptr, length);
+        Py_buffer view;
+        int error = PyObject_GetBuffer(bytes, &view, PyBUF_SIMPLE);
+        array->CopyContents(view.buf, view.len);
+        PyBuffer_Release(&view);
+        return bytes;
+    }
+
     if (value->IsObject()) {
         Local<Object> obj_value = value.As<Object>();
         if (context.IsEmpty()) {
@@ -141,18 +153,19 @@ Local<Value> js_from_py(PyObject *value, Local<Context> context) {
     }
 
 #if PY_MAJOR_VERSION >= 3
+    if (PyBytes_Check(value)) {
+        Py_buffer view;
+        int error = PyObject_GetBuffer(value, &view, PyBUF_SIMPLE);
+        Local<ArrayBuffer> js_value = ArrayBuffer::New(isolate, view.len);
+        memcpy(js_value->GetContents().Data(), view.buf, view.len);
+        PyBuffer_Release(&view);
+        return hs.Escape(js_value);
+    }
+
     if (PyUnicode_Check(value)) {
         Py_ssize_t len;
         const char *str = PyUnicode_AsUTF8AndSize(value, &len);
         Local<String> js_value = String::NewFromUtf8(isolate, str, NewStringType::kNormal, len).ToLocalChecked();
-        return hs.Escape(js_value);
-    }
-    if (PyString_Check(value)) {
-        char *str;
-        Py_ssize_t len;
-        PyBytes_AsStringAndSize(value, &str, &len);
-        Local<ArrayBuffer> js_value = ArrayBuffer::New(isolate, len);
-        memcpy(str, js_value->GetContents().Data(), len);
         return hs.Escape(js_value);
     }
 #else
@@ -162,6 +175,7 @@ Local<Value> js_from_py(PyObject *value, Local<Context> context) {
         Py_DECREF(value_encoded);
         return hs.Escape(js_value);
     } 
+
     if (PyString_Check(value)) {
         Local<String> js_value = String::NewFromUtf8(isolate, PyString_AS_STRING(value), NewStringType::kNormal, PyString_GET_SIZE(value)).ToLocalChecked();
         return hs.Escape(js_value);
