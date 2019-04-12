@@ -34,9 +34,6 @@ def test_convert_to_py(context):
                 " is called error."
     assert context.eval('"' + long_text + '"') == long_text
 
-    if sys.version_info.major >= 3:
-        assert context.eval('new Uint8Array([1, 2, 3])') == bytes([1, 2, 3])
-
 
 def test_convert_to_js(context):
     context.glob.foo = 'Hello, world!'
