@@ -33,6 +33,7 @@ def test_convert_to_py(context):
                 " shouldn't be and where it was, it is able to obtain the deviation and its variation, which" \
                 " is called error."
     assert context.eval('"' + long_text + '"') == long_text
+    assert context.eval('new Uint8Array([1, 2, 3])').to_bytes() == b"\x01\x02\x03"
 
 
 def test_convert_to_js(context):

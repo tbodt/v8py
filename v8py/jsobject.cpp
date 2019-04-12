@@ -13,6 +13,7 @@ PyTypeObject js_object_type = {
 };
 PyMethodDef js_object_methods[] = {
     {"__dir__", (PyCFunction) js_object_dir, METH_NOARGS, NULL},
+    {"to_bytes", (PyCFunction) js_object_to_bytes, METH_NOARGS, NULL},
     {NULL}
 };
 PyMappingMethods js_object_mapping_methods = {
@@ -192,6 +193,27 @@ PyObject *js_object_dir(js_object *self) {
     if (!context_cleanup_timeout(context)) return NULL;
 
     return py_properties;
+}
+
+PyObject *js_object_to_bytes(js_object *self) {
+    IN_V8;
+    Local<Object> object = self->object.Get(isolate);
+    Local<Context> context = object->CreationContext();
+    Context::Scope cs(context);
+
+    if (!object->IsTypedArray()) {
+        Py_INCREF(Py_None);
+        return Py_None;
+    }
+
+    Local<TypedArray> array = object.As<TypedArray>();
+    size_t length = array->Length();
+    PyObject *bytes = PyBytes_FromStringAndSize(nullptr, length);
+    Py_buffer view;
+    int error = PyObject_GetBuffer(bytes, &view, PyBUF_SIMPLE);
+    array->CopyContents(view.buf, view.len);
+    PyBuffer_Release(&view);
+    return bytes;
 }
 
 PyObject *js_object_repr(js_object *self) {

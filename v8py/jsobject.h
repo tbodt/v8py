@@ -24,6 +24,7 @@ PyObject *js_object_getiter(js_object *self);
 Py_ssize_t js_object_length(js_object *self);
 PyObject *js_object_dir(js_object *self);
 PyObject *js_object_repr(js_object *self);
+PyObject *js_object_to_bytes(js_object *self);
 
 typedef struct {
     PyObject_HEAD
