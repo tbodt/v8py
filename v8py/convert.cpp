@@ -50,17 +50,6 @@ PyObject *py_from_js(Local<Value> value, Local<Context> context) {
         return list;
     }
 
-    if (value->IsTypedArray()) {
-        Local<TypedArray> array = value.As<TypedArray>();
-        size_t length = array->Length();
-        PyObject *bytes = PyBytes_FromStringAndSize(nullptr, length);
-        Py_buffer view;
-        int error = PyObject_GetBuffer(bytes, &view, PyBUF_SIMPLE);
-        array->CopyContents(view.buf, view.len);
-        PyBuffer_Release(&view);
-        return bytes;
-    }
-
     if (value->IsObject()) {
         Local<Object> obj_value = value.As<Object>();
         if (context.IsEmpty()) {
