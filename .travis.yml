@@ -30,5 +30,5 @@ deploy:
     on:
         tags: true
         repo: tbodt/v8py
-    distributions: sdist bdist_wheel
+    distributions: sdist
     skip_upload_docs: true
