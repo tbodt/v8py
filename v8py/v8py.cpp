@@ -49,6 +49,12 @@ PyObject *mark_unconstructable(PyObject *shit, PyObject *thing) {
     return thing;
 }
 
+PyObject *trigger_low_memory_notification(PyObject *self, PyObject *args) {
+    IN_V8;
+    isolate->LowMemoryNotification();
+    Py_RETURN_NONE;
+}
+
 PyObject *construct_new_object(PyObject *self, PyObject *args) {
 
     int argc = (int)PyTuple_GET_SIZE(args);
@@ -112,6 +118,7 @@ static PyMethodDef v8_methods[] = {
     {"unconstructable", mark_unconstructable, METH_O, ""},
     {"current_context", context_get_current, METH_NOARGS, ""},
     {"new", construct_new_object, METH_VARARGS, "Creates a new JavaScript object from a given constructor function"},
+    {"low_memory_notification", trigger_low_memory_notification, METH_NOARGS, "Trigger V8 low memory notification"},
     {NULL},
 };
 
