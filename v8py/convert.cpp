@@ -201,9 +201,8 @@ Local<Value> js_from_py(PyObject *value, Local<Context> context) {
     }
 
     if (PyList_Check(value) || PyTuple_Check(value)) {
-        int length = PySequence_Length(value);
         Local<Array> array = Array::New(isolate, length);
-        for (int i = 0; i < length; i++) {
+        for (int i = 0; i < PySequence_Length(value); i++) {
             PyObject *item = PySequence_ITEM(value, i);
             bool set_worked = array->Set(context, i, js_from_py(item, context)).FromJust();
             assert(set_worked);
@@ -256,8 +255,7 @@ PyObject *pys_from_jss(const FunctionCallbackInfo<Value> &js_args, Local<Context
 
 // js_args is an out parameter, expected to contain enough space
 void jss_from_pys(PyObject *py_args, Local<Value> *js_args, Local<Context> context) {
-    int size = PyTuple_GET_SIZE(py_args);
-    for (int i = 0; i < size; i++) {
+    for (int i = 0; i < PyTuple_GET_SIZE(py_args); i++) {
         js_args[i] = js_from_py(PyTuple_GET_ITEM(py_args, i), context);
     }
 }
