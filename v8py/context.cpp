@@ -99,11 +99,7 @@ PyObject *context_new(PyTypeObject *type, PyObject *args, PyObject *kwargs) {
     context->SetEmbedderData(OBJECT_PROTOTYPE_SLOT, Object::New(isolate)->GetPrototype());
     context->SetEmbedderData(ERROR_PROTOTYPE_SLOT, Exception::Error(String::Empty(isolate)).As<Object>()->GetPrototype());
 
-    PyObject *weakref_module = PyImport_ImportModule("weakref");
-    PyErr_PROPAGATE(weakref_module);
-    PyObject *weak_key_dict = PyObject_GetAttrString(weakref_module, "WeakKeyDictionary");
-    PyErr_PROPAGATE(weak_key_dict);
-    self->js_object_cache = PyObject_CallObject(weak_key_dict, NULL);
+    self->js_object_cache = PyDict_New();
     PyErr_PROPAGATE(self->js_object_cache);
 
     self->scripts = PySet_New(NULL);

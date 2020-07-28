@@ -259,19 +259,6 @@ Local<Function> py_class_get_constructor(py_class *self, Local<Context> context)
     return hs.Escape(function);
 }
 
-void py_class_object_weak_callback(const WeakCallbackInfo<Persistent<Object>> &info) {
-    HandleScope hs(isolate);
-    Local<Object> js_object = info.GetParameter()->Get(isolate);
-    assert(js_object->GetInternalField(0) == IZ_DAT_OBJECT);
-    PyObject *py_object = (PyObject *) js_object->GetInternalField(1).As<External>()->Value();
-
-    // the entire purpose of this weak callback
-    Py_DECREF(py_object);
-
-    info.GetParameter()->Reset();
-    delete info.GetParameter();
-}
-
 void py_class_init_js_object(Local<Object> js_object, PyObject *py_object, Local<Context> context) {
     js_object->SetInternalField(0, IZ_DAT_OBJECT);
     js_object->SetInternalField(1, External::New(isolate, py_object));
@@ -293,7 +280,6 @@ void py_class_init_js_object(Local<Object> js_object, PyObject *py_object, Local
     }
 
     Persistent<Object> *obj_handle = new Persistent<Object>(isolate, js_object);
-    obj_handle->SetWeak(obj_handle, py_class_object_weak_callback, WeakCallbackType::kFinalizer);
 
     context_set_cached_jsobject(context, py_object, js_object);
 }
@@ -309,6 +295,7 @@ Local<Object> py_class_create_js_object(py_class *self, PyObject *py_object, Loc
     object = self->templ->Get(isolate)->InstanceTemplate()->NewInstance(context).ToLocalChecked();
     Py_INCREF(py_object);
     py_class_init_js_object(object, py_object, context);
+    Py_DECREF(py_object);
 
     return hs.Escape(object);
 }
