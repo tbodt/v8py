@@ -2,7 +2,7 @@
 language: python
 sudo: false
 group: beta
-dist: bionic
+dist: xenial
 services:
     - docker
 
@@ -34,7 +34,7 @@ install:
     - export CFLAGS='-g -O0 --coverage'
 
 script:
-    - cibuildwheel --platform linux --output-dir dist
+    - travis_wait 60 cibuildwheel --platform linux --output-dir dist
     - pip install dist/*.whl
     - pytest
     - pip uninstall -y greenstack && python -c "import v8py"
