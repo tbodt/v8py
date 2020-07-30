@@ -2,7 +2,7 @@
 language: python
 sudo: false
 group: beta
-dist: trusty
+dist: bionic
 services:
     - docker
 
