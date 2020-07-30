@@ -1,18 +1,44 @@
-language: python
-python:
-    - 2.7
-    - 3.5
-script:
-    - ./setup.py test
-    - pip uninstall -y greenstack && ./setup.py develop && python -c "import v8py"
 
-dist: trusty
+language: python
 sudo: false
 group: beta
+dist: trusty
+services:
+    - docker
+
+jobs:
+    include:
+        - python: 2.7
+          env:
+            - CIBW_BUILD=cp27-manylinux_x86_64
+            - CIBW_MANYLINUX_X86_64_IMAGE=quay.io/pypa/manylinux2014_x86_64:2020-07-27-669fac3
+        - python: 3.5
+          env:
+            - CIBW_BUILD=cp35-manylinux_x86_64
+            - CIBW_MANYLINUX_X86_64_IMAGE=quay.io/pypa/manylinux2014_x86_64:2020-07-27-669fac3
+        - python: 3.6
+          env:
+            - CIBW_BUILD=cp36-manylinux_x86_64
+            - CIBW_MANYLINUX_X86_64_IMAGE=quay.io/pypa/manylinux2014_x86_64:2020-07-27-669fac3
+        - python: 3.7
+          env:
+            - CIBW_BUILD=cp37-manylinux_x86_64
+            - CIBW_MANYLINUX_X86_64_IMAGE=quay.io/pypa/manylinux2014_x86_64:2020-07-27-669fac3
+        - python: 3.8
+          env:
+            - CIBW_BUILD=cp38-manylinux_x86_64
+            - CIBW_MANYLINUX_X86_64_IMAGE=quay.io/pypa/manylinux2014_x86_64:2020-07-27-669fac3
 
 install:
-    - pip install twine pytest greenstack
+    - pip install twine pytest greenstack cibuildwheel
     - export CFLAGS='-g -O0 --coverage'
+
+script:
+    - cibuildwheel --platform linux --output-dir dist
+    - pip install dist/*.whl
+    - pytest
+    - pip uninstall -y greenstack && python -c "import v8py"
+
 
 # it takes ages to compile v8 so don't do it too often
 cache:
