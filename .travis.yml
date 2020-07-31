@@ -13,12 +13,14 @@ python:
 install:
     - sudo apt update && sudo apt install patchelf
     - pip install --upgrade pip && pip install twine pytest greenstack
-    - pip3 install auditwheel
+    # auditwheel is python 3 only, cheat a bit here
+    - ~/virtualenv/python3.6/bin/pip install auditwheel
     - export CFLAGS='-g -O0 --coverage'
 
 script:
     - python ./setup.py bdist_wheel
-    - auditwheel repair --plat manylinux2014_x86_64 dist/*.whl && rm -rf dist && mv wheelhouse dist
+    - ~/virtualenv/python3.6/bin/auditwheel show dist/*.whl
+    - ~/virtualenv/python3.6/bin/auditwheel repair --plat manylinux2014_x86_64 dist/*.whl && rm -rf dist && mv wheelhouse dist
     - pip install dist/*.whl
     - pytest
     - pip uninstall -y greenstack && python -c "import v8py"
