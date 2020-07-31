@@ -12,7 +12,9 @@ python:
 
 install:
     - sudo apt update && sudo apt install patchelf
-    - pip install --upgrade pip && pip install twine pytest greenstack auditwheel
+    - pip install --upgrade pip && pip install twine pytest greenstack
+    - pip3 install auditwheel
+    - export CFLAGS='-g -O0 --coverage'
 
 script:
     - python ./setup.py bdist_wheel
