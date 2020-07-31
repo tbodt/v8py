@@ -10,15 +10,13 @@ python:
     - 3.7
     - 3.8
 
-
 install:
     - sudo apt update && sudo apt install patchelf
-    - pip install twine pytest greenstack auditwheel
-    - export CFLAGS='-g -O0 --coverage'
+    - pip install --upgrade pip && pip install twine pytest greenstack auditwheel
 
 script:
     - python ./setup.py bdist_wheel
-    - auditwheel --plat manylinux2014_x86_64 --repair dist/*.whl && rm -rf dist && mv wheelhouse dist
+    - auditwheel repair --plat manylinux2014_x86_64 dist/*.whl && rm -rf dist && mv wheelhouse dist
     - pip install dist/*.whl
     - pytest
     - pip uninstall -y greenstack && python -c "import v8py"
