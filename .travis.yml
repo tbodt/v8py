@@ -1,40 +1,24 @@
 
 language: python
-sudo: false
+sudo: true
 group: beta
 dist: xenial
-services:
-    - docker
+python:
+    - 2.7
+    - 3.5
+    - 3.6
+    - 3.7
+    - 3.8
 
-jobs:
-    include:
-        - python: 2.7
-          env:
-            - CIBW_BUILD=cp27-manylinux_x86_64
-            - CIBW_MANYLINUX_X86_64_IMAGE=quay.io/pypa/manylinux2014_x86_64:2020-07-27-669fac3
-        - python: 3.5
-          env:
-            - CIBW_BUILD=cp35-manylinux_x86_64
-            - CIBW_MANYLINUX_X86_64_IMAGE=quay.io/pypa/manylinux2014_x86_64:2020-07-27-669fac3
-        - python: 3.6
-          env:
-            - CIBW_BUILD=cp36-manylinux_x86_64
-            - CIBW_MANYLINUX_X86_64_IMAGE=quay.io/pypa/manylinux2014_x86_64:2020-07-27-669fac3
-        - python: 3.7
-          env:
-            - CIBW_BUILD=cp37-manylinux_x86_64
-            - CIBW_MANYLINUX_X86_64_IMAGE=quay.io/pypa/manylinux2014_x86_64:2020-07-27-669fac3
-        - python: 3.8
-          env:
-            - CIBW_BUILD=cp38-manylinux_x86_64
-            - CIBW_MANYLINUX_X86_64_IMAGE=quay.io/pypa/manylinux2014_x86_64:2020-07-27-669fac3
 
 install:
-    - pip install twine pytest greenstack cibuildwheel
+    - sudo apt update && sudo apt install patchelf
+    - pip install twine pytest greenstack auditwheel
     - export CFLAGS='-g -O0 --coverage'
 
 script:
-    - travis_wait 60 cibuildwheel --platform linux --output-dir dist
+    - python ./setup.py bdist_wheel
+    - auditwheel --plat manylinux2014_x86_64 --repair dist/*.whl && rm -rf dist && mv wheelhouse dist
     - pip install dist/*.whl
     - pytest
     - pip uninstall -y greenstack && python -c "import v8py"
