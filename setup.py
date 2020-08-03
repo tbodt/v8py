@@ -120,8 +120,7 @@ def get_v8():
     else:
         print('updating depot tools')
         with cd('depot_tools'):
-            run('git checkout master')
-            run('git pull')
+            run('git fetch')
 
     if not os.path.isdir('v8/.git'):
         print('downloading v8')
