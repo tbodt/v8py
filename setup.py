@@ -155,17 +155,6 @@ class BuildV8Command(Command):
                     run('ninja\\ninja -C out.gn/x64.release d8')
                 else:
                     gypflags = '-Dv8_use_external_startup_data=0 -Dv8_enable_i18n_support=0 -Dv8_enable_inspector=1 -Dwerror=\'\' '
-                    # for some reason, gtest will sometimes fail to build because the weird cmake-gyp bridge generates
-                    # clang calls that exclude the standard header path. we don't need it, skip building it
-                    run('sed -i "s|\'../samples/samples.gyp:\\*\',||g" gypfiles/all.gyp')
-                    run('sed -i "s|\'../test/cctest/cctest.gyp:\\*\',||g" gypfiles/all.gyp')
-                    run('sed -i "s|\'../test/fuzzer/fuzzer.gyp:\\*\',||g" gypfiles/all.gyp')
-                    run('sed -i "s|\'../test/unittests/unittests.gyp:\\*\',||g" gypfiles/all.gyp')
-                    run('sed -i "s|testing/gmock.gyp ||g" Makefile')
-                    run('sed -i "s|testing/gtest.gyp ||g" Makefile')
-                    run('sed -i "s|test/unittests/unittests.gyp ||g" Makefile')
-                    run('sed -i "s|test/cctest/cctest.gyp ||g" Makefile')
-                    run('sed -i "s|test/fuzzer/fuzzer.gyp ||g" Makefile')
                     run('make GYPFLAGS="{}" CFLAGS=-fPIC CXXFLAGS=-fPIC {} -j{}'.format(gypflags, MODE,
                                                                                         multiprocessing.cpu_count()))
 
