@@ -114,6 +114,7 @@ PyObject *context_new(PyTypeObject *type, PyObject *args, PyObject *kwargs) {
 
 void context_dealloc(context_c *self) {
     self->js_context.Reset();
+    PyDict_Clear(self->js_object_cache);
     Py_DECREF(self->js_object_cache);
     Py_DECREF(self->scripts);
     Py_TYPE(self)->tp_free((PyObject *) self);
