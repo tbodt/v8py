@@ -1,18 +1,33 @@
+
 language: python
+sudo: true
+group: beta
+dist: xenial
 python:
     - 2.7
     - 3.5
-script:
-    - ./setup.py test
-    - pip uninstall -y greenstack && ./setup.py develop && python -c "import v8py"
-
-dist: trusty
-sudo: false
-group: beta
+    - 3.6
+    - 3.7
 
 install:
-    - pip install twine pytest greenstack
+    - sudo apt update && sudo apt install patchelf
+    - pip install --upgrade pip && pip install twine pytest
+    # greenstack doesn't build for python 3.7 and above
+    - python -c "import sys; exit(1 if (sys.version_info.major, sys.version_info.minor) > (3, 6) else 0)" && pip install greenstack; true
+    # auditwheel is python 3 only, cheat a bit here
+    - ~/virtualenv/python3.6/bin/pip install auditwheel
+    - export CC=`pwd`/v8/third_party/llvm-build/Release+Asserts/bin/clang
+    - export CXX=`pwd`/v8/third_party/llvm-build/Release+Asserts/bin/clang++
     - export CFLAGS='-g -O0 --coverage'
+
+script:
+    - python ./setup.py bdist_wheel
+    - ~/virtualenv/python3.6/bin/auditwheel show dist/*.whl
+    - ~/virtualenv/python3.6/bin/auditwheel repair --plat manylinux2014_x86_64 dist/*.whl && rm -rf dist && mv wheelhouse dist
+    - pip install dist/*.whl
+    - pytest
+    - pip uninstall -y greenstack; python -c "import v8py"
+
 
 # it takes ages to compile v8 so don't do it too often
 cache:
