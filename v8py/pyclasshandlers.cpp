@@ -42,7 +42,7 @@ void py_class_method_callback(const FunctionCallbackInfo<Value> &info) {
     if (js_self == context->Global()) {
         js_self = js_self->GetPrototype().As<Object>();
     }
-    PyObject *self = (PyObject *) js_self->GetInternalField(1).As<External>()->Value();
+    PyObject *self = (PyObject *) js_self->GetInternalField(PYOBJECT_INTERNAL_FIELD).As<External>()->Value();
     PyObject *args = pys_from_jss(info, context);
     JS_PROPAGATE_PY(args);
     // add self onto the beginning of the arg list
@@ -79,7 +79,7 @@ template <class T> inline extern PyObject *get_self(const PropertyCallbackInfo<T
     if (js_self == context->Global()) {
         js_self = js_self->GetPrototype().As<Object>();
     }
-    return (PyObject *) js_self->GetInternalField(1).template As<External>()->Value();
+    return (PyObject *) js_self->GetInternalField(PYOBJECT_INTERNAL_FIELD).template As<External>()->Value();
 }
 
 #define Info(T) const PropertyCallbackInfo<T> &info

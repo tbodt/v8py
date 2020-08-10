@@ -263,9 +263,9 @@ void py_class_object_weak_callback(const WeakCallbackInfo<Persistent<Object>> &i
     HandleScope hs(isolate);
     Local<Object> js_object = info.GetParameter()->Get(isolate);
 
-    assert(js_object->GetInternalField(0) == IZ_DAT_OBJECT);
-    PyObject *py_object = (PyObject *) js_object->GetInternalField(1).As<External>()->Value();
-    PyObject *js_object_cache = (PyObject *) js_object->GetInternalField(2).As<External>()->Value();
+    assert(js_object->GetInternalField(MAGIC_INTERNAL_FIELD) == IZ_DAT_OBJECT);
+    PyObject *py_object = (PyObject *) js_object->GetInternalField(PYOBJECT_INTERNAL_FIELD).As<External>()->Value();
+    PyObject *js_object_cache = (PyObject *) js_object->GetInternalField(JS_OBJECT_CACHE_INTERNAL_FIELD).As<External>()->Value();
 
     if (PyDict_Size(js_object_cache) != 0) {
         if (PyMapping_HasKey(js_object_cache, py_object)) {
@@ -280,13 +280,13 @@ void py_class_object_weak_callback(const WeakCallbackInfo<Persistent<Object>> &i
 
 
 void py_class_init_js_object(Local<Object> js_object, PyObject *py_object, Local<Context> context) {
-    js_object->SetInternalField(0, IZ_DAT_OBJECT);
-    js_object->SetInternalField(1, External::New(isolate, py_object));
+    js_object->SetInternalField(MAGIC_INTERNAL_FIELD, IZ_DAT_OBJECT);
+    js_object->SetInternalField(PYOBJECT_INTERNAL_FIELD, External::New(isolate, py_object));
     // the v8::Context will get garbage collected before the JS objects,
     // so for the weak callback we keep a pointer to the object cache
     context_c *py_ctx = (context_c *)context->GetEmbedderData(CONTEXT_OBJECT_SLOT).As<External>()->Value();
     Py_INCREF(py_ctx->js_object_cache);
-    js_object->SetInternalField(2, External::New(isolate, py_ctx->js_object_cache));
+    js_object->SetInternalField(JS_OBJECT_CACHE_INTERNAL_FIELD, External::New(isolate, py_ctx->js_object_cache));
 
     // find out if the object is supposed to inherit from Error
     // the information is in an internal field on the last prototype
