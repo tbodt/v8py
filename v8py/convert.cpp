@@ -82,9 +82,9 @@ PyObject *py_from_js(Local<Value> value, Local<Context> context) {
             return dict;
         }
         if (obj_value->InternalFieldCount() == OBJECT_INTERNAL_FIELDS) {
-            Local<Value> magic = obj_value->GetInternalField(0);
+            Local<Value> magic = obj_value->GetInternalField(MAGIC_INTERNAL_FIELD);
             if (magic == IZ_DAT_OBJECT) {
-                PyObject *object = (PyObject *) obj_value->GetInternalField(1).As<External>()->Value();
+                PyObject *object = (PyObject *) obj_value->GetInternalField(PYOBJECT_INTERNAL_FIELD).As<External>()->Value();
                 Py_INCREF(object);
                 return object;
             }

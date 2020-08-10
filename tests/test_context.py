@@ -1,7 +1,7 @@
 import pytest
 import time
 
-from v8py import JavaScriptTerminated, current_context, new
+from v8py import JavaScriptTerminated, Context, current_context, new
 
 def test_glob(context):
     context.eval('foo = "bar"')
@@ -108,3 +108,11 @@ def test_current_context(context):
         assert current_context() is context
     context.expose(f)
     context.eval('f()')
+
+def test_object_sharing(context):
+    shared = Context()
+    shared.foo = {'x': object()}
+    output = str(shared.eval('foo'))
+    context.foo = shared.foo
+    del shared
+    assert str(context.eval('foo')) == output

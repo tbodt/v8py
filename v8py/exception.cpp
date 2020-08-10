@@ -79,9 +79,9 @@ extern "C" {
 void py_throw_js(Local<Value> js_exc, Local<Message> js_message) {
     if (js_exc->IsObject() && js_exc.As<Object>()->InternalFieldCount() == OBJECT_INTERNAL_FIELDS) {
         Local<Object> exc_object = js_exc.As<Object>();
-        PyObject *exc_type = (PyObject *) exc_object->GetInternalField(2).As<External>()->Value();
-        PyObject *exc_value = (PyObject *) exc_object->GetInternalField(1).As<External>()->Value();
-        PyObject *exc_traceback = (PyObject *) exc_object->GetInternalField(3).As<External>()->Value();
+        PyObject *exc_type = (PyObject *) exc_object->GetInternalField(EXCEPTION_TYPE_INTERNAL_FIELD).As<External>()->Value();
+        PyObject *exc_value = (PyObject *) exc_object->GetInternalField(PYOBJECT_INTERNAL_FIELD).As<External>()->Value();
+        PyObject *exc_traceback = (PyObject *) exc_object->GetInternalField(TRACEBACK_INTERNAL_FIELD).As<External>()->Value();
         if (exc_type == NULL && exc_traceback == NULL) {
             PyErr_SetObject((PyObject *) Py_TYPE(exc_value), exc_value);
         } else {
@@ -155,8 +155,8 @@ void js_throw_py() {
         exception = ((js_exception *) exc_value)->exception.Get(isolate).As<Object>();
     } else {
         exception = js_from_py(exc_value, context).As<Object>();
-        exception->SetInternalField(2, External::New(isolate, exc_type));
-        exception->SetInternalField(3, External::New(isolate, exc_traceback));
+        exception->SetInternalField(EXCEPTION_TYPE_INTERNAL_FIELD, External::New(isolate, exc_type));
+        exception->SetInternalField(TRACEBACK_INTERNAL_FIELD, External::New(isolate, exc_traceback));
     }
     isolate->ThrowException(exception);
 }

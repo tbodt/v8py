@@ -21,11 +21,12 @@ Local<Function> py_class_get_constructor(py_class *self, Local<Context> context)
 Local<Object> py_class_create_js_object(py_class *self, PyObject *py_object, Local<Context> context);
 void py_class_init_js_object(Local<Object> js_object, PyObject *py_object, Local<Context> context);
 
-// first one is magic pointer
-// second one is actual object
-// third is exception traceback (usually unused)
-// fourth is exception type (also usually unused)
-#define OBJECT_INTERNAL_FIELDS 4
+#define MAGIC_INTERNAL_FIELD 0
+#define PYOBJECT_INTERNAL_FIELD 1
+#define EXCEPTION_TYPE_INTERNAL_FIELD 2
+#define TRACEBACK_INTERNAL_FIELD 3
+#define JS_OBJECT_CACHE_INTERNAL_FIELD 4
+#define OBJECT_INTERNAL_FIELDS 5
 
 void py_class_construct_callback(const FunctionCallbackInfo<Value> &info);
 void py_class_method_callback(const FunctionCallbackInfo<Value> &info);
