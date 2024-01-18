@@ -1,3 +1,8 @@
+Looking for maintainers!
+====
+
+I (tbodt) no longer use this or have the time to maintain it. If you are using this seriously or would like to, and have resources for development and maintenance, reach out.
+
 V8Py
 ====
 
